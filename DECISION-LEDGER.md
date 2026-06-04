@@ -728,6 +728,70 @@ DATOS CMPBASE64 = JSON con datos del comprobante codificado en Base64
 5. **`tax-policy-versions/ar-2026-06-v2.md` ahora consolida 2 verificaciones empíricas** (COMPG v4.2 + QR fiscal RG 4892/2020). Patrón funciona para futuros bumps
 6. **PDF extractor (pdf-parse@2.4.5) es activo crítico permanente del proyecto** — sin esto, las 2 verificaciones eran imposibles. Mantener en devDependencies
 
+### Sprint 4 ROADMAP Cash context cierre parcial (2026-06-04)
+
+Implementación completa del bounded context `Cash` (C-OPS-01 capability: apertura + cierre de caja con conciliación + descuadre + movimientos manuales). Pattern consolidado 6ta aplicación.
+
+| Entregable | Detalle |
+|---|---|
+| `src/lib/db/schema/_common.ts` | `CASH_MOVEMENT_TYPES` enum ('withdraw'/'deposit'/'provider_payment') + `DESCUADRE_HIGH_THRESHOLD_ARS` constant ($5000) |
+| `src/lib/db/schema/cash_sessions.ts` | 6 CHECK constraints (sale_point>0, initial>=0, closed_consistency, discrepancy_reason_required, final/expected non-negative) |
+| `src/lib/db/schema/cash_movements.ts` | Append-only + 3 CHECK constraints (type catalog, amount>0, reason not empty) |
+| `drizzle/migrations/post_initial/0007_cash_partial_unique_and_immutable.sql` | CREATE TABLE cash_sessions hand-written + UNIQUE partial index + CREATE TABLE cash_movements + 2 triggers (cash_sessions_immutable_after_close con WHEN OLD.closed_at IS NOT NULL + cash_movements_immutable append-only) |
+| `src/lib/cash/sessions.ts` | openCashSession (UNIQUE partial → ActiveSessionAlreadyOpenError), closeCashSession (SELECT FOR UPDATE + descuadre compute + audit + métrica atómico), getActiveCashSession, getCashSessionById, 8 pure helpers, 4 errores tipados |
+| `src/lib/cash/movements.ts` | registerCashMovement, 2 errores tipados. **NO emite audit propio** (J1 EVENT-TAXONOMY catálogo cerrado, session.closed* abarca). |
+| `src/lib/cash/queries.ts` | getCashSessionSummary (session + movements + totals agregados), listCashSessions (paginada), computeMovementTotals (pure helper escala entera 10000) |
+| `src/lib/cash/index.ts` | Public API barrel |
+| `tests/unit/cash-service.test.ts` | 72 tests unit (pure helpers + wrapper smoke + multi-tenant guard + descuadre flujos) |
+
+**Total tests proyecto:** 627/627 unit verdes (baseline 552 + 72 cash + 3 listCashSessions refactor).
+
+**Advisor blocker detectado + fixed antes de tests integration:**
+
+> "cash_sessions table NUNCA se crea en ninguna migration. Drizzle-kit no se re-corrió desde Sprint 0+1 (sigue roto BigInt). Migration 0007 inicial solo creaba cash_movements + UNIQUE sobre tabla inexistente. CREATE TABLE cash_movements fallaría en su primer statement por FK references cash_sessions(id)."
+
+**Mismo patrón Spike A1 stock_movements + metrics_counter — 6ta vez consecutiva.**
+
+**Fix:** reescribí 0007 desde cero con orden correcto: (1) CREATE TABLE cash_sessions con 6 CHECKs hand-written + 2 indexes secundarios, (2) UNIQUE partial index, (3) CREATE TABLE cash_movements (workaround BigInt + FK ahora resuelve), (4) 2 indexes cash_movements, (5) trigger cash_sessions_immutable_after_close (NEW - advisor #1 secondary), (6) trigger cash_movements_immutable.
+
+**2 advisor secondary fixes aplicados:**
+
+1. **cash_sessions post-close immutability sin trigger** — schema doc decía "inmutable post-cierre" pero NO había trigger. Agregado `cash_sessions_immutable_after_close` con `WHEN OLD.closed_at IS NOT NULL` — solo bloquea UPDATEs cuando previa estaba cerrada (transición close de NULL → NOT NULL pasa).
+
+2. **listCashSessions test name mentía** — validation corría DESPUÉS de requireTenantId. Refactor: args validation primero, después tenant. +3 tests nuevos en suite.
+
+**1 secondary anotado (no fixed):** `incrementCounter` dentro de tx puede poisonar tx si falla. Whitelist bounded sign positive/negative/zero no falla en práctica. F1+ trigger: emit post-commit si edge case aparece.
+
+**Decisiones técnicas registradas:**
+
+- **expected_amount es input del caller F0** (NO computado por service). F0 simplification: comerciante hace la cuenta. F1+ trigger: Sprint 5 Sales context + feature flag `compute_expected_automatically` desde sales + movements.
+- **cash_movements NO emiten audit_log propio** — granulares (5-20/día), spam evitado. Audit ocurre vía `cash_session.closed*` con resumen agregado. RUNBOOK cash-discrepancy paso 2 consulta cash_movements directo por SQL para reconstruir flujo.
+- **Threshold $5000 ARS hardcoded F0** — alerting Pandora team consistency. F1+ trigger: feature flag por tenant si comerciante pide custom.
+- **classifyDescuadreSeverity boundary inclusiva**: `abs(descuadre) > $5000 → 'high'`. Exactamente $5000 = 'low'. Tests confirman.
+
+**Integration tests DIFERIDOS** (no urge, retomar con Sprint 5 que también necesita Docker):
+- Docker Desktop tuvo procesos zombies que requieren reinicio Windows. Owner eligió pausar + commit/push lo que hay + retomar próxima sesión.
+- 9+ tests integration documentados en `tests/integration/INTEGRATION-TODO.md`: T-CASH-01 UNIQUE partial concurrent (cross + same tenant) + T-CONC-02 (2 promises paralelas) + T-CASH-02 descuadre>$5000 + T-CASH-03 descuadre=0 + T-CASH-04 reason missing + bonus T-CASH-05..09 (triggers immutable post-close + cash_movements append-only + CHECK SQL + summary cross-tenant + schema smoke).
+- Estimación 5 archivos test, ~3-4h con Docker activo.
+- **Prioridad alta** — T-CASH-01 + T-CONC-02 validan UNIQUE partial concurrent (motivo de existir del schema). Sin verificación empírica, "1 session abierta por (tenant, sale_point)" es claim no probado.
+
+**Patrón consolidado (6to sprint consecutivo aplicando):**
+
+- pure helpers + wrappers DB + tx atómica
+- requireTracingContext gate en TODOS los wrappers
+- Multi-tenant guard `override_tenant_id` solo para `actor_type === 'system' | 'support'`
+- UUID validation strict ANTES de actor check
+- Atomicidad runInTx detecta `txOrDb === db`
+- Defense layered DB+service
+- Regla J1 EVENT-TAXONOMY respetada (skip audit en movements)
+- Wrapper smoke tests al final
+
+**Lecciones core (acumuladas):**
+- Drizzle-kit broken se repitió por 6ta vez → schemas nuevos siempre requieren CREATE TABLE manual en SQL custom migration. Patrón canónico Pandora ahora.
+- Advisor pass intermedio (antes de tests integration) sigue siendo crítico — previno schema gap catastrófico.
+- Triggers immutable necesitan ser EXPLÍCITOS en SQL — doc "inmutable" sin trigger es promesa no enforced.
+- Test names que mienten son variant peligrosa de comment rot. Refactor orden validation + name update = ambos honestos.
+
 ---
 
 *Decision Ledger versión 1.0 — 2026-05-26 / actualizado 2026-05-27 (Sesión 3 — cierre trilogía de spec arquitectónica) / actualizado 2026-05-28 AM (6 docs fundacionales: NON-GOALS, CAPABILITY-MAP, BOUNDED-CONTEXTS, OPERATIONAL-SEVERITY, RUNBOOKS, MONEY-POLICY) / actualizado 2026-05-28 PM (Auditoría Lotes 1+2+3+4+5: 89 fixes aplicados, 30 mejoras diferidas) + ROADMAP.md v1.0.0 creado / actualizado 2026-06-03 AM (Sprint 3 Inventory cerrado, 552/552 tests verdes) / actualizado 2026-06-03 PM (Spike A1 Supabase Local CLI cerrado + T-INV-04..08 portados: 577/577 verdes, Sprint 3 EMPÍRICAMENTE VALIDADO contra Postgres real) / actualizado 2026-06-03 PM cont. (Retroactivos Sprint 1+2 portados: 597/597 verdes, T-JOBS-01 + T-WEBHOOK-01 + T-AUDIT-01 + T-METRICS-01, bug #3 fixed en queue.service.ts execute raw, Sprint 1+2 EMPÍRICAMENTE VALIDADO)*
