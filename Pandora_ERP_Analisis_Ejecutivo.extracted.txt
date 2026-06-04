@@ -1,0 +1,1007 @@
+﻿
+
+
+
+
+
+
+
+PANDORA ERP
+Análisis Ejecutivo Integral
+
+Arquitectura · Seguridad · Performance · Escalabilidad · Negocio
+Versión 1.0 — Mayo 2026
+Confidencial — Uso interno
+
+
+# 1. Resumen ejecutivo
+Pandora ERP es un sistema de gestión de ventas SaaS desarrollado para el mercado argentino, con foco en comercios medianos que requieren facturación electrónica AFIP, integración con MercadoPago, y un panel de control moderno que permita la toma de decisiones en tiempo real. Este documento cubre de forma exhaustiva todos los aspectos técnicos, de seguridad, de negocio y operacionales del proyecto, con el objetivo de servir como referencia estratégica para el desarrollo y lanzamiento del producto.
+
+INFO: El SRS v3.0 existente es sólido. Los gaps identificados son concretos y acotados. La doctrina correcta es: replicar la cultura operacional de Linear, Stripe y Cloudflare sin replicar su infraestructura.
+
+
+## 1.1 Estado general del proyecto
+Componente
+Estado
+Prioridad
+Detalle
+Diseño de UI/UX
+Cubierto
+Alta
+Dashboard completo, componentes definidos
+Stack tecnológico
+Cubierto
+Alta
+Next.js 16, Supabase, Vercel, TypeScript
+Arquitectura base (SRS)
+Cubierto
+Alta
+SRS v3.0 con 17 ADRs formalizados
+Configuración por entorno
+Crítico
+Urgente
+env.ts con Zod no implementado aún
+Seguridad — rate limiting
+Crítico
+Urgente
+Falta en Server Actions críticas
+Seguridad — webhooks MP
+Crítico
+Urgente
+Firma HMAC no verificada
+Security headers HTTP
+Crítico
+Urgente
+next.config.js no configurado
+Testing
+Agregar
+Alta
+Vitest + Playwright por implementar
+CI/CD pipeline
+Agregar
+Alta
+GitHub Actions pendiente
+Onboarding de usuarios
+Agregar
+Alta
+Activation tracking no implementado
+Observabilidad
+Verificar
+Media
+Sentry sí, PostHog y logs pendientes
+Monetización
+Agregar
+Alta
+Modelo de pricing a definir
+Legal / Ley 25.326
+Verificar
+Media
+Revisar cumplimiento antes de lanzar
+
+
+# 2. Stack tecnológico completo
+La selección tecnológica de Pandora está orientada a maximizar la velocidad de desarrollo y la confiabilidad operacional con un equipo pequeño. Cada decisión está documentada en los ADRs del SRS. El principio rector es: herramientas maduras con ecosistemas grandes, que permitan contratar desarrolladores fácilmente y escalar sin reescribir.
+
+
+## 2.1 Frontend
+Componente
+Estado
+Prioridad
+Detalle
+Next.js 16
+Cubierto
+Core
+Framework full-stack. Turbopack estable, PPR, proxy.ts
+TypeScript strict
+Cubierto
+Core
+Type safety end-to-end obligatorio
+Tailwind CSS
+Cubierto
+Core
+Utility-first, consistencia visual
+shadcn/ui
+Cubierto
+Core
+Componentes accesibles sobre Radix UI
+Recharts
+Agregar
+Alta
+Charts interactivos para el dashboard
+React Hook Form
+Agregar
+Alta
+Gestión de formularios. Pandora tiene 20+ forms
+Zustand
+Agregar
+Alta
+Estado global de UI: sidebar, modales, drawers
+TanStack Query
+Agregar
+Media
+Cache y actualización de datos en cliente
+Biome
+Agregar
+Media
+Reemplaza ESLint + Prettier. 10-20x más rápido
+
+
+## 2.2 Backend & base de datos
+Componente
+Estado
+Prioridad
+Detalle
+Supabase (Postgres)
+Cubierto
+Core
+DB principal con RLS, Auth, Realtime, Storage
+Supabase Auth
+Cubierto
+Core
+Autenticación con JWT, RLS multi-tenant
+Zod
+Cubierto
+Core
+Validación de esquemas y env variables
+Server Actions
+Cubierto
+Core
+Next.js 16 — lógica server sin API routes extra
+Pino
+Cubierto
+Core
+Logging estructurado según SRS sección 13
+Drizzle ORM
+Fase 1+
+Baja
+Reemplazar cuando Supabase client sea insuficiente
+BullMQ
+Fase 1+
+Media
+Background jobs. F0 usa Postgres jobs directos
+Upstash Redis
+Fase 1+
+Media
+Rate limiting distribuido y caché
+
+
+## 2.3 Infraestructura & deploy
+Componente
+Estado
+Prioridad
+Detalle
+Vercel
+Cubierto
+Core
+Deploy, CDN, Edge Network, staging + prod separados
+GitHub
+Cubierto
+Core
+Control de versiones
+GitHub Actions
+Agregar
+Alta
+CI/CD: tests, lint, build, deploy automático a staging
+Uptime Robot
+Agregar
+Alta
+Monitor /api/health — gratis hasta 50 monitores
+Sentry
+Cubierto
+Alta
+Error tracking y performance
+PostHog
+Agregar
+Alta
+Product analytics y activation tracking — gratis
+Axiom / Better Stack
+Fase 1+
+Media
+Log aggregation cuando el volumen lo justifique
+
+
+## 2.4 Servicios externos
+Componente
+Estado
+Prioridad
+Detalle
+MercadoPago
+Cubierto
+Core
+Pagos locales AR — checkout, webhooks, refunds
+AFIP Web Services
+Cubierto
+Core
+Facturación electrónica WSFE, WSAA, homologación
+Resend
+Cubierto
+Alta
+Emails transaccionales con dominio propio
+React Email
+Agregar
+Media
+Templates de email tipados en React
+Twilio
+Cubierto
+Media
+SMS y WhatsApp para notificaciones
+Vercel AI SDK
+Agregar
+Alta
+Asistente IA del panel — ya visible en el diseño
+Stripe
+Fase 2+
+Baja
+Solo si se expande fuera de Argentina
+
+
+# 3. Diseño y funcionalidad
+El diseño del dashboard de Pandora es una ventaja competitiva real. El riesgo principal no es el diseño en sí mismo, sino la forma en que se cargan los datos que lo alimentan. Un dashboard visualmente excelente con datos lentos o inconsistentes destruye la confianza del usuario más rápido que un diseño mediocre con datos correctos.
+
+
+## 3.1 Principios del diseño implementado
+Dashboard principal con métricas en tiempo real: facturación, clientes activos, pipeline
+Panel lateral de IA para consultas contextuales sobre el negocio
+Reuniones y calendario integrados en la columna derecha
+Acciones rápidas: nuevo deal, agregar contacto, nueva tarea, subir archivo
+Navegación lateral con todas las secciones del ERP
+
+
+## 3.2 Reglas para mantener calidad sin sacrificar performance
+
+### 3.2.1 Skeletons obligatorios
+Cada widget del dashboard debe tener su estado de carga con skeleton. Sin esto, los usuarios ven layouts rotos o en blanco mientras los datos llegan. Esto es especialmente crítico para los números de facturación en tiempo real.
+
+ATENCIÓN: Regla: ningún componente del dashboard puede renderizarse sin un skeleton loader correspondiente. Esto aplica a todos los panels de métricas, gráficos y listas.
+
+
+### 3.2.2 Server Components para datos pesados
+En Next.js 16, los charts y KPIs se fetchean en el servidor como Server Components. El cliente recibe HTML ya renderizado. Esto elimina el flash de carga y es 2-3x más rápido que fetch desde el cliente.
+
+
+### 3.2.3 Separación de datos en vivo vs históricos
+Los datos deben clasificarse en dos categorías con estrategias distintas: datos en vivo (facturación del día, notificaciones) que usan Supabase Realtime subscriptions; y datos históricos (gráficos mensuales, comparativas) que usan queries con caché sobre tablas de resúmenes pre-agregados, no sobre las tablas de transacciones directamente.
+
+
+### 3.2.4 Daily summaries pre-agregados (Fase 1)
+Los gráficos de tendencia mensual no deben consultar la tabla de ventas completa en cada render. En Fase 1 se implementan tablas de resúmenes diarios pre-calculados que reducen las queries a lecturas simples de N filas por período.
+
+CRÍTICO: Anti-patrón crítico: dashboards bonitos con datos de demo o sin datos reales generan pérdida de confianza inmediata. Mejor tener pocos KPIs reales que muchos charts vacíos.
+
+
+# 4. Arquitectura de código
+La arquitectura de código es la decisión más costosa de cambiar después del primer cliente real. Pandora usa un monolito modular en Next.js 16 con separación de capas. Este patrón permite evolucionar hacia microservicios en Fase 3+ sin reescribir el core del negocio.
+
+
+## 4.1 Estructura de carpetas recomendada
+La organización del código sigue el principio de "feature-first" dentro de las convenciones de Next.js App Router:
+src/app/ — rutas Next.js App Router (pages, layouts, loading, error)
+src/app/actions/ — Server Actions organizadas por dominio de negocio
+src/components/ — componentes React reutilizables sin lógica de negocio
+src/lib/ — utilidades, helpers, clientes de servicios externos
+src/lib/services/ — lógica de negocio (SaleService, InvoiceService, etc.)
+src/config/env.ts — configuración centralizada con validación Zod (CRÍTICO)
+src/lib/errors.ts — taxonomía centralizada de errores
+src/types/ — tipos TypeScript compartidos
+
+
+## 4.2 Configuración por entorno — GAP CRÍTICO
+Este es el gap más urgente identificado. Sin un sistema de configuración centralizado, los secretos pueden aparecer en logs, el staging puede conectarse a producción accidentalmente, y los errores de variables faltantes se descubren en producción.
+
+CRÍTICO: src/config/env.ts con validación Zod es el primer archivo que debe escribirse antes de cualquier service. Todos los servicios dependen de esta configuración desde el día 1.
+
+El archivo debe incluir categorías separadas: secretos (MP_ACCESS_TOKEN, SUPABASE_SERVICE_ROLE_KEY), variables públicas (NEXT_PUBLIC_*), configuración AFIP (env, certs, CUIT, timeout), y configuración de observabilidad (LOG_LEVEL, SENTRY_DSN). El proceso debe fallar en el arranque si cualquier variable requerida está ausente.
+
+
+## 4.3 Taxonomía de errores
+Cada error del sistema debe pertenecer a una categoría con código tipado. Esto permite que el frontend muestre mensajes útiles, que los logs sean consultables por código, y que el soporte entienda qué pasó sin acceso al stack trace.
+VALIDATION_ERROR — datos inválidos del usuario
+PERMISSION_DENIED — acceso no autorizado
+NOT_FOUND — recurso inexistente
+RATE_LIMIT_EXCEEDED — demasiadas requests
+AFIP_ERROR — error en servicios AFIP (con sub-códigos)
+MP_ERROR — error en MercadoPago (con sub-códigos)
+INTERNAL_ERROR — error no esperado del sistema
+
+
+## 4.4 State machines y máquinas de estado
+El SRS v3.0 tiene 12 state machines formalizadas para los flujos críticos del negocio. Esto incluye el ciclo de vida de una venta, el proceso de facturación AFIP, el estado de un pago MP, y el proceso de cobro en POS. Ninguna transición de estado debe ocurrir fuera de estas máquinas.
+
+
+## 4.5 Patrones a evitar
+CRÍTICO: Los siguientes patrones están explícitamente prohibidos por los ADRs del SRS: microservicios antes de Fase 3, CQRS en el core, event sourcing, GraphQL público en F0, service mesh, Kubernetes, Kafka, Vault enterprise.
+
+
+# 5. Base de datos
+Pandora usa PostgreSQL a través de Supabase como única fuente de verdad. La arquitectura de datos es uno de los aspectos más costosos de modificar después del primer cliente real, por lo que las decisiones de schema, índices y multi-tenancy deben estar correctas desde Fase 0.
+
+
+## 5.1 Multi-tenancy con Row Level Security
+Toda la data de Pandora está aislada por empresa (tenant) usando RLS de PostgreSQL con auth.jwt(). Este patrón garantiza que un error en el código de aplicación no pueda filtrar datos entre tenants. El SRS tiene tests obligatorios de cross-tenant que deben ejecutarse en cada deploy.
+
+CRÍTICO: RLS es la línea de defensa final para el aislamiento de datos. Debe estar activo en TODAS las tablas sin excepción. Una tabla sin RLS es una vulnerabilidad IDOR directa.
+
+
+## 5.2 Índices críticos
+Los índices deben crearse junto con las tablas, no después. Los índices más importantes para el performance del dashboard:
+(company_id, created_at DESC) en sales, invoices, cash_movements
+(company_id, status) en deals, tasks
+(user_id, created_at DESC) en login_attempts
+(company_id, date) en daily_summaries para gráficos de tendencia
+
+
+## 5.3 Tablas de audit log
+El audit log debe ser append-only e inmutable. Cada operación crítica (ventas, facturas, cambios de configuración) genera una entrada con: timestamp, user_id, company_id, action, before (JSON), after (JSON), correlation_id, ip_address. La columna before/after debe implementarse desde el principio porque agregarla después requiere backfill de datos históricos.
+
+
+## 5.4 Tablas de movimientos append-only
+Las tablas stock_movements y cash_movements son append-only por diseño. Nunca se actualiza ni elimina un movimiento — se crea un movimiento de corrección. Esto es equivalente a event sourcing parcial sin su complejidad de implementación.
+
+
+## 5.5 Migraciones
+Todas las migraciones deben ser: declarativas (usando herramientas de Supabase), reversibles siempre que sea posible, y ejecutadas con procedimientos de checklist en producción. Nunca ejecutar migraciones directamente en producción sin validar en staging primero. Las migraciones destructivas (DROP COLUMN, DELETE masivo) deben tener checklist con firma del responsable.
+
+
+## 5.6 Backup y recovery
+Supabase Pro incluye point-in-time recovery (PITR) hasta 7 días. Para Fase 0 esto es suficiente. El plan de recovery debe contemplar: tiempo de restauración estimado (RTO), pérdida máxima de datos aceptable (RPO), procedimiento paso a paso documentado, y al menos un test de restauración antes del lanzamiento.
+
+ATENCIÓN: Verificar que el plan de Supabase contratado incluye PITR. El plan gratuito NO incluye backups automáticos con point-in-time recovery. Para un SaaS con datos financieros, esto no es negociable.
+
+
+# 6. Seguridad integral
+La seguridad de Pandora debe pensarse en capas concéntricas: la primera capa (autenticación) protege el acceso, la segunda (autorización) protege los recursos dentro del sistema, la tercera (validación) protege contra datos maliciosos, y la cuarta (monitoreo) detecta actividad anómala. Ninguna capa reemplaza a las otras.
+
+
+## 6.1 Estado actual de seguridad
+Componente
+Estado
+Prioridad
+Detalle
+Supabase Auth + RLS
+Cubierto
+Core
+Auth JWT y aislamiento multi-tenant
+HTTPS / TLS
+Cubierto
+Core
+Vercel lo gestiona automáticamente
+SQL injection
+Cubierto
+Core
+Supabase client usa queries parametrizadas
+Audit log inmutable
+Cubierto
+Core
+Append-only con transacción según SRS
+CSRF
+Cubierto
+Core
+Next.js 16 Server Actions lo mitigan
+JWT en cada Server Action
+Crítico
+Urgente
+Debe verificarse explícitamente en cada action
+Rate limiting
+Crítico
+Urgente
+Falta en login, AFIP, MP, Server Actions
+Firma webhooks MP
+Crítico
+Urgente
+MP_WEBHOOK_SECRET definido pero no usado
+Security headers HTTP
+Crítico
+Urgente
+next.config.js no configurado
+Secrets en logs
+Crítico
+Urgente
+Scrubbing en Sentry no configurado
+Price tampering
+Crítico
+Urgente
+Precios no validados server-side
+Credential stuffing
+Agregar
+Alta
+Rate limit login + lockout + Supabase config
+Encriptación campos sensibles
+Agregar
+Media
+CUIT, CBU, datos fiscales
+2FA para administradores
+Fase 1+
+Media
+Supabase soporta TOTP nativo
+WAF (Cloudflare)
+Fase 1+
+Media
+Con 10+ clientes activos
+Pentest básico
+Fase 1+
+Media
+OWASP ZAP antes del lanzamiento público
+
+
+## 6.2 Ataques de alta probabilidad para SaaS argentino
+
+### 6.2.1 Credential stuffing
+Uso de listas de contraseñas filtradas de otras plataformas para intentar acceder. Es el ataque más común contra aplicaciones de negocio. Mitigaciones: rate limiting de login (5 intentos/5 minutos por IP+email), leaked password protection de Supabase (integrado con HaveIBeenPwned), lockout progresivo, alerta por email en login desde IP nueva.
+
+
+### 6.2.2 Webhook spoofing de MercadoPago
+El atacante envía un POST al endpoint de webhooks simulando una notificación de pago confirmado sin haber pagado realmente. Es crítico para cualquier SaaS con pagos en Argentina. La mitigación es verificar la firma HMAC-SHA256 que MP incluye en cada webhook usando el MP_WEBHOOK_SECRET antes de procesar cualquier notificación.
+
+
+### 6.2.3 Price tampering
+El usuario modifica el precio de un producto en el cliente (DevTools, proxy) antes de enviarlo al servidor. Si el servidor confía en el precio enviado por el cliente, el atacante puede comprar productos a precio cero. La mitigación es simple: el servidor siempre recalcula el precio desde la base de datos usando el product_id, nunca usa el precio enviado por el cliente.
+
+
+### 6.2.4 IDOR — Insecure Direct Object Reference
+Un usuario autenticado accede a datos de otra empresa cambiando un ID en la URL o en el body de una request. Para Pandora, esto significaría ver deals, facturas o clientes de otro tenant. Está cubierto por RLS en Supabase, pero debe verificarse que TODAS las tablas tienen RLS activo y que ninguna Server Action hace queries sin el filtro de company_id.
+
+
+### 6.2.5 XSS — Cross-Site Scripting
+Un usuario malicioso ingresa código HTML o JavaScript en un campo de texto (nombre de empresa, descripción de producto, nota de deal) que luego se renderiza sin sanitizar. Next.js escapa el output por defecto, pero hay casos donde se usa dangerouslySetInnerHTML o se renderizan datos sin sanitizar. Mitigación: Content Security Policy estricta en los headers HTTP y validación con Zod en todos los inputs.
+
+
+## 6.3 Security headers HTTP obligatorios
+Los siguientes headers deben configurarse en next.config.js antes del primer deploy a producción:
+Content-Security-Policy (CSP) — define qué recursos puede cargar la página
+X-Frame-Options: DENY — previene clickjacking via iframe
+X-Content-Type-Options: nosniff — previene MIME sniffing
+Referrer-Policy: strict-origin-when-cross-origin — controla información de referrer
+Strict-Transport-Security (HSTS) — fuerza HTTPS en futuros accesos
+Permissions-Policy — deshabilita APIs del navegador no usadas (cámara, micrófono, etc.)
+
+
+## 6.4 Gestión de secretos
+Los secretos de la aplicación (tokens de API, credenciales AFIP, webhook secrets) deben gestionarse según estas reglas:
+Nunca en el código fuente — nunca hardcodeados, ni en comentarios
+Nunca en logs — Sentry debe tener scrubbing configurado para tokens y keys
+Nunca en el cliente — todas las variables secretas son server-only
+Entornos separados — staging tiene sus propios secretos, distintos de producción
+Rotación documentada — procedimiento escrito para rotar cada secreto sin downtime
+
+
+## 6.5 Compliance — Ley 25.326 Argentina
+Pandora almacena datos personales de comerciantes y sus clientes (nombre, CUIT, dirección, datos de contacto). La Ley 25.326 de Protección de Datos Personales de Argentina establece obligaciones que aplican al proyecto:
+Informar a los titulares qué datos se almacenan y con qué finalidad
+Obtener consentimiento explícito para el tratamiento de datos sensibles
+Implementar medidas de seguridad proporcionales a la sensibilidad de los datos
+Permitir a los titulares acceder, rectificar y eliminar sus datos (derecho ARCO)
+No transferir datos a terceros sin consentimiento previo
+
+ATENCIÓN: Verificar con un asesor legal antes del lanzamiento público. Incumplir la Ley 25.326 puede resultar en multas y, más importante, en pérdida de confianza de los clientes.
+
+
+# 7. Performance y optimización
+La performance de Pandora impacta directamente en la retención de clientes. Un dashboard lento en un sistema de ventas genera abandono. Los comerciantes usan Pandora durante el horario pico de ventas: cualquier lentitud en ese momento tiene consecuencias de negocio directas.
+
+
+## 7.1 Core Web Vitals — objetivos
+Métrica
+Estado
+Target
+Contexto
+LCP (Largest Contentful Paint)
+Objetivo
+< 2.5s
+Carga del dashboard principal
+FID / INP (Interactivity)
+Objetivo
+< 200ms
+Respuesta a clicks en el POS
+CLS (Cumulative Layout Shift)
+Objetivo
+< 0.1
+Estabilidad visual del dashboard
+TTFB (Time to First Byte)
+Objetivo
+< 800ms
+Primer byte desde Vercel Edge
+
+
+## 7.2 Estrategias de optimización por capa
+
+### 7.2.1 Rendering strategy
+Server Components para toda la data estática y semi-estática del dashboard
+Client Components solo para interactividad: forms, modales, realtime widgets
+Partial Pre-Rendering (PPR) de Next.js 16 para el dashboard: shell estático + contenido dinámico streameado
+Suspense boundaries en cada panel independiente para carga progresiva
+
+
+### 7.2.2 Optimización de queries
+Índices compuestos en (company_id, created_at) en todas las tablas principales
+Tablas de resúmenes pre-agregados para los gráficos del dashboard
+Paginación con cursor (no offset) para listas largas de deals, clientes, facturas
+Select selectivo: nunca SELECT * en queries de producción
+Connection pooling de Supabase activado (pgBouncer)
+
+
+### 7.2.3 Caché en capas
+Next.js cache para páginas y segmentos estáticos
+Revalidación on-demand con revalidateTag cuando cambian datos
+Supabase Realtime solo para datos que requieren actualizaciones inmediatas
+Upstash Redis (Fase 1) para rate limiting distribuido y caché de sesiones
+
+
+### 7.2.4 Assets y multimedia
+next/image para todas las imágenes con lazy loading automático
+Fuentes auto-optimizadas con next/font
+Bundle analysis periódico con Next.js Bundle Analyzer (disponible en 16.1)
+Code splitting por ruta automático con App Router
+
+
+# 8. Testing
+La estrategia de testing de Pandora sigue el principio de pirámide: muchos tests unitarios rápidos, algunos tests de integración para los flujos críticos, y pocos tests E2E para los happy paths de negocio. El objetivo no es cobertura del 100% sino confianza en los flujos que generan dinero.
+
+
+## 8.1 Qué testear primero (Fase 0)
+Con recursos limitados, los primeros tests deben cubrir los flujos que, si fallan, generan consecuencias directas de negocio o legales:
+Cálculo de totales y descuentos en ventas (errores de redondeo fiscal son un riesgo real)
+Generación y validación de XML para AFIP
+Lógica de estado de pagos MercadoPago
+RLS cross-tenant: verificar que un usuario no puede ver datos de otra empresa
+Rate limiting: verificar que se bloquea correctamente
+Webhook signature verification de MP
+
+
+## 8.2 Stack de testing
+Componente
+Estado
+Prioridad
+Detalle
+Vitest
+Agregar
+Alta
+Unit e integration tests. Compatible con TypeScript y Next.js
+@testing-library
+Agregar
+Alta
+Testing de componentes React sin implementación
+Playwright
+Fase 1+
+Alta
+E2E: login, crear venta, emitir factura, cobrar
+Supabase local
+Agregar
+Media
+Supabase CLI para tests con DB local aislada
+MSW
+Agregar
+Media
+Mock Service Worker para mockear AFIP y MP en tests
+
+
+## 8.3 Tests E2E críticos (Fase 1)
+Los siguientes flujos deben tener tests E2E antes del lanzamiento público:
+Login y onboarding de nueva empresa
+Crear y cerrar una venta en el POS
+Emitir una factura electrónica a AFIP en homologación
+Procesar un pago con MercadoPago en sandbox
+Acceder al dashboard y verificar que los números son correctos
+Verificar que un usuario no puede acceder a datos de otra empresa
+
+
+# 9. CI/CD y DevOps
+Un pipeline de CI/CD bien configurado elimina errores humanos en el proceso de deploy y permite iterar rápido con confianza. Para un equipo pequeño como el de Pandora, la automatización del deploy es especialmente crítica porque no hay equipo de QA separado.
+
+
+## 9.1 Ambientes recomendados
+Ambiente
+Hosting
+Uso
+Configuración
+Development
+Local
+Desarrollador
+Supabase local, AFIP homologación, MP sandbox
+Staging
+Vercel
+Pre-producción
+Supabase separado, AFIP homologación, MP sandbox
+Production
+Vercel
+Producción
+Supabase producción, AFIP producción, MP producción
+
+CRÍTICO: AFIP_ENV=homologacion en staging es obligatorio. Nunca conectar staging a AFIP producción. Un error en staging puede generar CAEs reales que contaminan los datos fiscales del cliente.
+
+
+## 9.2 Pipeline de GitHub Actions
+El pipeline recomendado para Pandora tiene tres etapas secuenciales:
+Lint & Type check — Biome + TypeScript (< 30 segundos). Si falla, no continúa.
+Unit & Integration tests — Vitest con Supabase local (< 2 minutos). Si falla, no continúa.
+Deploy a staging — Vercel preview automático en cada PR (< 3 minutos).
+
+Deploy a producción es manual con checklist. Auto-deploy a producción solo cuando cobertura de tests supere 80% y rollback automático esté probado.
+
+
+## 9.3 Checklist de deploy a producción
+Correr test suite completa en staging — todos deben pasar
+Verificar AFIP_ENV=produccion en variables de Vercel
+Ejecutar migraciones de DB en staging primero
+Validar que /api/health responde 200
+Ejecutar migraciones en producción
+Deploy en Vercel
+Verificar /api/health post-deploy
+Smoke test manual: login, crear venta, verificar dashboard
+Mantener versión anterior disponible para rollback 15 minutos
+
+
+# 10. Observabilidad y monitoreo
+La observabilidad de Pandora determina cuánto tiempo se tarda en detectar y resolver un incidente. Para un SaaS de ventas, un incidente a las 21:00 durante un pico de ventas puede costar clientes. El objetivo es detectar problemas antes de que los clientes los reporten.
+
+
+## 10.1 Stack de observabilidad
+Componente
+Estado
+Prioridad
+Detalle
+Sentry
+Cubierto
+Alta
+Error tracking y performance monitoring
+Pino
+Cubierto
+Alta
+Logging estructurado con correlation IDs
+Uptime Robot
+Agregar
+Alta
+Monitor /api/health cada 5 minutos — gratis
+PostHog
+Agregar
+Alta
+Product analytics y activation events — gratis
+Vercel Analytics
+Cubierto
+Media
+Core Web Vitals por ruta
+Axiom
+Fase 1+
+Media
+Log aggregation cuando supere los logs de Vercel
+
+
+## 10.2 Correlation IDs
+Cada request debe tener un correlation_id único que se propaga a todos los logs, llamadas a AFIP, llamadas a MP, y eventos de error en Sentry. Esto permite "rastrear" una venta específica desde el click del cajero hasta el XML de AFIP, incluyendo todos los errores intermedios.
+
+
+## 10.3 Health check endpoint
+El endpoint GET /api/health debe retornar el estado de todas las dependencias críticas: conexión a Supabase, conectividad con AFIP (ping a homologación), conectividad con MP, y versión del deploy. Este endpoint es monitorizado por Uptime Robot cada 5 minutos y debe responder en menos de 2 segundos.
+
+
+## 10.4 Alertas críticas
+Las siguientes condiciones deben generar alertas inmediatas (email/Slack):
+Tasa de errores 5xx superior al 1% en los últimos 5 minutos
+Latencia del dashboard superior a 3 segundos
+Health check falla 2 veces consecutivas
+Error de conexión a Supabase o AFIP
+Más de 10 errores de autenticación fallida desde la misma IP en 1 minuto
+Transacción de venta sin confirmación de AFIP después de 60 segundos
+
+
+# 11. Onboarding y activación de usuarios
+El onboarding es el proceso por el cual un nuevo cliente pasa de registrarse a generar su primera venta real. Es la métrica de activación más importante del negocio. Sin un onboarding bien diseñado, la mayoría de los registros nunca llegan a ser clientes activos.
+
+
+## 11.1 Activation tracking — GAP identificado
+El SRS menciona onboarding wizard pero no tiene un sistema de tracking de activación que informe decisiones de retención. Esto significa que actualmente no hay forma de saber en qué paso los nuevos clientes abandonan el onboarding.
+
+ATENCIÓN: Implementar activation tracking con PostHog con 5 eventos clave. Sin esto se opera a ciegas en retención. Tiene 4 horas de trabajo y ROI inmediato.
+
+
+## 11.2 Eventos de activación recomendados
+empresa_creada — completó el wizard de setup inicial
+primer_producto_agregado — configuró al menos un producto
+primer_cliente_creado — agregó su primer cliente
+primera_venta_creada — procesó su primera venta
+primera_factura_emitida — emitió su primera factura AFIP
+
+La secuencia empresa_creada → primera_factura_emitida define el "momento AHA" del producto. El tiempo entre estos dos eventos es la métrica de activación principal. Si supera 7 días, el onboarding tiene un problema que debe resolverse.
+
+
+## 11.3 Wizard de setup
+El wizard de onboarding debe completarse en menos de 10 minutos. Los pasos sugeridos son:
+Datos de la empresa (CUIT, razón social, condición IVA, dirección fiscal)
+Configuración AFIP (certificado, punto de venta)
+Primer producto o servicio
+Primer cliente (o saltear para probar con datos de demo)
+Tour guiado del dashboard de 2 minutos
+
+
+# 12. Monetización y pricing
+El modelo de pricing de Pandora debe definirse antes del lanzamiento. Las decisiones de pricing son difíciles de cambiar una vez que hay clientes activos, y el modelo equivocado puede generar fricción en la adopción o márgenes insostenibles.
+
+
+## 12.1 Modelo de pricing recomendado
+Para un SaaS B2B de gestión en Argentina, el modelo más efectivo en etapas tempranas es por usuario activo o por empresa, con pricing mensual en pesos (ARS) con ajuste por inflación. Las opciones principales:
+
+Tier
+Estado
+Alcance
+Descripción
+Free trial
+Recomendado
+14-30 días
+Acceso completo, sin tarjeta requerida
+Plan Starter
+Recomendado
+1-3 usuarios
+Funcionalidades core: POS, facturación, dashboard
+Plan Pro
+Recomendado
+Usuarios ilimitados
+Reportes avanzados, IA, integraciones
+Plan Enterprise
+Fase 2+
+Multi-sucursal
+Soporte dedicado, SLA, personalización
+
+
+## 12.2 Billing con MercadoPago
+La facturación recurrente de Pandora a sus propios clientes debe implementarse con suscripciones de MercadoPago. Consideraciones clave:
+Suscripciones mensuales en ARS con ajuste automático por inflación
+Webhooks de cobro exitoso/fallido para gestionar el estado de la cuenta
+Período de gracia de 3-5 días ante pagos fallidos antes de suspender acceso
+Factura electrónica Pandora → cliente por cada cobro (Pandora facturando a sus suscriptores)
+
+
+## 12.3 Métricas de negocio clave
+MRR (Monthly Recurring Revenue) — objetivo Fase 0: 5 clientes pagando
+Churn rate — objetivo: < 5% mensual
+LTV / CAC ratio — objetivo: > 3x
+Tiempo de payback — objetivo: < 6 meses
+
+
+# 13. Accesibilidad
+La accesibilidad de Pandora impacta tanto en la inclusión de usuarios con discapacidades como en la calidad general del código y la experiencia de usuario. shadcn/ui está construido sobre Radix UI, que incluye accesibilidad por defecto en sus componentes.
+
+
+## 13.1 Estado actual
+El uso de shadcn/ui y Radix UI proporciona accesibilidad de base en los componentes de UI. Sin embargo, hay aspectos que deben verificarse manualmente:
+Contraste de colores — el diseño usa grises y purples que deben verificarse contra WCAG AA (ratio 4.5:1 mínimo)
+Navegación por teclado — crítica para el POS donde los operadores usan atajos F1-F12 según el SRS
+Focus visible — todos los elementos interactivos deben tener indicador de foco visible
+Textos alternativos en imágenes y gráficos
+Landmarks y estructura semántica del HTML
+
+
+## 13.2 POS keyboard-first
+El SRS tiene una tabla completa de atajos F1-F12 para el POS. Esta es una característica de accesibilidad operacional: permite a cajeros operar sin ratón durante el horario pico de ventas, reduciendo el tiempo por transacción y los errores de operación.
+
+
+# 14. Escalabilidad
+La escalabilidad de Pandora está planificada en fases. La arquitectura actual (monolito modular en Vercel + Supabase) puede sostener cientos de clientes activos sin cambios arquitecturales mayores. Los cambios de escalado se introducen cuando hay evidencia de que son necesarios, no de forma preventiva.
+
+
+## 14.1 Capacidad del stack actual
+Componente
+Capacidad
+Fase
+Contexto
+Vercel
+Escala automático
+Fase 0-3
+Serverless, sin límite de instancias concurrentes
+Supabase Free
+Hasta 500 MB
+Fase 0
+Demo, early adopters, hasta ~10 clientes
+Supabase Pro
+Hasta 8 GB + PITR
+Fase 0-2
+Producción real, punto de partida recomendado
+Supabase Team
+Sin límite
+Fase 2+
+Cuando supere los 8 GB o necesite SLA
+
+
+## 14.2 Camino de escalado por fases
+
+### Fase 0 — hasta 20 clientes activos
+Vercel Hobby o Pro + Supabase Pro
+Rate limiting en-proceso (sin Redis)
+Logs en Vercel + Sentry
+Background jobs en Postgres (pg_cron o polling)
+
+
+### Fase 1 — 20 a 200 clientes activos
+BullMQ con Redis para background jobs robustos
+Upstash Redis para rate limiting distribuido y caché
+Axiom o Better Stack para log aggregation
+Cloudflare WAF para protección adicional
+
+
+### Fase 2 — 200 a 2000 clientes activos
+Supabase Team o equivalente con read replicas
+Pre-aggregation jobs para analytics del dashboard
+OpenTelemetry para tracing distribuido
+CDN optimizado para assets estáticos de clientes
+
+
+### Fase 3+ — más de 2000 clientes activos
+Evaluar extracción de servicios de alta carga como microservicios
+Multi-región si la base de clientes se expande fuera de Argentina
+Database sharding si Supabase Team alcanza sus límites
+
+CRÍTICO: Lo que NO debe hacerse en ninguna fase antes de que sea necesario: Kubernetes, Kafka, service mesh, event sourcing en el core, CQRS, multi-región preventivo, microservicios tempranos.
+
+
+# 15. Landing page y adquisición de clientes
+La landing page de Pandora es la primera impresión del producto para los potenciales clientes. Debe comunicar valor específico en 5 segundos y tener una llamada a la acción clara. El SEO es un canal de adquisición de largo plazo que debe trabajarse desde el lanzamiento.
+
+
+## 15.1 Elementos críticos de la landing
+Propuesta de valor clara y específica para el mercado AR — no genérica
+Demostración visual del dashboard — captura o video de 30 segundos
+Prueba social — aunque sea mínima: "Confiado por X comercios en Argentina"
+CTA principal: "Probar gratis 30 días — sin tarjeta de crédito"
+Sección de integraciones visibles: AFIP, MercadoPago, logo de Supabase/Vercel
+Precios claros y transparentes en ARS
+Preguntas frecuentes que respondan objeciones de venta comunes
+
+
+## 15.2 SEO para SaaS argentino
+Las palabras clave de mayor intención para Pandora en Argentina:
+"sistema de gestión de ventas Argentina" — alta intención, baja competencia
+"facturación electrónica AFIP software" — alta intención comercial
+"CRM ventas Argentina" — volumen medio, intención media
+"ERP pymes Argentina" — competencia media, clientes calificados
+
+INFO: Next.js 16 con App Router tiene SSR y SSG nativos. La landing page debe ser un Server Component estático para máxima velocidad de carga y puntuación de SEO.
+
+
+# 16. Documentación
+La documentación de Pandora tiene dos audiencias distintas con necesidades distintas: el equipo de desarrollo (documentación técnica) y los clientes (documentación de usuario). Ambas son importantes para la operación sostenible del producto.
+
+
+## 16.1 Documentación técnica
+CLAUDE.md — instrucciones para el asistente IA de desarrollo con contexto del proyecto
+ADRs (Architecture Decision Records) — decisiones arquitecturales con contexto y alternativas
+.env.example — todas las variables con comentarios por categoría
+README.md — instrucciones de setup local, comandos de desarrollo, estructura del proyecto
+Runbook de operaciones — cómo responder a incidentes comunes (AFIP caído, MP caído, Supabase lento)
+
+
+## 16.2 Documentación de usuario
+Guía de inicio — cómo configurar AFIP, primer producto, primera venta
+Base de conocimiento — preguntas frecuentes, casos de uso comunes
+Changelog público — qué cambió en cada versión, desde la perspectiva del usuario
+
+
+# 17. Roadmap de implementación
+El roadmap prioriza las acciones por impacto inmediato en seguridad, calidad del código, y capacidad de llegar al primer cliente real. Está organizado en semanas, no en meses.
+
+
+## 17.1 Esta semana — antes del primer commit productivo
+CRÍTICO: Estas 4 acciones son pre-requisitos para cualquier código de negocio. Sin ellas, el primer deploy a producción tendrá vulnerabilidades conocidas.
+
+Crear src/config/env.ts con validación Zod completa (4 horas)
+Crear .env.example con todos los nombres comentados por categoría (1 hora)
+Configurar security headers en next.config.js (2 horas)
+Implementar verificación de firma HMAC en webhook de MP (3 horas)
+
+
+## 17.2 Semana 1-2 — fundaciones de seguridad y calidad
+Rate limiting en-proceso para Server Actions críticas (login, ventas, AFIP)
+Scrubbing de secretos en Sentry configurado
+Idempotency keys en ventas para prevenir doble cobro
+Tabla login_attempts + alerta email por IP nueva
+Activation tracking con PostHog (5 eventos clave)
+Health check endpoint /api/health
+Uptime Robot configurado sobre /api/health
+
+
+## 17.3 Fase 0 — 4-6 semanas — producto funcional
+Core del POS: crear venta, agregar productos, aplicar descuentos
+Integración AFIP completa en homologación
+Integración MercadoPago: checkout, webhooks, estados de pago
+Dashboard con datos reales: facturación, clientes, pipeline
+Onboarding wizard completo
+Testing de flujos críticos con Vitest
+GitHub Actions CI/CD a staging
+
+
+## 17.4 Fase 1 — primer cliente real → escalar
+BullMQ para background jobs (reconciliación AFIP, emails programados)
+Playwright E2E en los 6 flujos críticos
+Daily summaries pre-agregados para performance del dashboard
+Command palette (cmdk) para power users
+Audit log navegable por el dueño
+Alertas de seguridad automáticas
+2FA para cuentas de administrador
+
+
+# 18. Decisiones de NO hacer
+Las decisiones de no hacer son tan importantes como las de hacer. Cada tecnología o patrón adicional agrega complejidad operacional, superficie de bugs, y tiempo de desarrollo. Esta lista es definitiva y está respaldada por los ADRs del SRS.
+
+Patrón / Tecnología
+Estado
+Horizonte
+Razón
+Kubernetes
+Descartado
+Siempre
+Overhead operacional sin ROI para equipo pequeño
+Kafka / RabbitMQ
+Descartado
+Fase 0-3
+Postgres + BullMQ cubre el caso de uso
+Service mesh (Istio)
+Descartado
+Siempre
+Requiere equipo de plataforma dedicado
+Microservicios
+Descartado
+Fase 0-2
+ADR-0007: monolito modular primero
+CQRS en el core
+Descartado
+Fase 0-2
+Complejidad sin beneficio real a esta escala
+Event sourcing completo
+Descartado
+Fase 0-2
+Append-only en stock/cash es suficiente
+GraphQL público
+Descartado
+Fase 0-1
+REST + Server Actions cubre el caso
+Vault Enterprise
+Descartado
+Fase 0-2
+Vercel env vars + Zod es suficiente
+Multi-región
+Descartado
+Fase 0-3
+Sin ROI hasta miles de clientes
+IA en POS
+Descartado
+Fase 0-2
+Sin beneficio medible para el cajero
+Offline-first total
+Descartado
+Fase 0-1
+CRDTs/OT es uno de los problemas más difíciles
+OpenTelemetry completo
+Descartado
+Fase 0-1
+Pino + Sentry + correlation_id es suficiente
+Chaos engineering
+Descartado
+Fase 0-1
+Sin resiliencia baseline no hay chaos que testear
+SAP-style configuración
+Descartado
+Siempre
+Más de 50 config = más bugs y más soporte
+Deploy automático a prod
+Descartado
+Fase 0-1
+Review manual hasta tener 80% coverage + rollback
+
+
+# 19. Conclusiones y próximos pasos
+Pandora tiene una base arquitectónica sólida documentada en el SRS v3.0 con 17 ADRs. El diseño de UI es una ventaja competitiva real. El stack tecnológico es el correcto para el momento y el equipo. Los gaps identificados son concretos, acotados, y resolubles en días de trabajo, no semanas.
+
+
+## 19.1 Los 3 riesgos principales hoy
+CRÍTICO: Riesgo 1 — Seguridad: los 4 gaps críticos (JWT en Server Actions, rate limiting, firma MP, security headers) deben resolverse antes del primer cliente real. Un incidente de seguridad en Fase 0 puede terminar el proyecto.
+
+CRÍTICO: Riesgo 2 — Configuración: env.ts sin Zod significa que secretos pueden filtrarse en logs, que staging puede conectarse a producción, y que errores de variables se descubren en producción. Es el primer archivo que debe existir.
+
+ATENCIÓN: Riesgo 3 — Procrastinación documental: el proyecto tiene documentación de primer nivel. Lo que falta es código. Cada semana sin clientes reales es una semana sin feedback de producto.
+
+
+## 19.2 La única métrica que importa hoy
+Todo lo analizado en este documento converge en una sola pregunta: ¿cuándo tiene Pandora su primer cliente pagando facturas reales en producción? Esa es la métrica que convierte este proyecto de un análisis arquitectónico excelente en un negocio.
+
+El objetivo de Fase 0 es claro: 5 clientes activos generando facturación electrónica real. Todo lo que no contribuye directamente a ese objetivo en las próximas 6 semanas debe esperar.
+
+Pandora ERP — Análisis Ejecutivo Integral v1.0 — Mayo 2026
+Confidencial — Uso interno
+

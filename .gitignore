@@ -1,0 +1,37 @@
+# Pandora ERP SRS — docs/specs/governance repo
+# Solo .md + .jsx + .html descriptivos. NO código productivo (vive en repo aparte pandora-erp).
+
+# ──── Staging del agente Claude Code ────────────────
+# .tmp/ es working área de sesiones — scripts intermedios, copias de archivos
+# en edición, archivos de comparación. NO se commitea.
+.tmp/
+
+# ──── Configuración LOCAL del agente Claude ────────
+# .claude/settings.local.json puede contener paths absolutos, hooks personales,
+# o credenciales. settings.json sí se commitea (configuración compartida).
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+.claude/*.tmp
+
+# ──── Documentos generados / binarios opcionales ───
+# .docx queda excluido por default (binarios + difícil diff). Re-incluir
+# explícitamente si algún artefacto vale versionar.
+*.docx
+*.pdf
+
+# Mantener .extracted.txt y .md sí — son fuente texto.
+
+# ──── OS / Editor / IDE ────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/*
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# ──── Backups ──────────────────────────────────────
+*.bak
+*.orig

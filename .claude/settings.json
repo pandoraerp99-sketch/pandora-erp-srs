@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-WindowsOptionalFeature -Online -FeatureName \"VirtualMachinePlatform\",\"Microsoft-Windows-Subsystem-Linux\" 2>&1)",
+      "PowerShell(Get-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform)",
+      "PowerShell(Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux)",
+      "Read(//c/Users/Pandora/.claude/projects/c--Users-Pandora-Desktop-SRS/memory/**)",
+      "Bash(powershell -Command \"Get-ChildItem -Path 'c:\\\\Users\\\\Pandora\\\\Desktop\\\\SRS\\\\pandora-erp' -Recurse -File | Select-Object FullName, Length | Format-Table -AutoSize | Out-String -Width 200\")",
+      "PowerShell($files = Get-ChildItem -Path 'c:\\\\Users\\\\Pandora\\\\Desktop\\\\SRS\\\\pandora-erp' -Recurse -File | Where-Object { $_.Length -gt 0 }; \"Total archivos con contenido: $\\($files.Count\\)\"; \"Total bytes: $\\(\\($files | Measure-Object -Property Length -Sum\\).Sum\\)\"; \"\"; \"Por carpeta:\"; $files | Group-Object { $_.Directory.FullName.Replace\\('c:\\\\Users\\\\Pandora\\\\Desktop\\\\SRS\\\\pandora-erp\\\\',''\\).Replace\\('c:\\\\Users\\\\Pandora\\\\Desktop\\\\SRS\\\\pandora-erp','\\(raiz\\)'\\) } | Sort-Object Name | ForEach-Object { \"{0,3}  {1}\" -f $_.Count, $_.Name })"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\Pandora\\Desktop\\SRS"
+    ]
+  }
+}
