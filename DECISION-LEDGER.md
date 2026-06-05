@@ -728,9 +728,9 @@ DATOS CMPBASE64 = JSON con datos del comprobante codificado en Base64
 5. **`tax-policy-versions/ar-2026-06-v2.md` ahora consolida 2 verificaciones empíricas** (COMPG v4.2 + QR fiscal RG 4892/2020). Patrón funciona para futuros bumps
 6. **PDF extractor (pdf-parse@2.4.5) es activo crítico permanente del proyecto** — sin esto, las 2 verificaciones eran imposibles. Mantener en devDependencies
 
-### Sprint 4 ROADMAP Cash context cierre parcial (2026-06-04)
+### Sprint 4 ROADMAP Cash context CERRADO COMPLETO (2026-06-04)
 
-Implementación completa del bounded context `Cash` (C-OPS-01 capability: apertura + cierre de caja con conciliación + descuadre + movimientos manuales). Pattern consolidado 6ta aplicación.
+Implementación completa del bounded context `Cash` (C-OPS-01 capability: apertura + cierre de caja con conciliación + descuadre + movimientos manuales). Pattern consolidado 7ma aplicación. **Código + 627 unit + 45 integration tests verde** (90 integration total proyecto). Total **717 tests verde**.
 
 | Entregable | Detalle |
 |---|---|
@@ -769,11 +769,25 @@ Implementación completa del bounded context `Cash` (C-OPS-01 capability: apertu
 - **Threshold $5000 ARS hardcoded F0** — alerting Pandora team consistency. F1+ trigger: feature flag por tenant si comerciante pide custom.
 - **classifyDescuadreSeverity boundary inclusiva**: `abs(descuadre) > $5000 → 'high'`. Exactamente $5000 = 'low'. Tests confirman.
 
-**Integration tests DIFERIDOS** (no urge, retomar con Sprint 5 que también necesita Docker):
-- Docker Desktop tuvo procesos zombies que requieren reinicio Windows. Owner eligió pausar + commit/push lo que hay + retomar próxima sesión.
-- 9+ tests integration documentados en `tests/integration/INTEGRATION-TODO.md`: T-CASH-01 UNIQUE partial concurrent (cross + same tenant) + T-CONC-02 (2 promises paralelas) + T-CASH-02 descuadre>$5000 + T-CASH-03 descuadre=0 + T-CASH-04 reason missing + bonus T-CASH-05..09 (triggers immutable post-close + cash_movements append-only + CHECK SQL + summary cross-tenant + schema smoke).
-- Estimación 5 archivos test, ~3-4h con Docker activo.
-- **Prioridad alta** — T-CASH-01 + T-CONC-02 validan UNIQUE partial concurrent (motivo de existir del schema). Sin verificación empírica, "1 session abierta por (tenant, sale_point)" es claim no probado.
+**Integration tests COMPLETOS — 45 tests verde en 8 archivos:**
+
+| Archivo | Tests | Verifica |
+|---|---|---|
+| `T-CASH-01-unique-partial.test.ts` | 1 (6 flows) | UNIQUE partial lineal: open/colisión/cerrar/reabrir/distinct-sp/distinct-tenant |
+| `T-CONC-02-cash-open-concurrent.test.ts` | 1 | 2 promises paralelas openCashSession mismo (tenant, sp) — 1 fulfilled + 1 ActiveSessionAlreadyOpenError + atomicidad tx |
+| `T-CASH-02-descuadre-alto.test.ts` | 1 | descuadre=-6000 → warning + sign negative + severity high + reason persistido + métrica 1 |
+| `T-CASH-03-cierre-limpio.test.ts` | 1 | descuadre=0 → info + sign zero + severity none + reason NULL + métrica 1 + NO double-emit |
+| `T-CASH-04-movement-reason-defense.test.ts` | 3 | Defense layered: service throws MovementValidationError + DB CHECK 23514 cash_movements_reason_not_empty + happy path |
+| `T-CASH-05-triggers-immutable.test.ts` | 8 | Triggers conditional cash_sessions post-close + unconditional cash_movements (UPDATE/DELETE/TRUNCATE + INSERT inverso OK) |
+| `T-CASH-07-check-constraints.test.ts` | 11 | 6 CHECKs cash_sessions + 2 CHECKs cash_movements bypass-service raw SQL |
+| `T-CASH-08-cross-tenant-and-queries.test.ts` | 9 | Cross-tenant fences (5) + integration coverage getCashSessionSummary/listCashSessions (4) — fix post-advisor pre-commit |
+| `T-CASH-09-schema-smoke.test.ts` | 10 | pg_catalog smoke: 14+8 columnas + 6+3 CHECKs + 4+3 indexes + 2+3 triggers + 3+2 FKs |
+
+**Advisor pass pre-commit detectó gap crítico:**
+
+> T-CASH-08 había sido skipeado con justificación errada ("computeMovementTotals tiene 6 unit tests verde"). El advisor lo cazó: `computeMovementTotals` es **pure helper** — nunca toca DB, tenant_id ni isolation. T-CASH-08 era el ÚNICO test cross-tenant del Sprint 4. CLAUDE.md §18.4 + §7.9 + §1.4 lo exigen como mandatory no negociable. **Fix aplicado antes del commit** con seed 2 tenants + integration coverage primera vez DB-real de getCashSessionSummary/listCashSessions.
+
+**1 secondary advisor observation NO fixed** (decisión deliberada por guía advisor "don't churn it"): T-CASH-05+06 reintrodujo inter-`it` shared state — pasa deterministically bajo Vitest sequential-within-file. F1+ trigger: si parallel test execution se introduce, refactorizar a single-`it` o reset state.
 
 **Patrón consolidado (6to sprint consecutivo aplicando):**
 
@@ -787,11 +801,13 @@ Implementación completa del bounded context `Cash` (C-OPS-01 capability: apertu
 - Wrapper smoke tests al final
 
 **Lecciones core (acumuladas):**
-- Drizzle-kit broken se repitió por 6ta vez → schemas nuevos siempre requieren CREATE TABLE manual en SQL custom migration. Patrón canónico Pandora ahora.
+- Drizzle-kit broken se repitió por 7ma vez → schemas nuevos siempre requieren CREATE TABLE manual en SQL custom migration. Patrón canónico Pandora ahora.
 - Advisor pass intermedio (antes de tests integration) sigue siendo crítico — previno schema gap catastrófico.
+- **Advisor pass pre-commit detectó gap cross-tenant skipeado mal justificado** — pure helper unit tests NUNCA sustituyen integration tests para wrappers DB con multi-tenant filtering. Lección persistida para futuros sprints.
 - Triggers immutable necesitan ser EXPLÍCITOS en SQL — doc "inmutable" sin trigger es promesa no enforced.
 - Test names que mienten son variant peligrosa de comment rot. Refactor orden validation + name update = ambos honestos.
+- **Cross-tenant tests son MANDATORY** según CLAUDE.md §18.4 — NUNCA dropear con la justificación "el filtro WHERE está en el código". El test es la única forma empírica de validar que el filtro NO se rompe ante refactor futuro.
 
 ---
 
-*Decision Ledger versión 1.0 — 2026-05-26 / actualizado 2026-05-27 (Sesión 3 — cierre trilogía de spec arquitectónica) / actualizado 2026-05-28 AM (6 docs fundacionales: NON-GOALS, CAPABILITY-MAP, BOUNDED-CONTEXTS, OPERATIONAL-SEVERITY, RUNBOOKS, MONEY-POLICY) / actualizado 2026-05-28 PM (Auditoría Lotes 1+2+3+4+5: 89 fixes aplicados, 30 mejoras diferidas) + ROADMAP.md v1.0.0 creado / actualizado 2026-06-03 AM (Sprint 3 Inventory cerrado, 552/552 tests verdes) / actualizado 2026-06-03 PM (Spike A1 Supabase Local CLI cerrado + T-INV-04..08 portados: 577/577 verdes, Sprint 3 EMPÍRICAMENTE VALIDADO contra Postgres real) / actualizado 2026-06-03 PM cont. (Retroactivos Sprint 1+2 portados: 597/597 verdes, T-JOBS-01 + T-WEBHOOK-01 + T-AUDIT-01 + T-METRICS-01, bug #3 fixed en queue.service.ts execute raw, Sprint 1+2 EMPÍRICAMENTE VALIDADO)*
+*Decision Ledger versión 1.0 — 2026-05-26 / actualizado 2026-05-27 (Sesión 3 — cierre trilogía de spec arquitectónica) / actualizado 2026-05-28 AM (6 docs fundacionales: NON-GOALS, CAPABILITY-MAP, BOUNDED-CONTEXTS, OPERATIONAL-SEVERITY, RUNBOOKS, MONEY-POLICY) / actualizado 2026-05-28 PM (Auditoría Lotes 1+2+3+4+5: 89 fixes aplicados, 30 mejoras diferidas) + ROADMAP.md v1.0.0 creado / actualizado 2026-06-03 AM (Sprint 3 Inventory cerrado, 552/552 tests verdes) / actualizado 2026-06-03 PM (Spike A1 Supabase Local CLI cerrado + T-INV-04..08 portados: 577/577 verdes, Sprint 3 EMPÍRICAMENTE VALIDADO contra Postgres real) / actualizado 2026-06-03 PM cont. (Retroactivos Sprint 1+2 portados: 597/597 verdes, T-JOBS-01 + T-WEBHOOK-01 + T-AUDIT-01 + T-METRICS-01, bug #3 fixed en queue.service.ts execute raw, Sprint 1+2 EMPÍRICAMENTE VALIDADO) / actualizado 2026-06-04 (Sprint 4 Cash CERRADO COMPLETO: 717/717 tests verde — 627 unit + 90 integration con 45 nuevos Cash. Advisor pass pre-commit detectó gap cross-tenant T-CASH-08 → fix aplicado antes del commit. Cash EMPÍRICAMENTE VALIDADO contra Postgres real)*
