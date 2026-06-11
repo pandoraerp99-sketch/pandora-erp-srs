@@ -159,6 +159,16 @@ Recomendación del contador: ☐ PER_LINE ☐ PER_BRACKET ☐ Otro: __________
 
 ¿Hay límite contable de diferencia tolerable (ej: hasta $1 ARS sin ajuste)? __________
 
+**Sub-pregunta nueva (research 2026-06-11) — estándar industria SaaS AR:**
+
+> 📊 **Comparación con SaaS líderes:** investigación previa a esta reunión detectó que **Stripe Tax, Siigo, Bind ERP** usan PER_BRACKET por defecto. Argumento técnico: la estructura del array `Iva[]` en WSFEv1 agrupa por alícuota — PER_BRACKET es coherente con el shape oficial. PER_LINE puede acumular errores de redondeo que rompan la invariante WSFEv1 con tolerancia 0 en multi-alícuota + descuentos prorrateados.
+
+**Pandora está actualmente con PER_LINE implementado** (decisión cerrada 2026-06-03 antes de este research). Si tu recomendación es PER_BRACKET, el refactor es ~2-3h antes de Sprint 6 fiscal.
+
+- ¿Hay razón **normativa AR** para preferir uno sobre otro? ☐ Sí → cuál: __________ ☐ No, es indistinto profesionalmente
+- Si es indistinto: ☐ Mantener PER_LINE (Pandora actual) ☐ Cambiar a PER_BRACKET (estándar industria)
+- En multi-alícuota con descuentos: ¿alguno de los dos rompe en práctica? __________
+
 ### A-2. Cómo proceder cuando WSFEv1 timeout > 2h (sabiendo que el "ticket no fiscal" NO es comprobante fiscal válido)
 
 > ⚠️ La investigación oficial confirmó que el término "comprobante no fiscal" pertenece al régimen de **controladores fiscales**, NO es un fallback válido para WSFEv1. Además, el comprobante autorizado debe ponerse a disposición del cliente dentro de 10 días de asignado el CAE. **Esto invalida el modelo actual de Pandora** (ADR-0004 sección reconciliación) que asumía que un ticket interno post-2h podía ser entregado al cliente como comprobante operativo.
@@ -183,6 +193,31 @@ Respuesta: ____________________________________________________________
 **Pregunta sub-c:** Si tras 10 días seguimos sin CAE (downtime extendido AFIP), ¿hay obligación de anular/devolver, o se puede emitir con fecha retroactiva una vez que AFIP vuelva?
 
 Respuesta: ____________________________________________________________
+
+**Sub-pregunta nueva (research 2026-06-11) — CAEA como solución oficial:**
+
+> 🔴 **Hallazgo del research previo:** investigación detectó que las opciones A/B/C/D listadas arriba pueden estar **superadas por CAEA**. Cronología normativa:
+> - **RG 5782/2025** (BO 03/11/2025): CAEA pasa a "único mecanismo de contingencia" sujeto a Título III RG 4290
+> - **RG 5785/2025**: para emisores WS, CAEA es "primera opción de contingencia obligatoria"
+> - **RG 5852/2026** (BO 29/05/2026): **elimina el requisito de adhesión previa desde 01/06/2026** — cualquier contribuyente puede usar CAEA como contingencia sin tramitar alta especial
+>
+> SaaS líderes (Alegra, Zeus ERP) implementan CAEA como fallback automático: cuando CAE falla, emiten con CAEA. El cliente recibe un comprobante CAEA, no un recibo interno provisional.
+
+**El modelo "correcto" según esta investigación sería:**
+```
+venta cobrada → timeout WSFEv1 → activar CAEA pre-cargado →
+  emitir con CAEA → reportar a ARCA dentro de 8 días post-quincena
+```
+
+**Sub-pregunta urgente para esta reunión:**
+
+- ¿LIS ya tiene CAEA habilitado (pre-RG 5852) o usás CAE-online exclusivamente? ☐ CAEA habilitado ☐ Solo CAE ☐ No sabés
+- ¿Recomendás que **Pandora F0 implemente CAEA desde el día 1** (Sprint 6 fiscal), o se puede diferir a F0.5 lanzando solo con CAE-online?
+  - ☐ CAEA desde F0 (riesgo: implementación más compleja antes de primer cliente real)
+  - ☐ CAE-online F0 + CAEA F0.5 (riesgo: si AFIP cae durante piloto, NO hay fallback legal)
+  - ☐ Otro: __________
+
+> **Cross-ref a A-20** (RG 5782 CAEA): el research previo une A-2 + A-20 como **misma pregunta**. La respuesta a esta sub-pregunta cierra ambas A-* en la misma conversación.
 
 ### A-3. `legal_name` y `fiscal_address` en customer_snapshot — ¿capturar aunque WSFEv1 no los exija?
 
@@ -762,6 +797,25 @@ Esto significaría que el comerciante factura al precio bruto (con IVA aunque se
 #### A-25.d — Pandora F0 alcance — Solo Responsable Inscripto TDF?
 
 ¿Es viable que **Pandora F0 NO soporte monotributistas TDF amparados Ley 19.640** y se enfoque solo en Responsables Inscriptos TDF? El caso confirmado (papá rotisería + LIS sedería) es RI; los kioscos pueden ser monotributistas.
+
+#### A-25.e — Hipótesis técnica del research 2026-06-11 (confirmar o refutar)
+
+> 💡 **Hipótesis del research previo:** la tensión "Monotributista TDF no puede usar ImpOpEx > 0 en Tipo C" puede ser **aparente, no real**, por el siguiente razonamiento:
+>
+> 1. Ley 19.640 exime del pago de IVA por operaciones en TDF
+> 2. **Un Monotributista ya está exento de IVA por su propio régimen** (Monotributo) — no cobra IVA en ninguna operación, estén donde estén
+> 3. Para el Tipo C la exención de IVA es "automática" por el régimen, no por Ley 19.640
+> 4. **Solo un RI TDF necesita declarar ImpOpEx** porque solo él cobraría IVA si no fuese por la Ley 19.640
+>
+> **Consecuencia operativa**: un Monotributista TDF amparado puede simplemente **agregar la leyenda "Operación amparada por Ley 19.640"** como texto libre en el comprobante (campo descripción o pie), sin tocar ImpOpEx. La exención ya está implícita en el Tipo C.
+
+**Confirmación necesaria del contador:**
+
+- ¿Esta hipótesis es **correcta fiscalmente**? ☐ Sí ☐ No → corregir cómo: __________
+- Si es correcta: ¿hay leyenda canónica para esa marca en Tipo C, o es texto libre? __________
+- ¿Tenés algún caso real de Monotributista TDF amparado que hayas asesorado? ¿Cómo lo resolviste? __________
+
+> **Si la hipótesis sobrevive a la reunión**: A-25.d (excluir Monotri TDF de F0) deja de ser obligatorio. Pandora F0 puede soportar Monotri TDF con solo agregar leyenda + sin tocar ImpOpEx. A-10 queda reformulada: ImpOpEx solo para RI TDF, leyenda libre para Monotri TDF.
 
 > **Acción Pandora:** este hallazgo redirige A-10 (TDF Ley 19.640) — esa pregunta original asumía "todos los comerciantes TDF pueden ampararse vía ImpOpEx". El manual oficial v4.2 desmiente esta asunción para Monotributistas. **A-10 debe re-formularse a luz de A-25.**
 
