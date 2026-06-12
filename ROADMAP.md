@@ -1033,12 +1033,14 @@ export const mpPayments = pgTable('mp_payments', {
 ### Gating criteria Sprint 5
 
 ✅ Sprint 5 done cuando:
-- [ ] Venta completa con cobro efectivo funciona
-- [ ] Venta completa con MP QR funciona (sandbox MP)
-- [ ] Webhook MP HMAC validated + dedup funciona
-- [ ] T-MONEY-01..07 verdes
-- [ ] Idempotency obligatoria probada
-- [ ] customer_snapshot persiste inmutable
+- [x] Venta completa con cobro efectivo funciona (T-SALES-01 + T-SALES-04, sesiones 06-04 y 06-09)
+- [ ] Venta completa con MP QR funciona (sandbox MP) — **🟡 DEFERIDO 2026-06-11: Bloque 5 gated por MP sandbox account del owner**
+- [ ] Webhook MP HMAC validated + dedup funciona — **🟡 DEFERIDO 2026-06-11: Bloque 5 ídem (HMAC primitivas + dedup ya cubierto Sprint 1 #2+#4)**
+- [ ] T-MONEY-01..07 verdes — **⚠️ COBERTURA EXISTE 2026-06-11**: `money.test.ts` (~15 tests) + `calculation.test.ts` (~13 tests) verde. Mapping uno-a-uno T-MONEY-01..07 vs tests existentes NO formalizado. Acción próxima: 30 min mapping o renombrar
+- [ ] Idempotency obligatoria probada — **🟡 DEFERIDO Sprint 6 (2026-06-11)**: sin infra `idempotency_log`; ADR-0010 aprobado pero sin implementación. Sprint 6 fiscal con CAE retries lo hace crítico
+- [x] customer_snapshot persiste inmutable (T-SALES-02, sesión 06-11 + fix setSaleCustomer guard cobrada)
+
+> **Estado al 2026-06-11**: Bloques 1-4 codables CERRADOS ESTRUCTURALMENTE (742 tests verde). 3 ítems del gating diferidos con trigger explícito (ver memoria `sprint-5-cierre-estructural-2026-06-11.md`). Sprint 5 NO está marcado como "Sprint done" en sentido estricto del checklist hasta cerrar los 3 ítems pendientes — pero los bloqueantes técnicos para Sprint 6 fiscal están eliminados.
 
 ### Bloqueantes posibles + plan B
 

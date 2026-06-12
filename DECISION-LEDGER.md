@@ -808,6 +808,51 @@ Implementación completa del bounded context `Cash` (C-OPS-01 capability: apertu
 - Test names que mienten son variant peligrosa de comment rot. Refactor orden validation + name update = ambos honestos.
 - **Cross-tenant tests son MANDATORY** según CLAUDE.md §18.4 — NUNCA dropear con la justificación "el filtro WHERE está en el código". El test es la única forma empírica de validar que el filtro NO se rompe ante refactor futuro.
 
+### Sprint 5 ROADMAP Sales+MP context CIERRE ESTRUCTURAL — Bloques 1-4 cerrados, Bloque 5 + 2 ítems gating diferidos con trigger (2026-06-11)
+
+Implementación del bounded context `Sales` con integración Cash↔Sales y stock decrement vía Inventory public API. Pattern consolidado 8va aplicación. **Cierre estructural (bloques codables verde) ≠ cierre gating completo (ROADMAP §1033 checklist)** — distinción explícita anotada por advisor 2026-06-11.
+
+**742 tests verde total** (627 unit + 115 integration, +25 integration vs cierre Sprint 4). **11 commits productivos** en 3 sesiones (06-04 evening + 06-09 + 06-11).
+
+| Bloque | Estado | Hash |
+|---|---|---|
+| **1 — Schema migration #8** (sale_payments append-only + mp_payments + sales.cash_session_id) | ✅ Cerrado | `699f818` |
+| **2 — Refactor finalizeSale** → recordStockMovement(skip_audit:true) — bootstrap 2026-05-30 hacía UPDATE products directo bypaseando Sprint 3 anti-oversell + sin stock_movements rows = Sprint 6 fiscal sin reconstruir flujo | ✅ Cerrado | `ce71f6d` |
+| **T-SALES-01** defensa post-refactor (happy + concurrent oversell stock=1 gemelo T-INV-04 desde Sales side + cross-tenant) | ✅ Cerrado | `da2c72c` |
+| **3 — Sales↔Cash linkage** (4 sub-commits) | ✅ Cerrado | `82ea468` + `c6cf357` + `df778ae` + `83dcd7f` |
+| **4 — T-SALES-02 + 3 edge cases advisor** (2 fixes: ProductInactiveError mapeo + setSaleCustomer guard cobrada; 4 tests: customer_snapshot inmutable + race window + stock_tracking=false + multi-item atomicity) | ✅ Cerrado | `03a763b` |
+| **5 — MercadoPago entero** | 🟡 **DEFERIDO** | Trigger: owner crea cuenta MP sandbox + credenciales en `.env.test` |
+
+**3 ítems del ROADMAP Sprint 5 gating diferidos con trigger explícito** (anti-drift, anotación advisor 2026-06-11):
+
+- 🟡 **Bloque 5 MercadoPago entero** — gated por MP sandbox account del owner (fuera del código)
+- 🟡 **T-SALES-03 idempotency obligatoria probada** — diferida a Sprint 6 (sin infra `idempotency_log`; ADR-0010 aprobado pero sin implementación; AFIP CAE retries lo hacen crítico recién en Sprint 6 fiscal; sale finalize idempotency natural F0 vía sale_id + state machine)
+- ⚠️ **T-MONEY-01..07 verdes mapping verification** — `money.test.ts` (~15 tests) + `calculation.test.ts` (~13 tests) verde, pero mapping uno-a-uno T-MONEY-01..07 vs tests existentes NO formalizado. Acción próxima: 30 min para mappear o renombrar tests
+
+**Decisiones arquitectónicas Sprint 5 (confirmadas por owner pre-Sprint 5):**
+
+- **A) Módulo sales mono-archivo** (NO refactor a 6 archivos del ROADMAP spec) — 672 LoC en 10 funciones está bajo CLAUDE.md §6.4 threshold; cash/sessions.ts también es mono. Aplicar BOUNDED-CONTEXTS cuando duela, no preventivo.
+- **B) Stock decrement vía Inventory public API** — `recordStockMovement(skip_audit:true)` en vez de UPDATE products directo. Respeta BOUNDED-CONTEXTS + reusa SELECT FOR UPDATE anti-oversell de Sprint 3 (T-INV-04 verificado).
+- **Bloque 3**: `sale_point` obligatorio en sales (default 1) para resolver linkage ambiguo Sales↔Cash; sale_payments granular per row (1 row per payment) en vez de JSON inline; `method='mixto'` solo aplica al denormalizado `sales.payment_method`; `mp_payment_external_id` obligatorio si method=mp_qr, prohibido si method≠mp_qr; `closeCashSession.expected_amount` opcional con auto-compute backward-compat preservado; tarjeta NO afecta cálculo caja (solo efectivo).
+- **Bloque 4**: ProductInactiveError → FiscalIntegrityError (preserva contrato Sales); setSaleCustomer guard bloquea cobrada explícito (customer_snapshot inmutable post-finalize).
+
+**🔄 Cambio de comportamiento documentado como decisión (no solo test passing):**
+
+- **stock_tracking_enabled=false ahora emite movement row** (`stock_changed=false`) — antes (bootstrap) NO se creaba row. Razones: audit trail uniforme + reporting cruzado + F1+ trigger histórico. Trade-off: stock_movements crece más rápido para tenants con productos sin tracking (servicios, libre). Bounded por volumen ventas — no es problema F0 (30-200 ventas/día TDF retail).
+
+**Advisor pass pre-commit Sprint 5 cierre estructural (2026-06-11):**
+
+> 3 puntos críticos: (1) "this is NOT the manufactured-entry pattern" — escribir el ledger está bien acá (owner eligió cierre formal Bloque 5 gated por algo fuera del código); (2) "undercounting deferred" — Bloque 5 NO es el único gap; T-SALES-03 idempotency + T-MONEY mapping verification también lo son; (3) "stock_tracking=false debe ser DECISIÓN documentada, no solo test passing"; (4) "anti-drift: ROADMAP debe carry la misma annotation" para evitar divergencia próxima sesión.
+
+**4 fixes del advisor aplicados antes del commit:**
+
+1. Memoria framing honesto con tabla de 3 ítems deferred (no solo Bloque 5)
+2. stock_tracking_enabled=false documentado como decisión arquitectónica
+3. ROADMAP.md Sprint 5 gating section actualizada con notas DEFERIDO + emoji 🟡⚠️
+4. Esta entry del ledger usa "CIERRE ESTRUCTURAL" (no "CERRADO COMPLETO") + lista deferred items explícitos
+
+**Próximo:** Sprint 6 fiscal (gated por 11 items contadora + B-6 abogado). Research fiscal preparatorio del 2026-06-11 destrabó PARCIALMENTE A-2 (vía CAEA RG 5782/2025+5785/2025+5852/2026 — esperando confirmación contador), A-11 (texto Ley 27.743 con cita RG 5614/2024), A-18 (texto Ley 27.618 con cita RG 5003/2021), A-19 (leyendas RG 5762/2025). Acciones del owner: agendar reunión contadora con guion `reunion-contador-y-abogado.md` actualizado (commit `7116e7c`); verificar 5 RGs en BO; iniciar consulta vinculante ARCA para A-10+A-22+A-23+A-25; setup MP sandbox account para destrabar Bloque 5.
+
 ---
 
-*Decision Ledger versión 1.0 — 2026-05-26 / actualizado 2026-05-27 (Sesión 3 — cierre trilogía de spec arquitectónica) / actualizado 2026-05-28 AM (6 docs fundacionales: NON-GOALS, CAPABILITY-MAP, BOUNDED-CONTEXTS, OPERATIONAL-SEVERITY, RUNBOOKS, MONEY-POLICY) / actualizado 2026-05-28 PM (Auditoría Lotes 1+2+3+4+5: 89 fixes aplicados, 30 mejoras diferidas) + ROADMAP.md v1.0.0 creado / actualizado 2026-06-03 AM (Sprint 3 Inventory cerrado, 552/552 tests verdes) / actualizado 2026-06-03 PM (Spike A1 Supabase Local CLI cerrado + T-INV-04..08 portados: 577/577 verdes, Sprint 3 EMPÍRICAMENTE VALIDADO contra Postgres real) / actualizado 2026-06-03 PM cont. (Retroactivos Sprint 1+2 portados: 597/597 verdes, T-JOBS-01 + T-WEBHOOK-01 + T-AUDIT-01 + T-METRICS-01, bug #3 fixed en queue.service.ts execute raw, Sprint 1+2 EMPÍRICAMENTE VALIDADO) / actualizado 2026-06-04 (Sprint 4 Cash CERRADO COMPLETO: 717/717 tests verde — 627 unit + 90 integration con 45 nuevos Cash. Advisor pass pre-commit detectó gap cross-tenant T-CASH-08 → fix aplicado antes del commit. Cash EMPÍRICAMENTE VALIDADO contra Postgres real)*
+*Decision Ledger versión 1.0 — 2026-05-26 / actualizado 2026-05-27 (Sesión 3 — cierre trilogía de spec arquitectónica) / actualizado 2026-05-28 AM (6 docs fundacionales: NON-GOALS, CAPABILITY-MAP, BOUNDED-CONTEXTS, OPERATIONAL-SEVERITY, RUNBOOKS, MONEY-POLICY) / actualizado 2026-05-28 PM (Auditoría Lotes 1+2+3+4+5: 89 fixes aplicados, 30 mejoras diferidas) + ROADMAP.md v1.0.0 creado / actualizado 2026-06-03 AM (Sprint 3 Inventory cerrado, 552/552 tests verdes) / actualizado 2026-06-03 PM (Spike A1 Supabase Local CLI cerrado + T-INV-04..08 portados: 577/577 verdes, Sprint 3 EMPÍRICAMENTE VALIDADO contra Postgres real) / actualizado 2026-06-03 PM cont. (Retroactivos Sprint 1+2 portados: 597/597 verdes, T-JOBS-01 + T-WEBHOOK-01 + T-AUDIT-01 + T-METRICS-01, bug #3 fixed en queue.service.ts execute raw, Sprint 1+2 EMPÍRICAMENTE VALIDADO) / actualizado 2026-06-04 (Sprint 4 Cash CERRADO COMPLETO: 717/717 tests verde — 627 unit + 90 integration con 45 nuevos Cash. Advisor pass pre-commit detectó gap cross-tenant T-CASH-08 → fix aplicado antes del commit. Cash EMPÍRICAMENTE VALIDADO contra Postgres real) / actualizado 2026-06-11 (Sprint 5 Sales+MP CIERRE ESTRUCTURAL — Bloques 1-4 cerrados 742/742 tests verde; Bloque 5 MercadoPago + T-SALES-03 idempotency + T-MONEY mapping verification DEFERIDOS con trigger explícito. Advisor 4 fixes aplicados: framing honesto memoria/ledger/ROADMAP + stock_tracking decisión documentada. Anti-drift: ROADMAP §1033 gating mismo state.)*
