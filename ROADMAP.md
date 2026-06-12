@@ -1080,6 +1080,47 @@ Si todos cerrados → arrancar. Si alguno pending → STOP + insistir con contad
 
 > **Nota post-ADRs 2026-06-02:** los gating A-18 a A-22 fueron agregados durante la sesión de ADRs estratégicos (0023/0024/0025). El bloque original Sprint 6 incluía solo A-1, A-2, A-4, A-10, A-11 + B-6.
 
+### Mini-audit pre-Sprint 6 (2026-06-12) — estado del piso
+
+Antes de Sprint 6 se hizo audit read-only de superficie fiscal existente. Resultado:
+
+**🟢 OK / Limpio:**
+- `sales.fiscal_status` 10 estados MATCH EXACTO vs CLAUDE.md §12.2
+- `invoice_sequences` schema completo (UNIQUE + 3 CHECKs)
+- 8 eventos fiscal canónicos registrados en `audit/event-names.ts` + cross-tenant/price-tampering/emergency-stop
+- Money codepath limpio (sin `Number()`/`parseFloat()`/`parseInt()` en `services/**`)
+- Patrón T-INV-09 (queries.ts cross-tenant leak) eliminado de raíz (no hay `queries.ts` en ningún service)
+- 12 migrations existentes coherentes con sprints anteriores (sin huérfanas)
+
+**🟢 Cerrado por la propia mini-audit (commit pre-Sprint 6):**
+- Migration `0010_fiscal_snapshots_immutable.sql` creada — el schema `fiscal_snapshots.ts` declaraba desde Sprint 5 que el trigger se aplicaría "via migración SQL custom en B5" pero B5 nunca llegó. Patrón idéntico a stock_movements (0005) + cash_movements (0007). T-FISCAL-SCHEMA-01 (4 tests) valida UPDATE/DELETE/TRUNCATE bloqueados.
+- Schema + migration `padron_a5_cache` (0011) — CLAUDE.md §17.2 cache 24h. Política exacta sigue pendiente A-4 contadora pero schema enforce uniqueness está. T-PADRON-01 (4 tests) valida UNIQUE + per-tenant coexistence.
+- Schema + migration `wsaa_tokens` (0012) — CLAUDE.md §17.2 cache 12h + ADR-0019 S13 hard isolation homo/prod. T-WSAA-01 (6 tests) valida UNIQUE + CHECK environment + CHECK expires_at > generated_at + per-tenant coexistence.
+- **Migration `0013_rls_padron_wsaa.sql` (advisor catch 2026-06-12):** primera iteración de la audit dejó las 2 tablas nuevas SIN RLS, inconsistente con `fiscal_snapshots`/`invoice_sequences`/`sales`/etc. que SÍ tienen RLS desde 0003. Advisor catch antes del commit: "cerraste el trigger faltante de fiscal_snapshots ahora pero deferiste RLS de wsaa_tokens en un comentario — mismo patrón de promesa-no-aplicada, asimétrico". Crítico para `wsaa_tokens` (token+sign plaintext, cache-not-vault §11.8 → RLS es la única protección at-rest). Migration 0013 agrega ENABLE RLS + 3 policies (SELECT/INSERT/UPDATE) a ambas tablas siguiendo patrón 0003.
+
+**🟡 Gap sistémico revelado por advisor catch (NO bloqueante Sprint 6, escalado):**
+- **NO existe helper `withRlsContext()` en el repo** — todos los tests "cross-tenant" actuales (T-INV-08, T-CASH-08, T-PADRON-01.4, T-WSAA-01.6, etc.) corren con el `db` client privileged que BYPASSA RLS. Por lo tanto NO testean isolation real — testean comportamiento del service layer + UNIQUE constraints scoped per-tenant. El script `test:cross-tenant` está en `package.json` pero `tests/cross-tenant/` directory está vacío.
+- T-MT-01..07 patrón canónico (CLAUDE.md §7.9) NO está implementado todavía. Mini-audit honesty fix: etiquetas describe/it de T-PADRON-01.4 + T-WSAA-01.6 renombradas a "per-tenant coexistence (NOT RLS isolation)" para reflejar qué realmente testean.
+- **Trigger para resolver F0.5/F1**: cuando el primer servicio fiscal de Sprint 6 (AFIP emit) escriba contra DB usando JWT con `company_id`, necesitará helper `withRlsContext(jwt, callback)`. Ese mismo helper habilita escribir T-MT-01..07 reales. Owner-approved diferral.
+
+**🔴 Pendiente Sprint 6 (no bloqueante hoy, tabla vacía):**
+- **Migration 0013 ALTER TABLE fiscal_snapshots** — schema actual es el de Sprint 5 (sale_id + jurisdiction_context jsonb) y NO está alineado con ADR-0023/0025. Sprint 6 debe agregar:
+  - `invoice_id` (+ crear tabla `invoices` separada, ver §1099 schema propuesto)
+  - `condicion_iva_receptor_id` + `_desc_at_emission` + `_catalog_version_at_emission` (ADR-0023 §1 + ADR-0025)
+  - `qr_version` + `qr_payload_json` + `qr_url_base_at_emission` (ADR-0023 §2)
+  - `authorization_code_type CAE|CAEA` + CHECK (ADR-0023 §4)
+  - `merchant_jurisdiction_province` + `merchant_special_regime` + `transaction_in_special_zone` (en lugar de `jurisdiction_context jsonb`)
+- **Schema `invoices` separado de `fiscal_snapshots`** — NO existe hoy. Ver §1099 schema propuesto.
+- **Schema `customer_snapshots`** — propuesto en ADR-0023 (§"Customer Snapshot ampliado") pero no existe hoy. Sprint 6 debe armarlo.
+
+**🟡 Cleanup contadora-gated (NO bloqueantes para arrancar):**
+- `INVOICE_TYPES` incluye `'M'` que RG 5762/2025 elimina — pendiente A-19 cierre fecha cutover.
+- `TAX_REGIMES` solo 3 valores — posible expansión cuando A-22 confirme CondicionIVAReceptorId mapping (es runtime catalog ADR-0025, NO TAX_REGIMES, pero confirmar).
+- `fiscal_breakdown jsonb` shape flexible — concreto depende A-11 (Ley 27.743 texto literal).
+
+**🟡 Decisión diferida F1+ (mini-audit owner approved):**
+- **Eventos `fiscal.contingency.activated/deactivated` NO se agregan al catálogo F0.** Razón: CLAUDE.md §8.10 bloquea código reconciliación post-2h hasta cierre A-2 + B-6 (justamente el código que transicionaría a `contingency`). Estado `contingency` existe en enum pero el path para alcanzarlo NO se implementa F0 → events que nadie emite viola YAGNI (CLAUDE.md §4.3 filtro #7). Trigger F1+ natural: cuando A-2 + B-6 cierren modelo "constancia provisoria" y se implemente código reconciliación, mismo PR agrega los 2 events + bump EVENT-TAXONOMY. Costo: bajo (1 mini-ADR + 2 líneas al catálogo).
+
 ### Inputs requeridos
 
 - **ADRs base fiscales:**
