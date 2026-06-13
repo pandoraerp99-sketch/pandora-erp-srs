@@ -1098,10 +1098,25 @@ Antes de Sprint 6 se hizo audit read-only de superficie fiscal existente. Result
 - Schema + migration `wsaa_tokens` (0012) — CLAUDE.md §17.2 cache 12h + ADR-0019 S13 hard isolation homo/prod. T-WSAA-01 (6 tests) valida UNIQUE + CHECK environment + CHECK expires_at > generated_at + per-tenant coexistence.
 - **Migration `0013_rls_padron_wsaa.sql` (advisor catch 2026-06-12):** primera iteración de la audit dejó las 2 tablas nuevas SIN RLS, inconsistente con `fiscal_snapshots`/`invoice_sequences`/`sales`/etc. que SÍ tienen RLS desde 0003. Advisor catch antes del commit: "cerraste el trigger faltante de fiscal_snapshots ahora pero deferiste RLS de wsaa_tokens en un comentario — mismo patrón de promesa-no-aplicada, asimétrico". Crítico para `wsaa_tokens` (token+sign plaintext, cache-not-vault §11.8 → RLS es la única protección at-rest). Migration 0013 agrega ENABLE RLS + 3 policies (SELECT/INSERT/UPDATE) a ambas tablas siguiendo patrón 0003.
 
-**🟡 Gap sistémico revelado por advisor catch (NO bloqueante Sprint 6, escalado):**
-- **NO existe helper `withRlsContext()` en el repo** — todos los tests "cross-tenant" actuales (T-INV-08, T-CASH-08, T-PADRON-01.4, T-WSAA-01.6, etc.) corren con el `db` client privileged que BYPASSA RLS. Por lo tanto NO testean isolation real — testean comportamiento del service layer + UNIQUE constraints scoped per-tenant. El script `test:cross-tenant` está en `package.json` pero `tests/cross-tenant/` directory está vacío.
-- T-MT-01..07 patrón canónico (CLAUDE.md §7.9) NO está implementado todavía. Mini-audit honesty fix: etiquetas describe/it de T-PADRON-01.4 + T-WSAA-01.6 renombradas a "per-tenant coexistence (NOT RLS isolation)" para reflejar qué realmente testean.
-- **Trigger para resolver F0.5/F1**: cuando el primer servicio fiscal de Sprint 6 (AFIP emit) escriba contra DB usando JWT con `company_id`, necesitará helper `withRlsContext(jwt, callback)`. Ese mismo helper habilita escribir T-MT-01..07 reales. Owner-approved diferral.
+**🟢 Gap sistémico CERRADO 2026-06-12 PM + 2026-06-13 (5 commits, +20 tests behavioral):**
+- ~~NO existe helper `withRlsContext()`~~ → **creado en commit `ceac356` (2026-06-12 PM)**. Monta `SET LOCAL role authenticated` + `set_config('request.jwt.claims', ..., true)` dentro de transacción Drizzle. Smoke `T-RLS-CONTEXT-01` (6 tests) valida que `auth.jwt()` + `pandora.current_company_ids()` leen lo seteado.
+- ~~T-MT-01..07 patrón canónico no implementado~~ → **5/7 ✅ completos + 1/7 ✅ parcial + 1/7 ⏳ F0 (sin infra)**. Archivos creados en `tests/cross-tenant/`:
+  - `T-MT-01-select-rls.test.ts` (5 tests, commit `ceac356` 2026-06-12)
+  - `T-MT-02-update-rls.test.ts` (4 tests, commit `ceac356` 2026-06-12)
+  - `T-MT-04-secrets-isolation.test.ts` (7 tests, commit `37c6076` 2026-06-13 — cierra deuda 0013 directa)
+  - `T-MT-03-accountant-multi-company.test.ts` (6 tests, commit `eb697cc` 2026-06-13 — valida ADR-0008)
+  - `T-MT-05-invoice-sequences-concurrent.test.ts` (3 tests, commit `f411c9f` 2026-06-13 — valida ADR-0006 lock per-row)
+  - `T-MT-07-jobs-queue-cross-tenant.test.ts` (4 tests, commit `790f6e0` 2026-06-13 — queue layer ✅)
+- Suite `tests/cross-tenant/`: **35/35 verde**. Suite global: **792 verde** (628 unit + 164 integration).
+- Honesty fixes aplicados (advisor catches 2026-06-12 + 2026-06-13 PM):
+  - `T-PADRON-01.4` + `T-WSAA-01.6` etiquetas relabel "per-tenant coexistence (NOT RLS isolation)" — distinguen de tests RLS reales.
+  - COVERAGE-MATRIX "Aclaración crítica" — en runtime productivo F0 (db client privileged) la defensa efectiva es **capa 2 service-side** (`validateTenantAccess`); RLS es backstop dormant hasta conexión Supabase-JWT per-request o bug capa 2.
+  - **T-MT-07** relabel "✅ CUBIERTO (queue layer) + ⏳ processing layer pendiente Sprint 6" — el test cubre enqueue defense + mailbox integrity + poison, pero NO worker confining reads/writes al tenant del job durante processing (requiere worker real). Follow-up Sprint 6 explícito.
+  - **T-MT-06** relabel "⏳ DEFERRED (F0 — infra Realtime pendiente)" — Realtime SÍ es F0 §5.2, etiqueta previa "🟡 N/A F0" era incorrecta.
+
+**Follow-ups visibles tras cierre (NO promesas asumidas):**
+- T-MT-07 processing layer: Sprint 6 al implementar primer worker AFIP, agregar test que monte tracing context del tenant del job + intente cross-tenant access durante processing.
+- T-MT-06 Realtime: F0 pendiente hasta infra Supabase Realtime publish-via-channels (sin ETA confirmada).
 
 **🔴 Pendiente Sprint 6 (no bloqueante hoy, tabla vacía):**
 - **Migration 0013 ALTER TABLE fiscal_snapshots** — schema actual es el de Sprint 5 (sale_id + jurisdiction_context jsonb) y NO está alineado con ADR-0023/0025. Sprint 6 debe agregar:
