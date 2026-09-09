@@ -40,9 +40,11 @@ ROMERO & RUIZ cierra el **31/07**. El selector "Año" del panel usa **año
 calendario**, así que para esta empresa daría un período que no le sirve a nadie:
 no coincide con el balance ni con ninguna presentación.
 
-**Falta un dato en `companies`: la fecha de cierre de ejercicio.** Sin eso, el
-panel no puede ofrecer "el ejercicio" como período, que es el recorte con el que
-la contadora efectivamente trabaja.
+~~**Falta un dato en `companies`: la fecha de cierre de ejercicio.**~~
+✅ **Resuelto el 2026-09-09** (migration 0027,
+`companies.fiscal_year_end_month`). El grano **Ejercicio** ya existe en
+`/gastos` y en `/contador`, y es el recorte con el que la contadora
+efectivamente trabaja. Ver §3.
 
 ### b) Una sociedad tiene OTROS vencimientos, y no dependen del CUIT
 
@@ -106,24 +108,35 @@ período, y **export CSV de los que no entran al IVA compras** — exactamente l
 frase de arriba, hecha botón. La Posición de IVA del panel ya cierra con crédito
 fiscal real.
 
-**Dos cosas que recién se ven ahora que existe:**
+**Las dos cosas que se vieron al releer el pedido con la pantalla ya hecha
+quedaron RESUELTAS el 2026-09-09 (commit `68e021d`):**
 
-1. **El export no puede recortar el ejercicio.** El selector ofrece mes,
-   trimestre y año **calendario**. El ejercicio de esta empresa va del
-   **01/08/2025 al 31/07/2026**, y ninguno de los tres lo da. Para el pedido de
-   la contadora —que es por ejercicio— hoy habría que bajar 12 meses sueltos y
-   pegarlos. Es el mismo dato faltante de §2.a: `companies` no tiene fecha de
-   cierre de ejercicio.
+1. ~~**El export no puede recortar el ejercicio.**~~ ✅ **Resuelto.**
 
-2. **La contadora pide DOS cosas distintas de los gastos, y el botón da una.**
-   El último sub-ítem ("otros gastos **no incluidos** en el IVA compras") es lo
-   que exporta hoy. Pero los cinco anteriores —alquiler, seguros, servicios,
+   *Era:* el selector ofrecía mes, trimestre y año **calendario**, y el
+   ejercicio de esta empresa va del **01/08/2025 al 31/07/2026** — ninguno de
+   los tres lo daba. Para armar el pedido había que bajar 12 meses sueltos y
+   pegarlos, o sea el mismo trabajo manual que esto vino a sacar.
+
+   *Ahora:* migration 0027 agrega `companies.fiscal_year_end_month` (cierra el
+   §2.a) y el selector ofrece **Ejercicio** — el último **cerrado**, que es el
+   que tiene destinatario. Verificado con cierre en julio:
+   `/gastos?periodo=ejercicio` muestra *"ejercicio 01/08/2025 al 31/07/2026"*,
+   el rango exacto de este pedido, y el CSV trae esos mismos doce meses.
+
+2. ~~**La contadora pide DOS cosas distintas de los gastos, y el botón da una.**~~
+   ✅ **Resuelto.**
+
+   El último sub-ítem ("otros gastos **no incluidos** en el IVA compras") era lo
+   único que exportaba. Pero los cinco anteriores —alquiler, seguros, servicios,
    impuestos y tasas, honorarios— los pide **igual**, tengan o no factura: son
    "comprobantes de **pago**", que es otra cosa que el libro IVA compras. Para
    ésos hace falta exportar **todos** los gastos del período, no sólo los de
    afuera de ARCA. El servicio ya lo soporta (`getExpenseTotals(..., false)` y
-   `exportarGastosCsvAction(grano, false)`, ambos con test); falta exponerlo en
-   la pantalla.
+   `exportarGastosCsvAction(grano, false)`, ambos con test). El botón
+   "Exportar para el estudio" abre un menú con las dos, cada una con su
+   explicación: *Lo que hay que mandar* (la rutina mensual) y *Todos los
+   gastos* (los comprobantes de pago, para el balance).
 
 ## 4. Detalles menores pero reales
 
