@@ -220,18 +220,49 @@ Igual que con los tres bloques del panel, se dice cuáles son en vez de rellenar
 
 Es más de un slice y conviene verlo entre medio. Orden propuesto:
 
-1. **Calendario** — grilla del mes + heatmap real de ventas + feriados cargados y
-   verificados + los vencimientos que ya trae el brief fiscal. *La mitad funciona
-   con el dato de hoy.*
-2. **Agenda / Pendientes** — tabla nueva, tipos, vencimiento, recurrencia simple.
-   Se alimenta sola con lo que el sistema ya sabe (bajo mínimo → "reponer"; caja
-   sin cerrar → "cerrar caja").
-3. **Proyecciones** — en este orden interno: **días de stock** → cierre de mes →
-   patrón semanal → contra el año pasado.
+1. ~~**Calendario**~~ — ✅ **HECHO** 2026-09-10 (`560f981`, `9f501b3`). Grilla del
+   mes + heatmap real de ventas + feriados **cargados** (nunca calculados). Los
+   **vencimientos fiscales NO entraron**: son dato verificado contra ARCA y
+   todavía no lo tenemos — `holiday_calendars` ya sabe decir qué años faltan.
+2. ~~**Agenda / Pendientes**~~ — ✅ **HECHO** 2026-09-10 (`f8a5ec5`, `665156b`).
+   Tabla `tasks` (migration 0030), tipos, vencimiento, recurrencia, filtro por
+   tipo y vista por día desde el calendario.
+
+   Dos correcciones al plan original, con su motivo:
+
+   - **"bajo mínimo → reponer" se descartó.** El panel ya tiene su tarjeta de
+     Reponer, con los productos y las cantidades. Repetirlo como pendiente dice
+     lo mismo con menos detalle y llena la lista de cosas que uno ya vio. Quedó
+     sólo el de caja sin cerrar.
+   - **Los derivados no se guardan.** "Caja abierta de un día anterior" ya vive
+     en `cash_sessions`: una copia en `tasks` sólo puede desincronizarse. Se
+     derivan al leer y van **sin casilla** — no se resuelven tachándolos.
+
+   **Diferido y dicho** (se sacó su CSS huérfano en vez de dejarlo dando vueltas):
+   los atajos de escritura `.todo-templates` (cuáles son los tres útiles se sabe
+   mirando qué anota el comercio, no adivinando), el segmentado día/mes/año
+   `.todo-seg` (lo reemplazó el agrupado por vencimiento) y las filas de agenda
+   con importe `.cal-agenda`/`.ag-*` (necesitan el calendario fiscal verificado).
+3. **Proyecciones** ← **ACÁ VA LO PRÓXIMO**. En este orden interno: **días de
+   stock** → cierre de mes → patrón semanal → contra el año pasado.
+
+   > ⚠️ Releer §6 antes de escribir una línea. Lo que hoy parece "patrón semanal
+   > sólido" en los datos de desarrollo es el patrón que **yo mismo escribí** en
+   > `scripts/seed-dev-ventas.sql` (domingos cerrados, sábados a la mitad, cero
+   > estacionalidad anual). El comercio real arranca en cero filas. La pregunta
+   > que tiene que contestar cada bloque es *"¿cuántas semanas de operación real
+   > necesito antes de decir esto?"* — y decirlo en pantalla mientras no las haya.
 
 Después, transversal: **exportar `.ics`** para que todo eso caiga en el calendario
 del teléfono.
 
-**Antes de arrancar hace falta una decisión del owner** (§7): los feriados
-provinciales de TDF no tienen fuente encontrada. O se cargan a mano para el año en
-curso, o el calendario muestra sólo los nacionales y lo dice.
+~~**Antes de arrancar hace falta una decisión del owner** (§7)~~ — **RESUELTO**
+2026-09-10, delegado por el owner ("hagamos lo más conveniente").
+
+El 1 de junio (Día de la Provincia) **no es un feriado**: es un receso
+administrativo del sector público. Decretar feriados es facultad de la Nación y
+**el empleador elige si adhiere**. Marcarlo como feriado le diría al comercio que
+está cerrado cuando en realidad es su decisión. Va con tipo propio
+(`asueto_provincial`), color distinto y nota visible. La fuente es **secundaria**
+(Cámara de Comercio de Ushuaia → Ley Provincial 007/92); el texto primario no se
+encontró, y la fila de cobertura lo dice en vez de callarlo.
