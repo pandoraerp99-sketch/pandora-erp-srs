@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pandora · Devoluciones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --ink:#0d1424; --ink-1:#1f2a44; --ink-2:#4a5570; --ink-3:#7681a0; --ink-4:#a8b0c5;
+  --purple:#6b5fff; --purple-2:#9088ff; --blue:#5b8cff; --green:#34c77d; --orange:#f7984a; --pink:#ee6a8e; --red:#ef5d6a; --yellow:#f4c948; --teal:#0e8f9e; --rose:#d65db1;
+  --glass-bg:rgba(255,255,255,0.58); --glass-bg-2:rgba(255,255,255,0.72);
+  --glass-bd:1px solid rgba(255,255,255,0.85);
+  --glass-hi:inset 0 1px 0 rgba(255,255,255,0.9);
+  --glass-sh:0 8px 32px rgba(54,70,120,0.10), 0 2px 8px rgba(54,70,120,0.06);
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+button,input,select{ font:inherit; color:inherit; border:none; outline:none; background:none; cursor:pointer; }
+html,body{ height:100%; }
+body{ font-family:'Inter',ui-sans-serif,system-ui,sans-serif; -webkit-font-smoothing:antialiased; letter-spacing:-0.011em; color:var(--ink); height:100dvh; overflow:hidden; position:relative; }
+.bg{ position:fixed; inset:0; z-index:-10; }
+.bg .base{ position:absolute; inset:0; background:linear-gradient(175deg,#b5c6e8 0%,#c8d4ea 28%,#ddd0e0 62%,#eed6d0 100%); }
+.bg .glow{ position:absolute; inset:0; background:
+  radial-gradient(ellipse 70% 60% at 10% 95%, rgba(238,200,220,0.55) 0%, transparent 60%),
+  radial-gradient(ellipse 60% 50% at 88% 82%, rgba(240,210,175,0.40) 0%, transparent 60%),
+  radial-gradient(ellipse 55% 42% at 55% 22%, rgba(255,255,255,0.60) 0%, transparent 52%),
+  radial-gradient(ellipse 58% 48% at 10% 22%, rgba(195,215,248,0.65) 0%, transparent 62%); }
+::-webkit-scrollbar{ width:7px; height:7px; }
+::-webkit-scrollbar-track{ background:transparent; }
+::-webkit-scrollbar-thumb{ background:rgba(13,20,36,0.14); border-radius:5px; border:2px solid transparent; background-clip:padding-box; }
+.glass{ background:var(--glass-bg); backdrop-filter:blur(28px) saturate(140%); -webkit-backdrop-filter:blur(28px) saturate(140%); border:var(--glass-bd); border-radius:20px; box-shadow:var(--glass-hi), var(--glass-sh); }
+.glass-strong{ background:var(--glass-bg-2); backdrop-filter:blur(32px) saturate(150%); -webkit-backdrop-filter:blur(32px) saturate(150%); border:var(--glass-bd); border-radius:20px; box-shadow:var(--glass-hi), var(--glass-sh); }
+.tnum{ font-variant-numeric:tabular-nums; }
+
+.shell{ height:100dvh; padding:10px; display:grid; grid-template-columns:210px 1fr; gap:8px; }
+.sidebar{ display:flex; flex-direction:column; border-radius:20px; padding:22px 14px 18px; overflow:hidden; }
+.logo-row{ display:flex; align-items:center; gap:10px; padding:0 8px 22px; }
+.logo-mark{ width:26px; height:26px; flex-shrink:0; } .logo-mark svg{ width:100%; height:100%; display:block; }
+.logo-text{ font-size:19px; font-weight:700; letter-spacing:-0.025em; background:linear-gradient(135deg,#2a3454 0%,#4a5878 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.nav-item{ display:flex; align-items:center; gap:11px; padding:10px 11px; border-radius:12px; color:var(--ink-2); font-size:13.5px; font-weight:500; cursor:pointer; transition:all 200ms cubic-bezier(.4,0,.2,1); }
+.nav-item:hover{ color:var(--ink); background:rgba(255,255,255,0.4); }
+.nav-item.active{ background:rgba(255,255,255,0.92); color:var(--ink); box-shadow:0 1px 2px rgba(54,70,120,0.06), 0 4px 12px rgba(54,70,120,0.08); }
+.nav-item.active .nav-icon-box{ background:var(--purple); color:#fff; box-shadow:0 4px 10px rgba(107,95,255,0.4); }
+.nav-icon-box{ width:26px; height:26px; display:flex; align-items:center; justify-content:center; border-radius:7px; color:var(--ink-2); transition:all 200ms; flex-shrink:0; }
+.side-foot{ margin-top:auto; padding-top:12px; display:flex; flex-direction:column; gap:9px; }
+.afip{ padding:10px 11px; border-radius:13px; background:rgba(52,199,125,0.08); border:1px solid rgba(52,199,125,0.20); }
+.afip-top{ display:flex; align-items:center; gap:7px; }
+.afip-dot{ width:7px; height:7px; border-radius:50%; background:var(--green); flex:0 0 auto; animation:pg 2.4s ease-in-out infinite; }
+.afip-name{ font-size:11.5px; font-weight:700; color:#177a4a; }
+.afip-live{ margin-left:auto; font-size:8.5px; font-weight:800; letter-spacing:0.06em; color:var(--green); }
+.afip-sub{ font-size:10px; color:#5a9b78; padding-left:14px; margin-top:2px; }
+@keyframes pg{ 0%,100%{box-shadow:0 0 0 2px rgba(52,199,125,0.22)} 50%{box-shadow:0 0 0 5px rgba(52,199,125,0)} }
+.cashier{ display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:13px; background:rgba(255,255,255,0.66); border:1px solid rgba(255,255,255,0.9); box-shadow:var(--glass-hi); }
+.cashier-av{ width:32px; height:32px; flex:0 0 auto; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--blue)); display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:700; }
+.avatar-ring{ padding:2px; border-radius:50%; flex:0 0 auto; display:flex; background:conic-gradient(from 0deg,#6b5fff,#5b8cff,#34c77d,#f7984a,#ee6a8e,#6b5fff); }
+.avatar-ring > .cashier-av{ border:2px solid rgba(255,255,255,0.9); }
+.cashier-name{ font-size:12px; font-weight:600; line-height:1.2; }
+.cashier-role{ font-size:10px; color:var(--ink-3); }
+.cashier-live{ width:7px; height:7px; border-radius:50%; background:var(--green); margin-left:auto; flex:0 0 auto; animation:pg 2.4s ease-in-out infinite; }
+
+.main{ min-width:0; min-height:0; overflow-y:auto; padding:4px 6px 18px 2px; }
+.topbar{ display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+.search{ position:relative; flex:1; max-width:360px; display:flex; align-items:center; height:42px; border-radius:14px; padding:0 14px 0 40px; }
+.search svg{ position:absolute; left:13px; width:16px; height:16px; color:var(--ink-3); }
+.search input{ width:100%; font-size:13px; } .search input::placeholder{ color:var(--ink-3); }
+.tb-chips{ display:inline-flex; align-items:center; gap:3px; padding:5px; border-radius:14px; margin-left:8px; }
+.tb-chips .chip{ font-size:12px; font-weight:600; color:var(--ink-2); background:transparent; padding:7px 12px; border-radius:9px; transition:all 120ms; }
+.tb-chips .chip.on{ background:var(--ink); color:#fff; }
+.tb-chips .chip .c{ display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+.top-tools{ display:flex; align-items:center; gap:8px; margin-left:auto; }
+.iconbtn{ width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:12px; color:var(--ink-1); position:relative; }
+.iconbtn svg{ width:18px; height:18px; }
+.iconbtn .ndot{ position:absolute; top:7px; right:7px; min-width:15px; height:15px; border-radius:999px; background:var(--pink); color:#fff; font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center; border:2px solid rgba(255,255,255,0.9); }
+.user-chip{ display:flex; align-items:center; gap:9px; padding:5px 13px 5px 5px; border-radius:999px; }
+.user-name{ font-size:12.5px; font-weight:600; line-height:1.25; } .user-role{ font-size:10.5px; color:var(--ink-3); }
+
+.content{ display:flex; gap:16px; }
+.col-main{ flex:1; min-width:0; display:flex; flex-direction:column; gap:16px; }
+.col-side{ width:324px; flex-shrink:0; display:flex; flex-direction:column; gap:16px; }
+.card{ border-radius:20px; padding:20px; }
+.upper-mini{ font-size:10.5px; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.08em; font-family:var(--mono); font-weight:500; }
+.card-title{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.card-title h3{ font-size:14px; font-weight:600; color:var(--ink); }
+
+/* ===== DEVOLUCIONES ===== */
+.dv-head{ display:flex; align-items:center; justify-content:space-between; padding:18px 24px; border-radius:20px; }
+.dv-head-l{ display:flex; align-items:center; gap:15px; }
+.dv-head-ic{ width:46px; height:46px; border-radius:14px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; color:#fff; background:linear-gradient(135deg,var(--orange),var(--pink)); box-shadow:0 6px 16px rgba(238,106,142,0.32); }
+.dv-head-ic svg{ width:22px; height:22px; }
+.dv-title{ font-size:23px; font-weight:700; letter-spacing:-0.03em; }
+.dv-sub{ font-size:12.5px; color:var(--ink-2); margin-top:2px; }
+.dv-new{ display:inline-flex; align-items:center; gap:8px; padding:11px 18px; border-radius:13px; background:linear-gradient(140deg,var(--purple),var(--purple-2)); color:#fff; font-size:13.5px; font-weight:700; box-shadow:0 7px 20px rgba(107,95,255,0.42); transition:all 170ms; }
+.dv-new:hover{ transform:translateY(-1px); box-shadow:0 10px 26px rgba(107,95,255,0.52); }
+.dv-new svg{ width:16px; height:16px; }
+
+.dv-kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+.dv-kpi{ padding:16px 18px; border-radius:16px; }
+.dv-kpi .v{ font-size:24px; font-weight:700; letter-spacing:-0.02em; margin-top:6px; }
+.dv-kpi .foot{ font-size:11px; color:var(--ink-3); margin-top:3px; }
+
+.dv-sec{ font-size:11px; text-transform:uppercase; letter-spacing:0.06em; font-family:var(--mono); font-weight:700; color:var(--ink-3); margin:4px 4px 0; }
+.dv-card{ padding:16px 20px; border-radius:18px; display:flex; align-items:center; gap:15px; }
+.dv-card.hide{ display:none; }
+.dv-av{ width:42px; height:42px; border-radius:12px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; font-weight:700; background:linear-gradient(135deg,var(--ink-2),var(--ink-1)); }
+.dv-c-main{ flex:1; min-width:0; }
+.dv-c-name{ font-size:15px; font-weight:700; letter-spacing:-0.01em; }
+.dv-c-items{ font-size:12.5px; color:var(--ink-2); margin-top:2px; }
+.dv-c-meta{ font-size:11px; color:var(--ink-3); margin-top:3px; font-family:var(--mono); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.dv-nc{ display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; padding:2px 7px; border-radius:6px; background:rgba(91,140,255,0.14); color:#3b6fd4; font-family:var(--mono); }
+.dv-tag{ font-size:11px; font-weight:600; padding:4px 9px; border-radius:7px; }
+.dv-right{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex:0 0 auto; }
+.dv-monto{ font-family:var(--mono); font-size:16px; font-weight:700; color:#c93545; }
+.dv-reint{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:4px 10px; border-radius:8px; }
+.dv-reint svg{ width:12px; height:12px; }
+.dv-reint.efvo{ background:rgba(52,199,125,0.14); color:#1a8e5a; }
+.dv-reint.vale{ background:rgba(107,95,255,0.12); color:var(--purple); }
+.dv-reint.cambio{ background:rgba(247,152,74,0.15); color:#b96c1a; }
+.dv-ver{ font-size:11.5px; font-weight:600; color:var(--ink-3); background:rgba(255,255,255,0.6); border:1px solid rgba(255,255,255,0.9); padding:6px 12px; border-radius:9px; }
+
+/* rail */
+.mot-row{ display:flex; align-items:center; gap:10px; margin-bottom:11px; }
+.mot-row .l{ font-size:12.5px; color:var(--ink-1); width:96px; flex:0 0 auto; }
+.mot-bar{ flex:1; height:8px; border-radius:999px; background:rgba(13,20,36,0.07); overflow:hidden; }
+.mot-bar span{ display:block; height:100%; border-radius:999px; background:linear-gradient(90deg,var(--orange),var(--pink)); }
+.mot-row .p{ font-family:var(--mono); font-size:11.5px; font-weight:700; color:var(--ink-2); width:34px; text-align:right; flex:0 0 auto; }
+.pol-row{ display:flex; align-items:flex-start; gap:9px; font-size:12px; color:var(--ink-2); padding:7px 0; }
+.pol-row svg{ width:15px; height:15px; color:var(--green); flex:0 0 auto; margin-top:1px; }
+.tip{ font-size:11.5px; color:var(--ink-3); line-height:1.5; padding:14px 16px; border-radius:14px; background:rgba(91,140,255,0.07); border:1px solid rgba(91,140,255,0.16); }
+.tip b{ color:var(--ink-2); }
+
+/* modal */
+.modal-ov{ position:fixed; inset:0; z-index:100; background:rgba(20,26,44,0.42); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; padding:24px; }
+.modal-ov.open{ display:flex; }
+.modal{ width:100%; max-width:560px; max-height:90vh; overflow-y:auto; background:var(--glass-bg-2); backdrop-filter:blur(32px) saturate(150%); -webkit-backdrop-filter:blur(32px) saturate(150%); border:var(--glass-bd); border-radius:22px; box-shadow:0 24px 70px rgba(20,26,44,0.35); padding:24px; animation:mIn 220ms cubic-bezier(.16,1,.3,1); }
+@keyframes mIn{ from{ opacity:0; transform:translateY(16px) scale(.98); } }
+.m-head{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:18px; }
+.m-title{ font-size:19px; font-weight:700; letter-spacing:-0.02em; }
+.m-sub{ font-size:12.5px; color:var(--ink-3); margin-top:2px; }
+.m-x{ width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:var(--ink-2); background:rgba(13,20,36,0.05); flex:0 0 auto; }
+.m-x svg{ width:16px; height:16px; }
+.m-step{ font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; font-family:var(--mono); font-weight:700; color:var(--purple); margin:16px 0 8px; }
+.m-search{ position:relative; display:flex; align-items:center; height:40px; border-radius:11px; background:#fff; border:1px solid rgba(13,20,36,0.12); padding:0 12px 0 36px; }
+.m-search svg{ position:absolute; left:11px; width:15px; height:15px; color:var(--ink-3); }
+.m-search input{ width:100%; font-size:13.5px; }
+.m-sale{ margin-top:10px; padding:12px 14px; border-radius:12px; background:rgba(255,255,255,0.6); border:1px solid rgba(255,255,255,0.85); }
+.m-sale-top{ display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--ink-2); margin-bottom:8px; }
+.m-sale-top b{ color:var(--ink); }
+.m-item{ display:flex; align-items:center; gap:11px; padding:8px 0; border-top:1px solid rgba(13,20,36,0.06); }
+.m-item:first-of-type{ border-top:none; }
+.m-check{ width:20px; height:20px; border-radius:6px; border:2px solid var(--ink-4); flex:0 0 auto; display:flex; align-items:center; justify-content:center; }
+.m-check svg{ width:12px; height:12px; color:#fff; opacity:0; }
+.m-item.on .m-check{ background:var(--purple); border-color:var(--purple); } .m-item.on .m-check svg{ opacity:1; }
+.m-item .n{ flex:1; font-size:13px; } .m-item .n .q{ font-size:11px; color:var(--ink-3); }
+.m-item .a{ font-family:var(--mono); font-weight:600; font-size:12.5px; }
+.m-chips{ display:flex; gap:6px; flex-wrap:wrap; }
+.m-chip{ font-size:12px; font-weight:600; color:var(--ink-2); background:rgba(13,20,36,0.05); padding:7px 13px; border-radius:9px; }
+.m-chip.on{ background:var(--purple); color:#fff; }
+.m-toggle{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border-radius:12px; background:rgba(52,199,125,0.07); border:1px solid rgba(52,199,125,0.18); margin-top:12px; }
+.m-toggle .t{ font-size:12.5px; font-weight:600; } .m-toggle .s{ font-size:11px; color:var(--ink-3); margin-top:1px; }
+.sw{ width:42px; height:24px; border-radius:999px; background:rgba(13,20,36,0.18); position:relative; flex:0 0 auto; cursor:pointer; transition:background 160ms; }
+.sw::after{ content:''; position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.2); transition:transform 160ms; }
+.sw.on{ background:var(--green); } .sw.on::after{ transform:translateX(18px); }
+.m-total{ display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-radius:12px; background:rgba(239,93,106,0.08); border:1px solid rgba(239,93,106,0.2); margin:16px 0; }
+.m-total .k{ font-size:12.5px; color:var(--ink-2); } .m-total .v{ font-family:var(--mono); font-size:20px; font-weight:700; color:#c93545; }
+.m-nc{ font-size:11.5px; color:var(--ink-3); display:flex; align-items:center; gap:7px; margin-bottom:16px; }
+.m-nc svg{ width:14px; height:14px; color:var(--blue); flex:0 0 auto; }
+.m-acts{ display:flex; gap:10px; justify-content:flex-end; }
+.m-btn{ font-size:13px; font-weight:600; padding:10px 17px; border-radius:11px; }
+.m-btn.ghost{ color:var(--ink-2); background:rgba(13,20,36,0.05); }
+.m-btn.primary{ color:#fff; background:linear-gradient(140deg,var(--purple),var(--purple-2)); box-shadow:0 6px 16px rgba(107,95,255,0.4); }
+@media (prefers-reduced-motion:reduce){ *{ animation:none !important; } }
+
+/* barra de scroll del contenido principal — consistente y siempre visible */
+.main{ overflow-y:scroll; }
+.main::-webkit-scrollbar{ width:7px; }
+.main::-webkit-scrollbar-track{ background:transparent; }
+.main::-webkit-scrollbar-thumb{ background:rgba(13,20,36,0.14); border-radius:5px; border:2px solid transparent; background-clip:padding-box; }
+</style>
+</head>
+<body>
+  <div class="bg"><div class="base"></div><div class="glow"></div></div>
+  <div class="shell">
+    <aside class="sidebar glass-strong">
+      <div class="logo-row">
+        <span class="logo-mark"><svg viewBox="0 0 32 32"><defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#6b5fff"/><stop offset="100%" stop-color="#5b8cff"/></linearGradient></defs><g fill="url(#lg1)"><path d="M16 2 L18 14 L30 16 L18 18 L16 30 L14 18 L2 16 L14 14 Z"/></g></svg></span>
+        <span class="logo-text">Pandora</span>
+      </div>
+      <nav style="display:flex; flex-direction:column; gap:3px; flex:1; overflow-y:auto; min-height:0; padding-right:4px; margin-right:-4px;">
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="10" rx="2"/><rect x="13" y="3" width="8" height="6" rx="2"/><rect x="3" y="15" width="8" height="6" rx="2"/><rect x="13" y="11" width="8" height="10" rx="2"/></svg></div><span>Panel</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg></div><span>Venta</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01"/><path d="M18 12h.01"/></svg></div><span>Caja</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.58a2 2 0 0 1 0 2.83z"/><circle cx="7" cy="7" r="1.5"/></svg></div><span>Productos</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg></div><span>Clientes</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></div><span>Stock</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m15 9-6 6"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg></div><span>Ofertas</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h4"/></svg></div><span>Facturas</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6"/><path d="M9 16h4"/></svg></div><span>Presupuestos</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div><span>Pedidos</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg></div><span>Señas</span></div>
+        <div class="nav-item active"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg></div><span>Devoluciones</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 15v-3"/><path d="M12 15V8"/><path d="M16 15v-5"/></svg></div><span>Reportes</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1-6 6 6 6 0 0 1 0-12 6 6 0 0 1 6 6z"/><path d="M8.5 8.5 4 21l4-2 4 2 1.2-3.4"/></svg></div><span>Contador</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></div><span>Integraciones</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8 2 2 0 1 1-2.8 2.8 1.7 1.7 0 0 0-2.8 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.8-1.2 2 2 0 1 1-2.8-2.8A1.7 1.7 0 0 0 4.6 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.8 2 2 0 1 1 2.8-2.8A1.7 1.7 0 0 0 11 4.6a2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.8 1.2 2 2 0 1 1 2.8 2.8A1.7 1.7 0 0 0 19.4 11a2 2 0 1 1 0 4z"/></svg></div><span>Configuración</span></div>
+      </nav>
+      <div class="side-foot">
+        <div class="afip"><div class="afip-top"><span class="afip-dot"></span><span class="afip-name">AFIP conectado</span><span class="afip-live">LIVE</span></div><div class="afip-sub">WSFEv1 · 47 CAE hoy</div></div>
+        <div class="cashier"><span class="avatar-ring"><span class="cashier-av">AR</span></span><div><div class="cashier-name">Agus Rochelle</div><div class="cashier-role">Dueño</div></div><span class="cashier-live"></span></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="search glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="Buscar devolución, cliente o venta…" /></div>
+        <div class="tb-chips glass" id="dvChips">
+          <button class="chip on">Todas</button>
+          <button class="chip"><span class="c" style="background:var(--red)"></span>Fallado</button>
+          <button class="chip"><span class="c" style="background:var(--orange)"></span>No le gustó</button>
+          <button class="chip"><span class="c" style="background:var(--purple)"></span>Cambio</button>
+          <button class="chip"><span class="c" style="background:var(--ink-4)"></span>Otro</button>
+        </div>
+        <div class="top-tools">
+          <button class="iconbtn glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg><span class="ndot">3</span></button>
+          <button class="iconbtn glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8 2 2 0 1 1-2.8 2.8 1.7 1.7 0 0 0-2.8 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.8-1.2 2 2 0 1 1-2.8-2.8A1.7 1.7 0 0 0 4.6 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.8 2 2 0 1 1 2.8-2.8A1.7 1.7 0 0 0 11 4.6a2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.8 1.2 2 2 0 1 1 2.8 2.8A1.7 1.7 0 0 0 19.4 11a2 2 0 1 1 0 4z"/></svg></button>
+          <div class="user-chip glass"><span class="avatar-ring"><span class="cashier-av">AR</span></span><div><div class="user-name">Agus Rochelle</div><div class="user-role">Dueño</div></div></div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="col-main">
+          <div class="dv-head glass">
+            <div class="dv-head-l">
+              <span class="dv-head-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg></span>
+              <div>
+                <h1 class="dv-title">Devoluciones</h1>
+                <p class="dv-sub">Cambios, reembolsos y notas de crédito.</p>
+              </div>
+            </div>
+            <button class="dv-new" id="dvNewBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>Nueva devolución</button>
+          </div>
+
+          <div class="dv-kpis">
+            <div class="dv-kpi glass"><div class="upper-mini">Total devuelto · mes</div><div class="v tnum" style="color:#c93545">$18.950</div><div class="foot">4 devoluciones</div></div>
+            <div class="dv-kpi glass"><div class="upper-mini">Tasa de devolución</div><div class="v tnum">1,6%</div><div class="foot">sobre 248 ventas</div></div>
+            <div class="dv-kpi glass"><div class="upper-mini">En nota de crédito</div><div class="v tnum">3</div><div class="foot">1 fue cambio</div></div>
+            <div class="dv-kpi glass"><div class="upper-mini">Motivo más común</div><div class="v" style="font-size:19px;">Fallado</div><div class="foot">50% de los casos</div></div>
+          </div>
+
+          <div class="dv-sec">Hoy</div>
+          <div class="dv-card glass" data-motivo="fallado">
+            <div class="dv-av" style="background:linear-gradient(135deg,#ef5d6a,#f7984a)">AT</div>
+            <div class="dv-c-main">
+              <div class="dv-c-name">Ana Torres</div>
+              <div class="dv-c-items">1× Vestido de fiesta — cierre fallado</div>
+              <div class="dv-c-meta">Dev #0031 · sobre Factura B 0004-00001240 <span class="dv-tag" style="background:rgba(239,93,106,0.13);color:#c93545">Fallado</span> <span class="dv-nc">NC B 0004-00000012</span></div>
+            </div>
+            <div class="dv-right">
+              <div class="dv-monto">−$8.500</div>
+              <span class="dv-reint efvo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Efectivo</span>
+              <button class="dv-ver">Ver</button>
+            </div>
+          </div>
+          <div class="dv-card glass" data-motivo="cambio">
+            <div class="dv-av" style="background:linear-gradient(135deg,#f7984a,#f4c948)">KN</div>
+            <div class="dv-c-main">
+              <div class="dv-c-name">Kiosco Norte</div>
+              <div class="dv-c-items">2× Botones forrados → cambió por broches a presión</div>
+              <div class="dv-c-meta">Dev #0030 · sobre Factura A 0004-00001238 <span class="dv-tag" style="background:rgba(247,152,74,0.15);color:#b96c1a">No le gustó</span></div>
+            </div>
+            <div class="dv-right">
+              <div class="dv-monto" style="color:var(--ink-3)">$0</div>
+              <span class="dv-reint cambio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg>Cambio</span>
+              <button class="dv-ver">Ver</button>
+            </div>
+          </div>
+
+          <div class="dv-sec">Esta semana</div>
+          <div class="dv-card glass" data-motivo="otro">
+            <div class="dv-av">GA</div>
+            <div class="dv-c-main">
+              <div class="dv-c-name">García SRL</div>
+              <div class="dv-c-items">3 m de tafeta — devolución parcial (sobró)</div>
+              <div class="dv-c-meta">Dev #0028 · sobre Factura A 0004-00001229 <span class="dv-tag" style="background:rgba(118,129,160,0.14);color:var(--ink-2)">Diferencia</span> <span class="dv-nc">NC A 0004-00000011</span></div>
+            </div>
+            <div class="dv-right">
+              <div class="dv-monto">−$9.600</div>
+              <span class="dv-reint vale"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 10v4M9 12h6"/></svg>Saldo a favor</span>
+              <button class="dv-ver">Ver</button>
+            </div>
+          </div>
+          <div class="dv-card glass" data-motivo="fallado">
+            <div class="dv-av" style="background:linear-gradient(135deg,#34c77d,#0e8f9e)">CF</div>
+            <div class="dv-c-main">
+              <div class="dv-c-name">Consumidor final</div>
+              <div class="dv-c-items">1× Cierre invisible 60 cm — vino trabado</div>
+              <div class="dv-c-meta">Dev #0026 · sobre Tique B 0004-00001201 <span class="dv-tag" style="background:rgba(239,93,106,0.13);color:#c93545">Fallado</span> <span class="dv-nc">NC B 0004-00000010</span></div>
+            </div>
+            <div class="dv-right">
+              <div class="dv-monto">−$850</div>
+              <span class="dv-reint efvo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Efectivo</span>
+              <button class="dv-ver">Ver</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-side">
+          <section class="card glass">
+            <div class="card-title"><h3>Motivos frecuentes</h3></div>
+            <div class="mot-row"><span class="l">Fallado</span><div class="mot-bar"><span style="width:50%"></span></div><span class="p">50%</span></div>
+            <div class="mot-row"><span class="l">No le gustó</span><div class="mot-bar"><span style="width:25%"></span></div><span class="p">25%</span></div>
+            <div class="mot-row"><span class="l">Diferencia</span><div class="mot-bar"><span style="width:15%"></span></div><span class="p">15%</span></div>
+            <div class="mot-row" style="margin-bottom:0;"><span class="l">Otro</span><div class="mot-bar"><span style="width:10%"></span></div><span class="p">10%</span></div>
+          </section>
+
+          <section class="card glass">
+            <div class="card-title"><h3>Política de cambios</h3></div>
+            <div class="pol-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><b>30 días</b> para cambio de productos no fallados.</span></div>
+            <div class="pol-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Saldo a favor válido <b>90 días</b>.</span></div>
+            <div class="pol-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Fallado: reembolso o cambio siempre.</span></div>
+            <button style="width:100%;margin-top:10px;font-size:12px;font-weight:600;color:var(--purple);background:rgba(107,95,255,0.08);padding:9px;border-radius:10px;">Editar política</button>
+          </section>
+
+          <div class="tip"><b>💡 Cada devolución genera su Nota de Crédito</b> del mismo tipo que la factura original (A/B/C), referenciando el comprobante, y revierte el IVA — automático con AFIP. <span style="color:var(--blue);font-weight:600;">Módulo fiscal F1.</span></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ═══ MODAL NUEVA DEVOLUCIÓN ═══ -->
+  <div class="modal-ov" id="modalOv">
+    <div class="modal">
+      <div class="m-head">
+        <div><div class="m-title">Nueva devolución</div><div class="m-sub">Buscá la venta, elegí qué se devuelve y cómo se reintegra.</div></div>
+        <button class="m-x" id="mClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+
+      <div class="m-step">1 · Venta original</div>
+      <div class="m-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input value="Factura B 0004-00001240 — Ana Torres" /></div>
+      <div class="m-sale">
+        <div class="m-sale-top"><span>Ana Torres · <b>18/06</b></span><span>Total <b>$14.900</b></span></div>
+        <div class="m-item on" data-a="8500"><span class="m-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></span><div class="n">Vestido de fiesta <span class="q">· 1 un</span></div><div class="a">$8.500</div></div>
+        <div class="m-item" data-a="6400"><span class="m-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></span><div class="n">Tafeta roja <span class="q">· 2 m</span></div><div class="a">$6.400</div></div>
+      </div>
+
+      <div class="m-step">2 · Motivo</div>
+      <div class="m-chips" id="mMotivos">
+        <button class="m-chip on">Fallado</button>
+        <button class="m-chip">No le gustó</button>
+        <button class="m-chip">Equivocado</button>
+        <button class="m-chip">Diferencia</button>
+        <button class="m-chip">Otro</button>
+      </div>
+
+      <div class="m-step">3 · Reintegro</div>
+      <div class="m-chips" id="mReint">
+        <button class="m-chip on">Efectivo</button>
+        <button class="m-chip">Saldo a favor</button>
+        <button class="m-chip">Cambio</button>
+      </div>
+      <div class="m-toggle">
+        <div><div class="t">Vuelve al stock</div><div class="s">Los ítems sanos se reingresan al inventario.</div></div>
+        <div class="sw" id="mStock"></div>
+      </div>
+
+      <div class="m-total"><span class="k">A devolver</span><span class="v tnum" id="mTotal">$8.500</span></div>
+      <div class="m-nc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h4"/></svg>Se generará <b style="margin:0 3px">Nota de Crédito B</b> sobre la Factura B 0004-00001240 (módulo fiscal F1).</div>
+      <div class="m-acts"><button class="m-btn ghost" id="mCancel">Cancelar</button><button class="m-btn primary" id="mConfirm">Confirmar devolución</button></div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    // filtro por motivo
+    var chips = document.querySelectorAll('#dvChips .chip');
+    var map = { 'Todas':'all','Fallado':'fallado','No le gustó':'nolegusto','Cambio':'cambio','Otro':'otro' };
+    var cards = document.querySelectorAll('.dv-card');
+    var secs = document.querySelectorAll('.dv-sec');
+    chips.forEach(function(ch){ ch.addEventListener('click', function(){
+      chips.forEach(function(x){ x.classList.remove('on'); }); ch.classList.add('on');
+      var f = map[ch.textContent.trim()] || 'all';
+      cards.forEach(function(c){ c.classList.toggle('hide', f!=='all' && (c.dataset.motivo||'') !== f); });
+      secs.forEach(function(s){ var next=s.nextElementSibling, any=false; while(next && next.classList.contains('dv-card')){ if(!next.classList.contains('hide')) any=true; next=next.nextElementSibling; } s.style.display = any ? '' : 'none'; });
+    }); });
+
+    // modal
+    var ov = document.getElementById('modalOv');
+    function open(){ ov.classList.add('open'); } function close(){ ov.classList.remove('open'); }
+    document.getElementById('dvNewBtn').addEventListener('click', open);
+    document.getElementById('mClose').addEventListener('click', close);
+    document.getElementById('mCancel').addEventListener('click', close);
+    ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+
+    // item selection → total
+    function fmt(n){ return '$' + (n||0).toLocaleString('es-AR'); }
+    function recalc(){ var t=0; document.querySelectorAll('.m-item.on').forEach(function(it){ t += parseFloat(it.dataset.a)||0; }); document.getElementById('mTotal').textContent = fmt(t); }
+    document.querySelectorAll('.m-item').forEach(function(it){ it.addEventListener('click', function(){ it.classList.toggle('on'); recalc(); }); });
+    // chip groups (single-select)
+    ['mMotivos','mReint'].forEach(function(id){ var g=document.getElementById(id); g.querySelectorAll('.m-chip').forEach(function(b){ b.addEventListener('click', function(){ g.querySelectorAll('.m-chip').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); }); }); });
+    document.getElementById('mStock').addEventListener('click', function(){ this.classList.toggle('on'); });
+    document.getElementById('mConfirm').addEventListener('click', close);
+
+    // ver detalle (placeholder liviano)
+    document.querySelectorAll('.dv-ver').forEach(function(b){ b.addEventListener('click', function(){ open(); }); });
+  })();
+  </script>
+  <script>
+  (function(){
+    var map={'Panel':'dashboard.html','Venta':'checkpoint-v19-top-tools.html','Caja':'checkpoint-caja-v2.html','Productos':'productos-v3.html','Clientes':'clientes-v6.html','Stock':'stock-v2.html','Ofertas':'ofertas.html','Facturas':'facturas-v4.html','Presupuestos':'presupuestos-v1.html','Pedidos':'pedidos.html','Señas':'pedidos-senados.html','Devoluciones':'devoluciones.html','Reportes':'reportes-v2.html','Contador':'contador-v2.html','Integraciones':'integraciones.html','Configuración':'configuracion-v1.html'};
+    function txt(el){return (el.textContent||'').trim();}
+    [].slice.call(document.querySelectorAll('.nav-item')).forEach(function(el){var u=map[txt(el)];if(u){el.style.cursor='pointer';el.addEventListener('click',function(){location.href=u;});}});
+  })();
+  </script>
+</body>
+</html>

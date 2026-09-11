@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pandora · Integraciones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --ink:#0d1424; --ink-1:#1f2a44; --ink-2:#4a5570; --ink-3:#7681a0; --ink-4:#a8b0c5;
+  --purple:#6b5fff; --purple-2:#9088ff; --blue:#5b8cff; --green:#34c77d; --orange:#f7984a; --pink:#ee6a8e; --red:#ef5d6a; --yellow:#f4c948; --teal:#0e8f9e;
+  --glass-bg:rgba(255,255,255,0.58); --glass-bg-2:rgba(255,255,255,0.72);
+  --glass-bd:1px solid rgba(255,255,255,0.85);
+  --glass-hi:inset 0 1px 0 rgba(255,255,255,0.9);
+  --glass-sh:0 8px 32px rgba(54,70,120,0.10), 0 2px 8px rgba(54,70,120,0.06);
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+button,input{ font:inherit; color:inherit; border:none; outline:none; background:none; cursor:pointer; }
+html,body{ height:100%; }
+body{ font-family:'Inter',ui-sans-serif,system-ui,sans-serif; -webkit-font-smoothing:antialiased; letter-spacing:-0.011em; color:var(--ink); height:100dvh; overflow:hidden; position:relative; }
+.bg{ position:fixed; inset:0; z-index:-10; }
+.bg .base{ position:absolute; inset:0; background:linear-gradient(175deg,#b5c6e8 0%,#c8d4ea 28%,#ddd0e0 62%,#eed6d0 100%); }
+.bg .glow{ position:absolute; inset:0; background:
+  radial-gradient(ellipse 70% 60% at 10% 95%, rgba(238,200,220,0.55) 0%, transparent 60%),
+  radial-gradient(ellipse 60% 50% at 88% 82%, rgba(240,210,175,0.40) 0%, transparent 60%),
+  radial-gradient(ellipse 55% 42% at 55% 22%, rgba(255,255,255,0.60) 0%, transparent 52%),
+  radial-gradient(ellipse 58% 48% at 10% 22%, rgba(195,215,248,0.65) 0%, transparent 62%); }
+::-webkit-scrollbar{ width:7px; height:7px; }
+::-webkit-scrollbar-track{ background:transparent; }
+::-webkit-scrollbar-thumb{ background:rgba(13,20,36,0.14); border-radius:5px; border:2px solid transparent; background-clip:padding-box; }
+.glass{ background:var(--glass-bg); backdrop-filter:blur(28px) saturate(140%); -webkit-backdrop-filter:blur(28px) saturate(140%); border:var(--glass-bd); border-radius:20px; box-shadow:var(--glass-hi), var(--glass-sh); }
+.glass-strong{ background:var(--glass-bg-2); backdrop-filter:blur(32px) saturate(150%); -webkit-backdrop-filter:blur(32px) saturate(150%); border:var(--glass-bd); border-radius:20px; box-shadow:var(--glass-hi), var(--glass-sh); }
+.mono{ font-family:var(--mono); }
+.shell{ height:100dvh; padding:10px; display:grid; grid-template-columns:210px 1fr; gap:8px; }
+.sidebar{ display:flex; flex-direction:column; border-radius:20px; padding:22px 14px 18px; overflow:hidden; }
+.logo-row{ display:flex; align-items:center; gap:10px; padding:0 8px 22px; }
+.logo-mark{ width:26px; height:26px; flex-shrink:0; } .logo-mark svg{ width:100%; height:100%; display:block; }
+.logo-text{ font-size:19px; font-weight:700; letter-spacing:-0.025em; background:linear-gradient(135deg,#2a3454 0%,#4a5878 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.nav-item{ display:flex; align-items:center; gap:11px; padding:10px 11px; border-radius:12px; color:var(--ink-2); font-size:13.5px; font-weight:500; cursor:pointer; transition:all 200ms cubic-bezier(.4,0,.2,1); }
+.nav-item:hover{ color:var(--ink); background:rgba(255,255,255,0.4); }
+.nav-item.active{ background:rgba(255,255,255,0.92); color:var(--ink); box-shadow:0 1px 2px rgba(54,70,120,0.06), 0 4px 12px rgba(54,70,120,0.08); }
+.nav-item.active .nav-icon-box{ background:var(--purple); color:#fff; box-shadow:0 4px 10px rgba(107,95,255,0.4); }
+.nav-icon-box{ width:26px; height:26px; display:flex; align-items:center; justify-content:center; border-radius:7px; color:var(--ink-2); transition:all 200ms; flex-shrink:0; }
+.side-foot{ margin-top:auto; padding-top:12px; display:flex; flex-direction:column; gap:9px; }
+.afip{ padding:10px 11px; border-radius:13px; background:rgba(52,199,125,0.08); border:1px solid rgba(52,199,125,0.20); }
+.afip-top{ display:flex; align-items:center; gap:7px; }
+.afip-dot{ width:7px; height:7px; border-radius:50%; background:var(--green); flex:0 0 auto; animation:pg 2.4s ease-in-out infinite; }
+.afip-name{ font-size:11.5px; font-weight:700; color:#177a4a; }
+.afip-live{ margin-left:auto; font-size:8.5px; font-weight:800; letter-spacing:0.06em; color:var(--green); }
+.afip-sub{ font-size:10px; color:#5a9b78; padding-left:14px; margin-top:2px; }
+@keyframes pg{ 0%,100%{box-shadow:0 0 0 2px rgba(52,199,125,0.22)} 50%{box-shadow:0 0 0 5px rgba(52,199,125,0)} }
+.cashier{ display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:13px; background:rgba(255,255,255,0.66); border:1px solid rgba(255,255,255,0.9); box-shadow:var(--glass-hi); }
+.cashier-av{ width:32px; height:32px; flex:0 0 auto; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--blue)); display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:700; }
+.avatar-ring{ padding:2px; border-radius:50%; flex:0 0 auto; display:flex; background:conic-gradient(from 0deg,#6b5fff,#5b8cff,#34c77d,#f7984a,#ee6a8e,#6b5fff); animation:spinRing 6s linear infinite; }
+.avatar-ring > .cashier-av{ animation:spinRing 6s linear infinite reverse; border:2px solid rgba(255,255,255,0.9); }
+@keyframes spinRing{ to{ transform:rotate(360deg); } }
+.cashier-name{ font-size:12px; font-weight:600; line-height:1.2; }
+.cashier-role{ font-size:10px; color:var(--ink-3); }
+.cashier-live{ width:7px; height:7px; border-radius:50%; background:var(--green); margin-left:auto; flex:0 0 auto; animation:pg 2.4s ease-in-out infinite; }
+.main{ min-width:0; min-height:0; overflow-y:auto; padding:4px 6px 30px 2px; }
+.topbar{ display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+.search{ position:relative; flex:1; max-width:380px; display:flex; align-items:center; height:42px; border-radius:14px; padding:0 14px 0 40px; }
+.search svg{ position:absolute; left:13px; width:16px; height:16px; color:var(--ink-3); }
+.search input{ width:100%; font-size:13px; } .search input::placeholder{ color:var(--ink-3); }
+.top-tools{ display:flex; align-items:center; gap:8px; margin-left:auto; }
+.iconbtn{ width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:12px; color:var(--ink-1); position:relative; }
+.iconbtn svg{ width:18px; height:18px; }
+.iconbtn .ndot{ position:absolute; top:7px; right:7px; min-width:15px; height:15px; border-radius:999px; background:var(--pink); color:#fff; font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center; border:2px solid rgba(255,255,255,0.9); }
+.user-chip{ display:flex; align-items:center; gap:9px; padding:5px 13px 5px 5px; border-radius:999px; }
+.user-name{ font-size:12.5px; font-weight:600; line-height:1.25; } .user-role{ font-size:10.5px; color:var(--ink-3); }
+.bar{ display:flex; align-items:center; gap:16px; padding:17px 20px; border-radius:20px; margin-bottom:18px;
+ background:rgba(255,255,255,0.52); -webkit-backdrop-filter:blur(40px) saturate(180%); backdrop-filter:blur(40px) saturate(180%);
+ border:1px solid rgba(255,255,255,0.6); box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 1px rgba(54,70,120,0.04), 0 10px 30px -14px rgba(54,70,120,0.3); }
+.bar-icon{ width:42px; height:42px; border-radius:13px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; color:var(--purple);
+ background:linear-gradient(150deg, rgba(107,95,255,0.16), rgba(91,140,255,0.10)); border:1px solid rgba(255,255,255,0.7); box-shadow: inset 0 1px 0 rgba(255,255,255,0.8); }
+.bar-title{ font-size:22px; font-weight:700; letter-spacing:-0.035em; color:var(--ink); line-height:1.05; }
+.bar-sub{ font-size:12.5px; color:var(--ink-3); margin-top:3px; } .bar-sub b{ color:var(--ink-2); font-weight:600; }
+.bar-actions{ margin-left:auto; display:flex; gap:10px; align-items:center; }
+.bar .b{ display:inline-flex; align-items:center; gap:7px; padding:10px 16px; border-radius:12px; font-size:13px; font-weight:600; cursor:pointer; transition:all 180ms; }
+.bar .b svg{ width:15px; height:15px; }
+.bar .b.primary{ color:#fff; border:none; background:linear-gradient(135deg, #7a6fff, #6b5fff); box-shadow:0 4px 14px -2px rgba(107,95,255,0.5), inset 0 1px 0 rgba(255,255,255,0.35); }
+.bar .b.primary:hover{ transform:translateY(-1px); }
+/* === integraciones === */
+.int-sec-h{ display:flex; align-items:flex-end; gap:11px; margin:24px 2px 13px; }
+.int-sec-h:first-of-type{ margin-top:0; }
+.ish-t{ font-size:15px; font-weight:700; color:var(--ink); letter-spacing:-0.02em; }
+.ish-s{ font-size:11.5px; color:var(--ink-3); margin-top:2px; }
+.ish-n{ font-size:10.5px; font-weight:700; font-family:var(--mono); color:var(--ink-3); background:rgba(255,255,255,0.55); border:1px solid rgba(255,255,255,0.8); padding:2px 8px; border-radius:999px; margin-bottom:2px; }
+.int-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:13px; }
+.int-card{ display:flex; align-items:flex-start; gap:13px; padding:15px 16px; border-radius:16px;
+ background:rgba(255,255,255,0.5); -webkit-backdrop-filter:blur(22px) saturate(140%); backdrop-filter:blur(22px) saturate(140%);
+ border:1px solid rgba(255,255,255,0.62); box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 6px 18px -13px rgba(54,70,120,0.22); transition:all 180ms cubic-bezier(.2,.7,.2,1); }
+.int-card:hover{ transform:translateY(-2px); background:rgba(255,255,255,0.64); box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 12px 26px -12px rgba(54,70,120,0.3); }
+.int-tile{ width:46px; height:46px; border-radius:13px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; letter-spacing:-0.02em; box-shadow:0 3px 9px rgba(54,70,120,0.20), inset 0 1px 0 rgba(255,255,255,0.25); }
+.int-main{ flex:1; min-width:0; }
+.int-top{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.int-name{ font-size:13.5px; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.int-desc{ font-size:11.5px; color:var(--ink-3); margin-top:4px; line-height:1.42; }
+.int-st{ font-size:10.5px; font-weight:600; padding:4px 10px; border-radius:999px; display:inline-flex; align-items:center; gap:5px; white-space:nowrap; flex:0 0 auto; }
+.int-st i{ width:6px; height:6px; border-radius:50%; background:var(--green); }
+.int-st.conn{ background:rgba(52,199,125,0.14); color:#1a8e5a; }
+.int-st.avail{ background:rgba(107,95,255,0.09); color:var(--purple); border:1px solid rgba(107,95,255,0.22); cursor:pointer; }
+.int-st.avail:hover{ background:rgba(107,95,255,0.16); }
+.int-st.soon{ background:rgba(118,129,160,0.12); color:#6a748f; }
+
+/* barra de scroll del contenido principal — consistente y siempre visible */
+.main{ overflow-y:scroll; }
+.main::-webkit-scrollbar{ width:7px; }
+.main::-webkit-scrollbar-track{ background:transparent; }
+.main::-webkit-scrollbar-thumb{ background:rgba(13,20,36,0.14); border-radius:5px; border:2px solid transparent; background-clip:padding-box; }
+</style>
+</head>
+<body>
+  <div class="bg"><div class="base"></div><div class="glow"></div></div>
+  <div class="shell">
+    <aside class="sidebar glass-strong">
+      <div class="logo-row">
+        <span class="logo-mark"><svg viewBox="0 0 32 32"><defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#6b5fff"/><stop offset="100%" stop-color="#5b8cff"/></linearGradient></defs><g fill="url(#lg1)"><path d="M16 2 L18 14 L30 16 L18 18 L16 30 L14 18 L2 16 L14 14 Z"/></g></svg></span>
+        <span class="logo-text">Pandora</span>
+      </div>
+      <nav style="display:flex; flex-direction:column; gap:3px; flex:1; overflow-y:auto; min-height:0; padding-right:4px; margin-right:-4px;">
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="10" rx="2"/><rect x="13" y="3" width="8" height="6" rx="2"/><rect x="3" y="15" width="8" height="6" rx="2"/><rect x="13" y="11" width="8" height="10" rx="2"/></svg></div><span>Panel</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg></div><span>Venta</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01"/><path d="M18 12h.01"/></svg></div><span>Caja</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.58a2 2 0 0 1 0 2.83z"/><circle cx="7" cy="7" r="1.5"/></svg></div><span>Productos</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg></div><span>Clientes</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></div><span>Stock</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m15 9-6 6"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg></div><span>Ofertas</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h4"/></svg></div><span>Facturas</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6"/><path d="M9 16h4"/></svg></div><span>Presupuestos</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 15v-3"/><path d="M12 15V8"/><path d="M16 15v-5"/></svg></div><span>Reportes</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8"/><path d="M8 10h8"/><path d="M8 14h3"/><circle cx="16" cy="16.5" r="1.6"/></svg></div><span>Contador</span></div>
+        <div class="nav-item active"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div><span>Integraciones</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></div><span>Configuración</span></div>
+      </nav>
+      <div class="side-foot">
+        <div class="afip"><div class="afip-top"><span class="afip-dot"></span><span class="afip-name">AFIP conectado</span><span class="afip-live">LIVE</span></div><div class="afip-sub">WSFEv1 · 47 CAE hoy</div></div>
+        <div class="cashier"><span class="avatar-ring"><span class="cashier-av">AR</span></span><div><div class="cashier-name">Agus Rochelle</div><div class="cashier-role">Dueño</div></div><span class="cashier-live"></span></div>
+      </div>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <div class="search glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="Buscar integración…" /></div>
+        <div class="top-tools">
+          <button class="iconbtn glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg><span class="ndot">3</span></button>
+          <button class="iconbtn glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg><span class="ndot">7</span></button>
+          <button class="iconbtn glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8 2 2 0 1 1-2.8 2.8 1.7 1.7 0 0 0-2.8 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.8-1.2 2 2 0 1 1-2.8-2.8A1.7 1.7 0 0 0 4.6 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.8 2 2 0 1 1 2.8-2.8A1.7 1.7 0 0 0 11 4.6a2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.8 1.2 2 2 0 1 1 2.8 2.8A1.7 1.7 0 0 0 19.4 11a2 2 0 1 1 0 4z"/></svg></button>
+          <div class="user-chip glass"><span class="avatar-ring"><span class="cashier-av">AR</span></span><div><div class="user-name">Agus Rochelle</div><div class="user-role">Dueño</div></div></div>
+        </div>
+      </div>
+      <div class="bar">
+        <div style="display:flex;align-items:center;gap:14px;"><span class="bar-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></span><div><div class="bar-title">Integraciones</div><div class="bar-sub">Conectá Pandora con todo tu ecosistema · <b>11 activas</b> de 56</div></div></div>
+        <div class="bar-actions"><button class="b primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>Sugerir integración</button></div>
+      </div>
+      <div class="int-sec-h"><div><div class="ish-t">Conectadas</div><div class="ish-s">Funcionando ahora en tu Pandora</div></div><span class="ish-n">8</span></div>
+        <div class="int-grid">
+          <div class="int-card"><span class="int-tile" style="background:#5b8cff;color:#fff;">AF</span><div class="int-main"><div class="int-top"><span class="int-name">AFIP / ARCA</span><span class="int-st conn"><i></i>Live</span></div><div class="int-desc">Facturación electrónica WSFEv1 + WSAA + Padrón A5</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#6b5fff;color:#fff;">CI</span><div class="int-main"><div class="int-top"><span class="int-name">Contador integrado</span><span class="int-st conn"><i></i>Activo</span></div><div class="int-desc">Tu contador entra con su login y ve los libros listos</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#00b1ea;color:#fff;">MP</span><div class="int-main"><div class="int-top"><span class="int-name">MercadoPago</span><span class="int-st conn"><i></i>Vinculado</span></div><div class="int-desc">Cobro con QR + Point + conciliación automática</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#34c77d;color:#fff;">@</span><div class="int-main"><div class="int-top"><span class="int-name">Email</span><span class="int-st conn"><i></i>Conectado</span></div><div class="int-desc">Envío de facturas y presupuestos por correo</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#3a4660;color:#fff;">PR</span><div class="int-main"><div class="int-top"><span class="int-name">Impresora térmica</span><span class="int-st conn"><i></i>Conectada</span></div><div class="int-desc">Epson TM-T20III · ticket 80 mm</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#1f2a44;color:#fff;">||</span><div class="int-main"><div class="int-top"><span class="int-name">Lector de barras</span><span class="int-st conn"><i></i>Conectado</span></div><div class="int-desc">Honeywell · emulación teclado</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#23a866;color:#fff;">$</span><div class="int-main"><div class="int-top"><span class="int-name">Transferencias / CVU</span><span class="int-st conn"><i></i>Activo</span></div><div class="int-desc">Alias y CVU para cobrar por transferencia</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#2bbf86;color:#fff;">BK</span><div class="int-main"><div class="int-top"><span class="int-name">Backups</span><span class="int-st conn"><i></i>Activo</span></div><div class="int-desc">Respaldo diario gestionado + restore test</div></div></div>
+        </div>
+        <div class="int-sec-h"><div><div class="ish-t">Fiscal y Gobierno</div><div class="ish-s">Organismos y regímenes de Argentina y TDF</div></div><span class="ish-n">5</span></div>
+        <div class="int-grid">
+          <div class="int-card"><span class="int-tile" style="background:#0e8f9e;color:#fff;">AR</span><div class="int-main"><div class="int-top"><span class="int-name">AREF · IIBB TDF</span><span class="int-st avail">Conectar</span></div><div class="int-desc">Ingresos Brutos de Tierra del Fuego</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#5b8cff;color:#fff;">LD</span><div class="int-main"><div class="int-top"><span class="int-name">Libro IVA Digital</span><span class="int-st avail">Conectar</span></div><div class="int-desc">Generá el archivo .txt listo para ARCA</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#4f7fe0;color:#fff;">MC</span><div class="int-main"><div class="int-top"><span class="int-name">Mis Comprobantes</span><span class="int-st avail">Conectar</span></div><div class="int-desc">Comprobantes de compra recibidos de proveedores</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#5b8cff;color:#fff;">TF</span><div class="int-main"><div class="int-top"><span class="int-name">Régimen Transparencia</span><span class="int-st conn"><i></i>Activo</span></div><div class="int-desc">Ley 27.743 · IVA discriminado al consumidor</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#7681a0;color:#fff;">IB</span><div class="int-main"><div class="int-top"><span class="int-name">IIBB otras provincias</span><span class="int-st soon">Próximamente</span></div><div class="int-desc">ARBA, AGIP y Convenio Multilateral</div></div></div>
+        </div>
+        <div class="int-sec-h"><div><div class="ish-t">Cobros y billeteras</div><div class="ish-s">QR y wallets que usan tus clientes</div></div><span class="ish-n">6</span></div>
+        <div class="int-grid">
+          <div class="int-card"><span class="int-tile" style="background:#0c1733;color:#fff;">MO</span><div class="int-main"><div class="int-top"><span class="int-name">MODO</span><span class="int-st avail">Conectar</span></div><div class="int-desc">La billetera de los bancos · QR interoperable</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#1a8e5a;color:#fff;">DNI</span><div class="int-main"><div class="int-top"><span class="int-name">Cuenta DNI</span><span class="int-st avail">Conectar</span></div><div class="int-desc">Banco Provincia · muy usada en mostrador</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#7b2ff7;color:#fff;">U</span><div class="int-main"><div class="int-top"><span class="int-name">Ualá Bis</span><span class="int-st avail">Conectar</span></div><div class="int-desc">Lector Bluetooth para tarjetas + QR</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#ff5a00;color:#fff;">NX</span><div class="int-main"><div class="int-top"><span class="int-name">Naranja X</span><span class="int-st avail">Conectar</span></div><div class="int-desc">Toque Naranja X · cobro con cualquier tarjeta</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#00b8d4;color:#fff;">PP</span><div class="int-main"><div class="int-top"><span class="int-name">Personal Pay</span><span class="int-st soon">Próximamente</span></div><div class="int-desc">Billetera de Telecom</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#00468b;color:#fff;">NA</span><div class="int-main"><div class="int-top"><span class="int-name">BNA+</span><span class="int-st soon">Próximamente</span></div><div class="int-desc">Billetera del Banco Nación</div></div></div>
+        </div>
+        <div class="int-sec-h"><div><div class="ish-t">Tarjetas y terminales</div><div class="ish-s">Débito, crédito y cuotas</div></div><span class="ish-n">4</span></div>
+        <div class="int-grid">
+          <div class="int-card"><span class="int-tile" style="background:#2a3b8f;color:#fff;">PW</span><div class="int-main"><div class="int-top"><span class="int-name">Payway (Prisma)</span><span class="int-st avail">Conectar</span></div><div class="int-desc">Terminal + QR · red Prisma</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#e4002b;color:#fff;">PN</span><div class="int-main"><div class="int-top"><span class="int-name">Posnet (Fiserv)</span><span class="int-st avail">Conectar</span></div><div class="int-desc">Terminal de tarjetas · red Posnet</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#ec0000;color:#fff;">GN</span><div class="int-main"><div class="int-top"><span class="int-name">GetNet</span><span class="int-st avail">Conectar</span></div><div class="int-desc">Terminal y app · Santander</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#f7984a;color:#fff;">C$</span><div class="int-main"><div class="int-top"><span class="int-name">Cuotas MiPyME</span><span class="int-st avail">Conectar</span></div><div class="int-desc">3 y 6 cuotas con tasa promo (vía Payway)</div></div></div>
+        </div>
+        <div class="int-sec-h"><div><div class="ish-t">Bancos y conciliación</div><div class="ish-s">Cruzá tus movimientos automáticamente</div></div><span class="ish-n">5</span></div>
+        <div class="int-grid">
+          <div class="int-card"><span class="int-tile" style="background:#ff7a00;color:#fff;">GA</span><div class="int-main"><div class="int-top"><span class="int-name">Banco Galicia</span><span class="int-st avail">Conectar</span></div><div class="int-desc">Conciliación automática de movimientos</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#ec0000;color:#fff;">SA</span><div class="int-main"><div class="int-top"><span class="int-name">Santander</span><span class="int-st avail">Conectar</span></div><div class="int-desc">Conciliación de cuenta</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#1464a5;color:#fff;">BB</span><div class="int-main"><div class="int-top"><span class="int-name">BBVA</span><span class="int-st soon">Próximamente</span></div><div class="int-desc">Conciliación de cuenta</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#00468b;color:#fff;">BN</span><div class="int-main"><div class="int-top"><span class="int-name">Banco Nación</span><span class="int-st soon">Próximamente</span></div><div class="int-desc">Conciliación de cuenta</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#0a2c6e;color:#fff;">MA</span><div class="int-main"><div class="int-top"><span class="int-name">Banco Macro</span><span class="int-st soon">Próximamente</span></div><div class="int-desc">Conciliación de cuenta</div></div></div>
+        </div>
+        <div class="int-sec-h"><div><div class="ish-t">Contabilidad</div><div class="ish-s">Exportá listo para el software de tu contador</div></div><span class="ish-n">7</span></div>
+        <div class="int-grid">
+          <div class="int-card"><span class="int-tile" style="background:#1464a5;color:#fff;">TG</span><div class="int-main"><div class="int-top"><span class="int-name">Tango</span><span class="int-st avail">Conectar</span></div><div class="int-desc">Asientos, Libro IVA y comprobantes</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#2a3b8f;color:#fff;">BJ</span><div class="int-main"><div class="int-top"><span class="int-name">Bejerman</span><span class="int-st avail">Conectar</span></div><div class="int-desc">Exportación contable</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#21b573;color:#fff;">XU</span><div class="int-main"><div class="int-top"><span class="int-name">Xubio</span><span class="int-st avail">Conectar</span></div><div class="int-desc">ERP contable en la nube</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#6b5fff;color:#fff;">HO</span><div class="int-main"><div class="int-top"><span class="int-name">Holistor</span><span class="int-st avail">Conectar</span></div><div class="int-desc">Estudios contables</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#f7984a;color:#fff;">CO</span><div class="int-main"><div class="int-top"><span class="int-name">Colppy</span><span class="int-st avail">Conectar</span></div><div class="int-desc">Contabilidad online</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#5b8cff;color:#fff;">SI</span><div class="int-main"><div class="int-top"><span class="int-name">SIAP</span><span class="int-st avail">Conectar</span></div><div class="int-desc">Aplicativos AFIP</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#1d6f42;color:#fff;">XL</span><div class="int-main"><div class="int-top"><span class="int-name">Excel / CSV</span><span class="int-st conn"><i></i>Activo</span></div><div class="int-desc">Descarga universal de datos</div></div></div>
+        </div>
+        <div class="int-sec-h"><div><div class="ish-t">Comunicación con el cliente</div><div class="ish-s">Mandá comprobantes y avisá</div></div><span class="ish-n">3</span></div>
+        <div class="int-grid">
+          <div class="int-card"><span class="int-tile" style="background:#25d366;color:#fff;">WA</span><div class="int-main"><div class="int-top"><span class="int-name">WhatsApp Business</span><span class="int-st avail">Conectar</span></div><div class="int-desc">Enviá facturas, presupuestos y links de pago por chat</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#7681a0;color:#fff;">SM</span><div class="int-main"><div class="int-top"><span class="int-name">SMS</span><span class="int-st soon">Próximamente</span></div><div class="int-desc">Notificaciones por mensaje de texto</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#ffe01b;color:#1f2a44;">CH</span><div class="int-main"><div class="int-top"><span class="int-name">Mailchimp</span><span class="int-st soon">Próximamente</span></div><div class="int-desc">Email marketing a tu cartera de clientes</div></div></div>
+        </div>
+        <div class="int-sec-h"><div><div class="ish-t">Ventas online y marketplaces</div><div class="ish-s">Sincronizá catálogo y stock · F2</div></div><span class="ish-n">5</span></div>
+        <div class="int-grid">
+          <div class="int-card"><span class="int-tile" style="background:#2c6df1;color:#fff;">TN</span><div class="int-main"><div class="int-top"><span class="int-name">Tienda Nube</span><span class="int-st soon">Próximamente</span></div><div class="int-desc">Sincronizá catálogo, precios y stock</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#ffe600;color:#1f2a44;">ML</span><div class="int-main"><div class="int-top"><span class="int-name">MercadoLibre</span><span class="int-st soon">Próximamente</span></div><div class="int-desc">Publicá y sincronizá stock con tu local</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#7f54b3;color:#fff;">WC</span><div class="int-main"><div class="int-top"><span class="int-name">WooCommerce</span><span class="int-st soon">Próximamente</span></div><div class="int-desc">Tu tienda en WordPress</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#95bf47;color:#fff;">SH</span><div class="int-main"><div class="int-top"><span class="int-name">Shopify</span><span class="int-st soon">Próximamente</span></div><div class="int-desc">Catálogo y pedidos</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#e1306c;color:#fff;">IG</span><div class="int-main"><div class="int-top"><span class="int-name">Instagram Shop</span><span class="int-st soon">Próximamente</span></div><div class="int-desc">Catálogo en redes sociales</div></div></div>
+        </div>
+        <div class="int-sec-h"><div><div class="ish-t">Envíos y logística</div><div class="ish-s">Etiquetas y seguimiento · F2</div></div><span class="ish-n">5</span></div>
+        <div class="int-grid">
+          <div class="int-card"><span class="int-tile" style="background:#ffe600;color:#1f2a44;">ME</span><div class="int-main"><div class="int-top"><span class="int-name">Mercado Envíos</span><span class="int-st soon">Próximamente</span></div><div class="int-desc">Etiquetas y seguimiento</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#e4002b;color:#fff;">AN</span><div class="int-main"><div class="int-top"><span class="int-name">Andreani</span><span class="int-st soon">Próximamente</span></div><div class="int-desc">Envíos a todo el país</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#003d7a;color:#fff;">OC</span><div class="int-main"><div class="int-top"><span class="int-name">OCA</span><span class="int-st soon">Próximamente</span></div><div class="int-desc">Logística nacional</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#0a4ea2;color:#fff;">CA</span><div class="int-main"><div class="int-top"><span class="int-name">Correo Argentino</span><span class="int-st soon">Próximamente</span></div><div class="int-desc">Envíos oficiales</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#ff6a00;color:#fff;">EP</span><div class="int-main"><div class="int-top"><span class="int-name">EnvíoPack</span><span class="int-st soon">Próximamente</span></div><div class="int-desc">Varios correos en una sola integración</div></div></div>
+        </div>
+        <div class="int-sec-h"><div><div class="ish-t">Hardware y periféricos</div><div class="ish-s">El equipamiento del mostrador</div></div><span class="ish-n">4</span></div>
+        <div class="int-grid">
+          <div class="int-card"><span class="int-tile" style="background:#4a5570;color:#fff;">BL</span><div class="int-main"><div class="int-top"><span class="int-name">Balanza (PLU)</span><span class="int-st avail">Conectar</span></div><div class="int-desc">Productos por peso</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#1f2a44;color:#fff;">CJ</span><div class="int-main"><div class="int-top"><span class="int-name">Cajón de dinero</span><span class="int-st conn"><i></i>Conectado</span></div><div class="int-desc">Apertura automática al cobrar</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#4a5570;color:#fff;">VC</span><div class="int-main"><div class="int-top"><span class="int-name">Visor de cliente</span><span class="int-st avail">Conectar</span></div><div class="int-desc">Pantalla con el total para el cliente</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#5b8cff;color:#fff;">CF</span><div class="int-main"><div class="int-top"><span class="int-name">Controlador fiscal</span><span class="int-st soon">Próximamente</span></div><div class="int-desc">Si tu rubro lo requiere</div></div></div>
+        </div>
+        <div class="int-sec-h"><div><div class="ish-t">Datos y automatización</div><div class="ish-s">Tu información, donde la necesites</div></div><span class="ish-n">4</span></div>
+        <div class="int-grid">
+          <div class="int-card"><span class="int-tile" style="background:#0f9d58;color:#fff;">GS</span><div class="int-main"><div class="int-top"><span class="int-name">Google Sheets</span><span class="int-st avail">Conectar</span></div><div class="int-desc">Exportá a planillas vivas</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#1a73e8;color:#fff;">GD</span><div class="int-main"><div class="int-top"><span class="int-name">Google Drive</span><span class="int-st avail">Conectar</span></div><div class="int-desc">Backup de XMLs y reportes en la nube</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#6b5fff;color:#fff;">API</span><div class="int-main"><div class="int-top"><span class="int-name">API / Webhooks</span><span class="int-st soon">Próximamente</span></div><div class="int-desc">Conectá tus propios sistemas · F3</div></div></div>
+          <div class="int-card"><span class="int-tile" style="background:#ff4f00;color:#fff;">ZP</span><div class="int-main"><div class="int-top"><span class="int-name">Zapier / Make</span><span class="int-st soon">Próximamente</span></div><div class="int-desc">Automatizá flujos sin escribir código · F3</div></div></div>
+        </div>
+    </main>
+  </div>
+<script>
+(function(){
+  var map={'Panel':'dashboard.html','Venta':'checkpoint-v19-top-tools.html','Caja':'checkpoint-caja-v2.html','Productos':'productos-v3.html','Clientes':'clientes-v6.html','Stock':'stock-v2.html','Ofertas':'ofertas.html','Facturas':'facturas-v4.html','Presupuestos':'presupuestos-v1.html','Pedidos':'pedidos.html','Señas':'pedidos-senados.html','Devoluciones':'devoluciones.html','Reportes':'reportes-v2.html','Contador':'contador-v2.html','Integraciones':'integraciones.html','Configuración':'configuracion-v1.html'};
+  function txt(el){return (el.textContent||'').trim();}
+  function find(label){return [].slice.call(document.querySelectorAll('.nav-item')).filter(function(el){return txt(el)===label;})[0];}
+  function ins(label,after,svg){if(find(label))return;var a=find(after);if(!a)return;var d=document.createElement('div');d.className='nav-item';d.innerHTML='<div class="nav-icon-box">'+svg+'</div><span>'+label+'</span>';a.parentNode.insertBefore(d,a.nextSibling);}
+  ins('Presupuestos','Facturas','<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6"/><path d="M9 16h4"/></svg>');
+  ins('Contador','Reportes','<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8"/><path d="M8 10h8"/><path d="M8 14h3"/><circle cx="16" cy="16.5" r="1.6"/></svg>');
+  ins('Integraciones','Contador','<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>');
+  ins('Pedidos','Presupuestos','<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>');
+  ins('Devoluciones','Pedidos','<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>');
+  ins('Señas','Pedidos','<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>');
+  [].slice.call(document.querySelectorAll('.nav-item')).forEach(function(el){var u=map[txt(el)];if(u){el.style.cursor='pointer';el.addEventListener('click',function(){location.href=u;});}});
+})();
+</script>
+  <script>
+  (function(){
+    var input = document.querySelector('.search input');
+    if(!input) return;
+    var cards = [].slice.call(document.querySelectorAll('.int-card'));
+    var secs = [].slice.call(document.querySelectorAll('.int-sec-h'));
+    function textOf(c){ var n=c.querySelector('.int-name'), d=c.querySelector('.int-desc'); return ((n?n.textContent:'')+' '+(d?d.textContent:'')).toLowerCase(); }
+    var noRes = document.createElement('div');
+    noRes.textContent = 'No encontramos integraciones con ese nombre.';
+    noRes.style.cssText = 'display:none;padding:34px;text-align:center;color:var(--ink-3);font-size:13px;';
+    (document.querySelector('.main') || document.body).appendChild(noRes);
+    function gridOf(h){ var g=h.nextElementSibling; while(g && !g.classList.contains('int-grid')) g=g.nextElementSibling; return g; }
+    function filter(){
+      var q = input.value.trim().toLowerCase();
+      cards.forEach(function(c){ c.style.display = (!q || textOf(c).indexOf(q)>=0) ? '' : 'none'; });
+      secs.forEach(function(h){
+        var g = gridOf(h);
+        var vis = g ? [].slice.call(g.querySelectorAll('.int-card')).some(function(c){ return c.style.display!=='none'; }) : false;
+        h.style.display = vis ? '' : 'none'; if(g) g.style.display = vis ? '' : 'none';
+      });
+      noRes.style.display = cards.some(function(c){ return c.style.display!=='none'; }) ? 'none' : 'block';
+    }
+    input.addEventListener('input', filter);
+    var m = (location.hash||'').match(/^#q=(.+)$/);
+    if(m){ input.value = decodeURIComponent(m[1]); filter(); }
+  })();
+  </script>
+</body>
+</html>

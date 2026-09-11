@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pandora · Reportes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   Pandora · Panel — adaptado del app.jsx (mismo sistema glass)
+   ============================================================ */
+:root{
+  --ink:#0d1424; --ink-1:#1f2a44; --ink-2:#4a5570; --ink-3:#7681a0; --ink-4:#a8b0c5;
+  --purple:#6b5fff; --purple-2:#9088ff; --blue:#5b8cff; --green:#34c77d; --orange:#f7984a; --pink:#ee6a8e; --red:#ef5d6a; --yellow:#f4c948; --teal:#0e8f9e;
+  --glass-bg:rgba(255,255,255,0.58); --glass-bg-2:rgba(255,255,255,0.72);
+  --glass-bd:1px solid rgba(255,255,255,0.85);
+  --glass-hi:inset 0 1px 0 rgba(255,255,255,0.9);
+  --glass-sh:0 8px 32px rgba(54,70,120,0.10), 0 2px 8px rgba(54,70,120,0.06);
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+button,input{ font:inherit; color:inherit; border:none; outline:none; background:none; cursor:pointer; }
+html,body{ height:100%; }
+body{ font-family:'Inter',ui-sans-serif,system-ui,sans-serif; -webkit-font-smoothing:antialiased; letter-spacing:-0.011em; color:var(--ink); height:100dvh; overflow:hidden; position:relative; }
+.bg{ position:fixed; inset:0; z-index:-10; }
+.bg .base{ position:absolute; inset:0; background:linear-gradient(175deg,#b5c6e8 0%,#c8d4ea 28%,#ddd0e0 62%,#eed6d0 100%); }
+.bg .glow{ position:absolute; inset:0; background:
+  radial-gradient(ellipse 70% 60% at 10% 95%, rgba(238,200,220,0.55) 0%, transparent 60%),
+  radial-gradient(ellipse 60% 50% at 88% 82%, rgba(240,210,175,0.40) 0%, transparent 60%),
+  radial-gradient(ellipse 55% 42% at 55% 22%, rgba(255,255,255,0.60) 0%, transparent 52%),
+  radial-gradient(ellipse 58% 48% at 10% 22%, rgba(195,215,248,0.65) 0%, transparent 62%); }
+::-webkit-scrollbar{ width:7px; height:7px; }
+::-webkit-scrollbar-track{ background:transparent; }
+::-webkit-scrollbar-thumb{ background:rgba(13,20,36,0.14); border-radius:5px; border:2px solid transparent; background-clip:padding-box; }
+
+.glass{ background:var(--glass-bg); backdrop-filter:blur(28px) saturate(140%); -webkit-backdrop-filter:blur(28px) saturate(140%); border:var(--glass-bd); border-radius:20px; box-shadow:var(--glass-hi), var(--glass-sh); }
+.glass-strong{ background:var(--glass-bg-2); backdrop-filter:blur(32px) saturate(150%); -webkit-backdrop-filter:blur(32px) saturate(150%); border:var(--glass-bd); border-radius:20px; box-shadow:var(--glass-hi), var(--glass-sh); }
+.tnum{ font-variant-numeric:tabular-nums; }
+.mono{ font-family:var(--mono); }
+
+/* ════ SHELL ════ */
+.shell{ height:100dvh; padding:10px; display:grid; grid-template-columns:210px 1fr; gap:8px; }
+
+/* ════ SIDEBAR (idéntica al POS / dashboard) ════ */
+.sidebar{ display:flex; flex-direction:column; border-radius:20px; padding:22px 14px 18px; overflow:hidden; }
+.logo-row{ display:flex; align-items:center; gap:10px; padding:0 8px 22px; }
+.logo-mark{ width:26px; height:26px; flex-shrink:0; } .logo-mark svg{ width:100%; height:100%; display:block; }
+.logo-text{ font-size:19px; font-weight:700; letter-spacing:-0.025em; background:linear-gradient(135deg,#2a3454 0%,#4a5878 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.nav-item{ display:flex; align-items:center; gap:11px; padding:10px 11px; border-radius:12px; color:var(--ink-2); font-size:13.5px; font-weight:500; cursor:pointer; transition:all 200ms cubic-bezier(.4,0,.2,1); }
+.nav-item:hover{ color:var(--ink); background:rgba(255,255,255,0.4); }
+.nav-item.active{ background:rgba(255,255,255,0.92); color:var(--ink); box-shadow:0 1px 2px rgba(54,70,120,0.06), 0 4px 12px rgba(54,70,120,0.08); }
+.nav-item.active .nav-icon-box{ background:var(--purple); color:#fff; box-shadow:0 4px 10px rgba(107,95,255,0.4); }
+.nav-icon-box{ width:26px; height:26px; display:flex; align-items:center; justify-content:center; border-radius:7px; color:var(--ink-2); transition:all 200ms; flex-shrink:0; }
+.side-foot{ margin-top:auto; padding-top:12px; display:flex; flex-direction:column; gap:9px; }
+.afip{ padding:10px 11px; border-radius:13px; background:rgba(52,199,125,0.08); border:1px solid rgba(52,199,125,0.20); }
+.afip-top{ display:flex; align-items:center; gap:7px; }
+.afip-dot{ width:7px; height:7px; border-radius:50%; background:var(--green); flex:0 0 auto; animation:pg 2.4s ease-in-out infinite; }
+.afip-name{ font-size:11.5px; font-weight:700; color:#177a4a; }
+.afip-live{ margin-left:auto; font-size:8.5px; font-weight:800; letter-spacing:0.06em; color:var(--green); }
+.afip-sub{ font-size:10px; color:#5a9b78; padding-left:14px; margin-top:2px; }
+@keyframes pg{ 0%,100%{box-shadow:0 0 0 2px rgba(52,199,125,0.22)} 50%{box-shadow:0 0 0 5px rgba(52,199,125,0)} }
+.cashier{ display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:13px; background:rgba(255,255,255,0.66); border:1px solid rgba(255,255,255,0.9); box-shadow:var(--glass-hi); }
+.cashier-av{ width:32px; height:32px; flex:0 0 auto; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--blue)); display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:700; }
+.avatar-ring{ padding:2px; border-radius:50%; flex:0 0 auto; display:flex; background:conic-gradient(from 0deg,#6b5fff,#5b8cff,#34c77d,#f7984a,#ee6a8e,#6b5fff); animation:spinRing 6s linear infinite; }
+.avatar-ring > .cashier-av{ animation:spinRing 6s linear infinite reverse; border:2px solid rgba(255,255,255,0.9); }
+@keyframes spinRing{ to{ transform:rotate(360deg); } }
+.cashier-name{ font-size:12px; font-weight:600; line-height:1.2; }
+.cashier-role{ font-size:10px; color:var(--ink-3); }
+.cashier-live{ width:7px; height:7px; border-radius:50%; background:var(--green); margin-left:auto; flex:0 0 auto; animation:pg 2.4s ease-in-out infinite; }
+
+/* ════ MAIN ════ */
+.main{ min-width:0; min-height:0; overflow-y:auto; padding:4px 6px 18px 2px; }
+.topbar{ display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+.search{ position:relative; flex:1; max-width:380px; display:flex; align-items:center; height:42px; border-radius:14px; padding:0 14px 0 40px; }
+.search svg{ position:absolute; left:13px; width:16px; height:16px; color:var(--ink-3); }
+.search input{ width:100%; font-size:13px; } .search input::placeholder{ color:var(--ink-3); }
+.seg{ display:inline-flex; padding:5px; gap:2px; border-radius:999px; }
+.seg button{ padding:7px 16px; border-radius:999px; font-size:12.5px; font-weight:500; color:var(--ink-2); transition:all 200ms; }
+.seg button.on{ background:var(--ink); color:#fff; box-shadow:0 4px 12px rgba(13,20,36,0.25); }
+.top-tools{ display:flex; align-items:center; gap:8px; margin-left:auto; }
+.iconbtn{ width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:12px; color:var(--ink-1); position:relative; }
+.iconbtn svg{ width:18px; height:18px; }
+.iconbtn .ndot{ position:absolute; top:7px; right:7px; min-width:15px; height:15px; border-radius:999px; background:var(--pink); color:#fff; font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center; border:2px solid rgba(255,255,255,0.9); }
+.user-chip{ display:flex; align-items:center; gap:9px; padding:5px 13px 5px 5px; border-radius:999px; }
+.user-name{ font-size:12.5px; font-weight:600; line-height:1.25; } .user-role{ font-size:10.5px; color:var(--ink-3); }
+
+.content{ display:flex; gap:16px; }
+.col-main{ flex:1; min-width:0; display:flex; flex-direction:column; gap:16px; }
+.col-side{ width:324px; flex-shrink:0; display:flex; flex-direction:column; gap:16px; }
+
+.card{ border-radius:20px; padding:22px; }
+.chart-box{ position:relative; }
+.chart-tip{ position:absolute; background:var(--ink); color:#fff; padding:5px 9px; border-radius:9px; font-family:var(--mono); font-size:11px; font-weight:600; box-shadow:0 8px 20px rgba(13,20,36,0.28); transform:translate(-50%,-115%); white-space:nowrap; }
+.chart-tip::after{ content:''; position:absolute; left:50%; bottom:-4px; transform:translateX(-50%) rotate(45deg); width:8px; height:8px; background:var(--ink); }
+.card-title{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.card-title h3{ font-size:14px; font-weight:600; color:var(--ink); display:flex; align-items:center; gap:8px; white-space:nowrap; }
+.card-title .ic{ width:24px; height:24px; border-radius:7px; display:flex; align-items:center; justify-content:center; }
+.more-btn{ color:var(--ink-3); padding:4px; border-radius:6px; display:flex; } .more-btn svg{ width:16px; height:16px; }
+.label-sm{ color:var(--ink-3); font-size:12px; font-weight:500; }
+.upper-mini{ font-size:10.5px; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.08em; font-family:var(--mono); font-weight:500; }
+.delta{ display:inline-flex; align-items:center; gap:3px; padding:3px 8px; border-radius:999px; font-size:11.5px; font-weight:600; line-height:1; }
+.delta svg{ width:11px; height:11px; }
+.delta.up{ background:rgba(52,199,125,0.14); color:#1a8e5a; }
+.delta.down{ background:rgba(239,93,106,0.14); color:#c93545; }
+.bignum{ font-size:33px; font-weight:700; letter-spacing:-0.03em; }
+
+/* hero */
+.hero{ position:relative; overflow:hidden; padding:30px 32px 32px; min-height:272px; }
+.hero-hi{ font-size:15px; font-weight:500; color:var(--ink-2); display:flex; align-items:center; gap:8px; }
+.hero-h1{ margin:6px 0 0; font-size:54px; line-height:1.02; font-weight:700; letter-spacing:-0.04em; max-width:560px; }
+.wave{ display:inline-block; animation:wave 2.4s ease-in-out 1s 2; transform-origin:70% 70%; }
+@keyframes wave{ 0%,60%,100%{transform:rotate(0)} 10%{transform:rotate(14deg)} 20%{transform:rotate(-8deg)} 30%{transform:rotate(14deg)} 40%{transform:rotate(-4deg)} 50%{transform:rotate(10deg)} }
+.hero-live{ margin-top:20px; display:flex; align-items:center; gap:14px; padding:14px 18px; background:rgba(255,255,255,0.55); border-radius:16px; border:1px solid rgba(255,255,255,0.85); max-width:430px; backdrop-filter:blur(20px); }
+.live-dot{ width:8px; height:8px; border-radius:999px; background:var(--green); position:relative; flex:0 0 auto; }
+.live-dot::after{ content:''; position:absolute; inset:-4px; border-radius:999px; background:var(--green); opacity:0.4; animation:liveRing 1.8s cubic-bezier(.2,.7,.2,1) infinite; }
+@keyframes liveRing{ 0%{transform:scale(0.8);opacity:0.6} 100%{transform:scale(2.2);opacity:0} }
+/* hero art (chips flotantes) */
+.hero-art{ position:absolute; top:22px; right:26px; bottom:22px; width:340px; pointer-events:none; }
+.hero-art .halo{ position:absolute; top:-10px; right:10px; width:300px; height:300px; border-radius:50%; background:radial-gradient(circle, rgba(255,210,180,0.5) 0%, rgba(255,180,200,0.22) 40%, transparent 70%); filter:blur(20px); }
+.float-card{ position:absolute; background:rgba(255,255,255,0.85); backdrop-filter:blur(20px) saturate(160%); border:1px solid rgba(255,255,255,0.9); border-radius:14px; box-shadow:0 12px 32px rgba(54,70,120,0.14), 0 4px 12px rgba(54,70,120,0.08); will-change:transform; }
+.f1{ animation:fl1 6s ease-in-out infinite; } .f2{ animation:fl2 7s ease-in-out infinite -1.5s; } .f3{ animation:fl3 8s ease-in-out infinite -3s; }
+@keyframes fl1{ 0%,100%{transform:translateY(0) rotate(3deg)} 50%{transform:translateY(-10px) rotate(2deg)} }
+@keyframes fl2{ 0%,100%{transform:translateY(0) rotate(-2deg)} 50%{transform:translateY(-9px) rotate(-1deg)} }
+@keyframes fl3{ 0%,100%{transform:translateY(0) rotate(-2deg)} 50%{transform:translateY(-8px) rotate(-1deg)} }
+
+.grid3{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+.grid2{ display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:16px; }
+
+/* charts */
+.spark{ width:100%; height:74px; margin-top:14px; display:block; }
+.bars{ display:flex; align-items:flex-end; gap:6px; height:74px; margin-top:14px; }
+.bars .b{ flex:1; border-radius:5px 5px 3px 3px; background:rgba(107,95,255,0.28); animation:grow 900ms cubic-bezier(.2,.7,.2,1) backwards; transform-origin:bottom; }
+.bars .b.hi{ background:var(--purple); box-shadow:0 4px 12px rgba(107,95,255,0.4); }
+@keyframes grow{ from{ transform:scaleY(0); } }
+.donut-wrap{ display:flex; align-items:center; gap:16px; }
+.donut{ width:128px; height:128px; border-radius:50%; flex:0 0 auto; position:relative; }
+.donut::after{ content:''; position:absolute; inset:20px; border-radius:50%; background:var(--glass-bg-2); backdrop-filter:blur(10px); }
+.donut .ctr{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:1; }
+.legend{ flex:1; display:flex; flex-direction:column; gap:9px; }
+.legend .row{ display:flex; align-items:center; gap:9px; font-size:12.5px; color:var(--ink-2); }
+.legend .dot{ width:10px; height:10px; border-radius:3px; flex:0 0 auto; }
+.legend .val{ margin-left:auto; font-family:var(--mono); font-weight:600; color:var(--ink); }
+
+/* listas */
+.tx-row{ display:grid; grid-template-columns:34px 1fr auto auto; align-items:center; gap:12px; padding:10px 0; border-top:1px solid rgba(13,20,36,0.05); font-size:13px; }
+.tx-row:first-child{ border-top:none; }
+.tx-ic{ width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; }
+.tx-ic svg{ width:16px; height:16px; }
+.tx-name{ font-weight:500; } .tx-sub{ font-size:11px; color:var(--ink-3); margin-top:1px; }
+.pay-pill{ font-size:10px; font-weight:700; padding:3px 8px; border-radius:7px; letter-spacing:0.02em; }
+.tx-amount{ font-family:var(--mono); font-weight:600; }
+
+/* widgets col derecha */
+.kv{ display:flex; align-items:center; justify-content:space-between; padding:8px 0; }
+.kv .k{ font-size:12.5px; color:var(--ink-2); } .kv .v{ font-family:var(--mono); font-weight:600; font-size:13px; }
+.divider{ height:1px; background:rgba(13,20,36,0.06); margin:6px 0; }
+.caja-state{ display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; padding:4px 9px; border-radius:999px; background:rgba(52,199,125,0.14); color:#1a8e5a; }
+.afipbar{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:4px; }
+.afipbar .cell{ text-align:center; padding:9px 4px; border-radius:11px; background:rgba(255,255,255,0.6); border:1px solid rgba(255,255,255,0.8); }
+.afipbar .n{ font-family:var(--mono); font-size:18px; font-weight:700; } .afipbar .t{ font-size:9.5px; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.05em; margin-top:1px; }
+.stock-row{ display:flex; align-items:center; gap:10px; padding:8px 0; border-top:1px solid rgba(13,20,36,0.05); font-size:12.5px; }
+.stock-row:first-child{ border-top:none; }
+.stock-thumb{ width:30px; height:30px; border-radius:8px; overflow:hidden; background:#fff; border:1px solid rgba(13,20,36,0.05); flex:0 0 auto; display:flex; align-items:center; justify-content:center; font-size:15px; }
+.stock-name{ flex:1; font-weight:500; }
+.stock-q{ font-family:var(--mono); font-weight:700; font-size:12px; padding:2px 8px; border-radius:7px; background:rgba(239,93,106,0.12); color:#c0384a; }
+.quick-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.quick{ display:flex; flex-direction:column; gap:9px; padding:15px 13px; border-radius:15px; text-align:left; background:rgba(255,255,255,0.7); border:1px solid rgba(255,255,255,0.9); box-shadow:var(--glass-hi); transition:all 180ms; }
+.quick:hover{ transform:translateY(-2px); box-shadow:var(--glass-hi), 0 8px 18px rgba(54,70,120,0.12); }
+.quick .qi{ width:38px; height:38px; border-radius:11px; display:flex; align-items:center; justify-content:center; } .quick .qi svg{ width:18px; height:18px; }
+.quick .ql{ font-size:13px; font-weight:600; }
+.cta{ width:100%; display:flex; align-items:center; justify-content:center; gap:9px; padding:14px; border-radius:14px; background:linear-gradient(140deg,var(--purple),var(--purple-2)); color:#fff; font-size:14.5px; font-weight:800; letter-spacing:-0.02em; box-shadow:0 7px 20px rgba(107,95,255,0.42); transition:all 170ms; }
+.cta:hover{ transform:translateY(-1px); box-shadow:0 10px 26px rgba(107,95,255,0.52); }
+.cta svg{ width:18px; height:18px; }
+@media (prefers-reduced-motion:reduce){ *{ animation:none !important; } }
+
+/* REPORTES v2 */
+.rep-head{ display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:16px; }
+.rep-title{ font-size:30px; font-weight:700; letter-spacing:-0.03em; color:var(--ink); margin:0; }
+.rep-sub{ font-size:13px; color:var(--ink-3); margin-top:4px; }
+.rep-export{ display:flex; gap:9px; }
+.rx{ display:inline-flex; align-items:center; gap:7px; padding:10px 15px; border-radius:12px; font-size:12.5px; font-weight:600; color:var(--ink-1); background:rgba(255,255,255,0.72); border:1px solid rgba(255,255,255,0.9); box-shadow:var(--glass-hi); cursor:pointer; transition:all 160ms; }
+.rx:hover{ transform:translateY(-1px); color:var(--ink); } .rx svg{ width:15px; height:15px; }
+.rx.full{ width:100%; justify-content:center; margin-top:16px; background:linear-gradient(140deg,var(--purple),var(--purple-2)); color:#fff; border:none; box-shadow:0 5px 14px rgba(107,95,255,0.34); }
+.rep-body{ display:flex; flex-direction:column; gap:16px; }
+.g2{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; }
+.rep-filters{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:12px 16px; }
+.rf-item{ display:inline-flex; align-items:center; gap:7px; padding:8px 13px; border-radius:11px; background:rgba(255,255,255,0.55); border:1px solid rgba(255,255,255,0.8); font-size:12.5px; color:var(--ink-2); cursor:pointer; }
+.rf-item b{ color:var(--ink); font-weight:600; } .rf-item .chev{ color:var(--ink-3); }
+.rf-apply{ margin-left:auto; padding:9px 18px; border-radius:11px; background:var(--purple); color:#fff; font-size:12.5px; font-weight:600; border:none; cursor:pointer; box-shadow:0 4px 12px rgba(107,95,255,0.32); }
+.insights{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
+.ins{ display:flex; align-items:center; gap:13px; padding:16px 18px; }
+.ins-ic{ width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
+.ins-tx{ min-width:0; } .ins-t{ font-size:13.5px; font-weight:700; color:var(--ink); line-height:1.2; } .ins-s{ font-size:11.5px; color:var(--ink-3); margin-top:3px; }
+.rep-kpi{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; } .rep-kpi .card{ padding:18px 20px; }
+.rep-area{ width:100%; height:180px; display:block; margin-top:6px; }
+.rep-leg{ display:flex; gap:14px; } .rl{ display:inline-flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink-2); }
+.rl i{ width:14px; height:3px; border-radius:2px; display:inline-block; } .rl .d1{ background:var(--purple); } .rl .d2{ background:rgba(120,129,160,0.6); }
+.pdonut-wrap{ display:flex; align-items:center; gap:18px; }
+.pdonut{ width:128px; height:128px; border-radius:50%; flex:0 0 auto; position:relative; }
+.pdonut-c{ position:absolute; inset:20px; border-radius:50%; background:var(--glass-bg-2); backdrop-filter:blur(8px); display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.pdonut-c .big{ font-family:var(--mono); font-size:17px; font-weight:700; color:var(--ink); letter-spacing:-0.02em; } .pdonut-c .lbl{ font-size:9px; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.07em; font-family:var(--mono); margin-top:1px; }
+.pl{ flex:1; display:flex; flex-direction:column; gap:10px; min-width:0; }
+.pl-row{ display:grid; grid-template-columns:auto 1fr auto auto; align-items:center; gap:9px; }
+.pl-dot{ width:9px; height:9px; border-radius:3px; } .pl-name{ font-size:12px; color:var(--ink-2); white-space:nowrap; } .pl-val{ font-family:var(--mono); font-size:12px; font-weight:600; color:var(--ink); text-align:right; } .pl-pct{ font-size:10.5px; color:var(--ink-3); font-family:var(--mono); width:30px; text-align:right; }
+.hbars{ display:flex; flex-direction:column; gap:12px; }
+.hb-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; } .hb-name{ font-size:12.5px; color:var(--ink-2); font-weight:500; } .hb-val{ font-family:var(--mono); font-size:12.5px; font-weight:600; color:var(--ink); }
+.hb-track{ height:8px; border-radius:999px; background:rgba(13,20,36,0.05); overflow:hidden; } .hb-track i{ display:block; height:100%; border-radius:999px; }
+.heat-grid{ display:grid; grid-template-columns:46px repeat(8,1fr) 58px; gap:3px; margin-top:8px; align-items:stretch; }
+.hc{ display:flex; align-items:center; }
+.hc.colh{ font-size:10px; color:var(--ink-3); font-family:var(--mono); justify-content:center; padding-bottom:3px; }
+.hc.colh.tot, .hc.rowh.tot{ font-size:9.5px; color:var(--ink-3); font-weight:600; }
+.hc.rowh{ font-size:11px; color:var(--ink-2); font-weight:600; }
+.hcell{ height:34px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:10.5px; font-weight:600; transition:transform 120ms; }
+.hcell.peak{ box-shadow:0 0 0 2px #fff, 0 0 0 3.5px var(--purple); }
+.htot{ font-family:var(--mono); font-weight:700; color:var(--ink); display:flex; align-items:center; }
+.htot.day{ height:34px; justify-content:flex-end; font-size:11px; padding-right:2px; }
+.htot.colsum{ justify-content:center; font-size:10.5px; color:var(--ink-2); padding-top:7px; border-top:1.5px solid rgba(13,20,36,0.10); margin-top:3px; }
+.htot.grand{ justify-content:flex-end; font-size:11.5px; padding:7px 2px 0 0; border-top:1.5px solid rgba(13,20,36,0.10); margin-top:3px; }
+.hc.rowh.tot{ padding-top:7px; border-top:1.5px solid rgba(13,20,36,0.10); margin-top:3px; align-items:center; }
+.heat-leg{ display:flex; align-items:center; gap:9px; justify-content:flex-end; margin-top:16px; font-size:10.5px; color:var(--ink-3); }
+.heat-leg-note{ margin-left:6px; color:var(--ink-4); }
+.heat-bar{ width:90px; height:8px; border-radius:999px; background:linear-gradient(90deg,rgba(107,95,255,0.10),rgba(107,95,255,0.9)); }
+.rtbl{ width:100%; border-collapse:collapse; }
+.rtbl th{ text-align:left; font-size:9.5px; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.07em; font-family:var(--mono); font-weight:500; padding:0 0 11px; border-bottom:1px solid rgba(13,20,36,0.07); }
+.rtbl th.r, .rtbl td.r{ text-align:right; } .rtbl td{ padding:10px 0; border-top:1px solid rgba(13,20,36,0.05); vertical-align:middle; font-size:13px; } .rtbl tbody tr:first-child td{ border-top:none; }
+.rp-name{ font-size:13px; font-weight:500; color:var(--ink-1); } .rp-sub{ font-size:11px; color:var(--ink-3); margin-top:1px; }
+.rtbl .mono{ font-family:var(--mono); font-size:13px; color:var(--ink-2); } .rp-amt{ font-family:var(--mono); font-size:13px; font-weight:700; color:var(--ink); }
+.mg{ font-family:var(--mono); font-size:11.5px; font-weight:700; padding:3px 8px; border-radius:7px; } .mg.ok{ background:rgba(52,199,125,0.14); color:#1a8e5a; } .mg.mid{ background:rgba(247,152,74,0.15); color:#b96c1a; } .mg.low{ background:rgba(239,93,106,0.14); color:#c93545; }
+.slow{ display:flex; flex-direction:column; gap:10px; }
+.slow-row{ display:flex; align-items:center; gap:11px; padding:9px 0; border-top:1px solid rgba(13,20,36,0.05); } .slow-row:first-child{ border-top:none; }
+.slow-warn{ width:22px; height:22px; border-radius:7px; background:rgba(247,152,74,0.16); color:#b96c1a; font-weight:800; font-size:13px; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
+.slow-tx{ flex:1; min-width:0; } .slow-name{ font-size:12.5px; font-weight:500; color:var(--ink-1); } .slow-sub{ font-size:11px; color:var(--ink-3); margin-top:1px; }
+.slow-inmov{ font-family:var(--mono); font-size:12.5px; font-weight:600; color:#b96c1a; }
+.cj-cell{ display:inline-flex; align-items:center; gap:8px; } .cj-av{ width:24px; height:24px; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--blue)); color:#fff; font-size:9px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; }
+.c-red{ color:#c93545; } .c-green{ color:#1a8e5a; }
+.iva-pos{ display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-radius:12px; background:rgba(247,152,74,0.10); border:1px solid rgba(247,152,74,0.24); margin-top:4px; }
+.iva-pos > span:first-child{ font-size:13px; font-weight:700; color:#b96c1a; } .iva-amt{ font-family:var(--mono); font-size:19px; font-weight:700; color:#b96c1a; }
+.flow-row{ display:flex; align-items:center; justify-content:space-between; } .flow-k{ display:inline-flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-2); } .flow-k i{ width:9px; height:9px; border-radius:3px; }
+.flow-row.in .flow-k i{ background:var(--green); } .flow-row.out .flow-k i{ background:var(--red); }
+.flow-v{ font-family:var(--mono); font-size:13.5px; font-weight:600; color:var(--ink); }
+.flow-bar{ height:8px; border-radius:999px; background:rgba(13,20,36,0.05); overflow:hidden; margin:7px 0 13px; } .flow-bar i{ display:block; height:100%; border-radius:999px; } .flow-bar .fin{ background:var(--green); } .flow-bar .fout{ background:var(--red); }
+.flow-res{ display:flex; align-items:center; justify-content:space-between; } .flow-res > span:first-child{ font-size:13px; font-weight:700; color:var(--ink); } .flow-res-v{ font-family:var(--mono); font-size:19px; font-weight:700; color:#1a8e5a; }
+.fiscal-total{ margin-bottom:4px; }
+.topc{ display:flex; flex-direction:column; gap:4px; } .tc-row{ display:flex; align-items:center; gap:11px; padding:9px 0; border-top:1px solid rgba(13,20,36,0.05); } .tc-row:first-child{ border-top:none; }
+.tc-av{ width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--blue)); color:#fff; font-size:10.5px; font-weight:700; display:flex; align-items:center; justify-content:center; flex:0 0 auto; } .tc-name{ flex:1; font-size:12.5px; font-weight:500; color:var(--ink-1); } .tc-val{ font-family:var(--mono); font-size:13px; font-weight:700; color:var(--ink); }
+
+/* barras hora/día (reemplazo del heatmap) */
+.bchart{ display:flex; align-items:flex-end; gap:9px; height:172px; padding-top:22px; margin-top:6px; }
+.bcol2{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+.bcol2 .bv{ font-family:var(--mono); font-size:10.5px; font-weight:600; color:var(--ink-2); margin-bottom:6px; white-space:nowrap; }
+.bcol2 .bk{ width:100%; max-width:48px; border-radius:8px 8px 4px 4px; background:rgba(107,95,255,0.26); transition:all .2s; }
+.bcol2 .bk.hi{ background:var(--purple); box-shadow:0 5px 16px rgba(107,95,255,0.42); }
+.bcol2 .bl{ font-size:10.5px; color:var(--ink-3); margin-top:9px; font-family:var(--mono); }
+
+/* punchcard ventas hora x día */
+.punch{ margin-top:10px; }
+.pgrid{ display:grid; grid-template-columns:46px repeat(8,1fr) 60px; align-items:center; row-gap:3px; }
+.ph{ font-size:10px; color:var(--ink-3); font-family:var(--mono); text-align:center; padding-bottom:10px; }
+.ph-tot{ font-size:9.5px; color:var(--ink-3); font-family:var(--mono); text-align:right; padding-bottom:10px; }
+.prow{ font-size:11.5px; color:var(--ink-2); font-weight:600; }
+.pcell{ display:flex; align-items:center; justify-content:center; height:37px; }
+.dot{ border-radius:50%; display:block; }
+.dot.peak{ box-shadow:0 0 0 3px rgba(255,255,255,0.95), 0 0 0 4.5px var(--purple); }
+.pday-tot{ font-family:var(--mono); font-size:11.5px; font-weight:700; color:var(--ink); text-align:right; }
+.punch-leg{ display:flex; align-items:center; gap:7px; justify-content:flex-end; margin-top:16px; font-size:10.5px; color:var(--ink-3); }
+.punch-leg .ld{ border-radius:50%; background:rgba(107,95,255,0.7); display:inline-block; flex:0 0 auto; }
+.punch-note{ margin-left:8px; color:var(--ink-4); }
+
+/* heatmap accesible + hover (7 niveles discretos) */
+.vm-grid{ grid-template-columns:46px repeat(8,1fr) 58px !important; }
+.vm-h.tot{ font-size:9.5px; color:var(--ink-3); font-family:var(--mono); text-align:right; }
+.vm-daytot{ font-family:var(--mono); font-size:11.5px; font-weight:700; color:var(--ink); text-align:right; padding-left:4px; }
+.vm-cell{ cursor:pointer; }
+.vm-cell:hover{ outline:2px solid var(--purple); outline-offset:1px; }
+.vmtip{ position:absolute; transform:translate(-50%, calc(-100% - 10px)); background:#fff; border-radius:13px; padding:10px 14px; box-shadow:0 12px 34px rgba(54,70,120,0.24); white-space:nowrap; z-index:8; opacity:0; pointer-events:none; transition:opacity .12s; }
+.vmtip.on{ opacity:1; }
+.vmtip::after{ content:''; position:absolute; bottom:-5px; left:50%; transform:translateX(-50%) rotate(45deg); width:11px; height:11px; background:#fff; border-radius:2px; }
+/* heatmap accesible (7 niveles discretos) */
+.vm{ position:relative; margin-top:8px; }
+.vm-grid{ display:grid; grid-template-columns:46px repeat(8,1fr); gap:5px; }
+.vm-h{ font-size:11.5px; color:var(--ink-2); font-family:var(--mono); text-align:center; padding-bottom:9px; }
+.vm-row{ font-size:11.5px; color:var(--ink-2); font-weight:600; display:flex; align-items:center; }
+.vm-cell{ height:32px; border-radius:8px; position:relative; border:1px solid rgba(13,20,36,0.05); }
+.vm-cell.peak{ border:2px solid #fff; box-shadow:0 0 0 2px var(--purple); }
+.peak-tip{ position:absolute; bottom:132%; left:50%; transform:translateX(-60%); background:#fff; border-radius:13px; padding:10px 14px; box-shadow:0 12px 34px rgba(54,70,120,0.24); white-space:nowrap; z-index:6; }
+.peak-tip::after{ content:''; position:absolute; bottom:-5px; left:60%; width:11px; height:11px; background:#fff; transform:rotate(45deg); border-radius:2px; }
+.pt-d{ font-size:12px; font-weight:600; color:var(--ink-1); }
+.pt-v{ font-size:12.5px; color:var(--ink-2); margin-top:3px; } .pt-v b{ color:var(--purple); font-family:var(--mono); }
+.vm-leg{ display:flex; align-items:center; justify-content:space-between; margin-top:18px; gap:12px; flex-wrap:wrap; }
+.vm-scale{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink-2); }
+.vm-sw{ width:24px; height:15px; border-radius:4px; border:1px solid rgba(13,20,36,0.06); }
+.vm-note{ font-size:11px; color:var(--ink-4); margin-left:auto; }
+
+/* ============ TOOLBAR (Apple-restraint) ============ */
+.bar{ display:flex; align-items:center; gap:16px; padding:17px 20px; border-radius:20px; margin-bottom:16px;
+ background:rgba(255,255,255,0.52); -webkit-backdrop-filter:blur(40px) saturate(180%); backdrop-filter:blur(40px) saturate(180%);
+ border:1px solid rgba(255,255,255,0.6); box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 1px rgba(54,70,120,0.04), 0 10px 30px -14px rgba(54,70,120,0.3); }
+.bar-id{ display:flex; align-items:center; gap:14px; }
+.bar-icon{ width:42px; height:42px; border-radius:13px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; color:var(--purple);
+ background:linear-gradient(150deg, rgba(107,95,255,0.16), rgba(91,140,255,0.10)); border:1px solid rgba(255,255,255,0.7); box-shadow: inset 0 1px 0 rgba(255,255,255,0.8); }
+.bar-title{ font-size:22px; font-weight:700; letter-spacing:-0.035em; color:var(--ink); line-height:1.05; }
+.bar-sub{ font-size:12.5px; color:var(--ink-3); margin-top:3px; display:flex; align-items:center; gap:8px; }
+.bar-actions{ margin-left:auto; display:flex; gap:10px; align-items:center; }
+.bar .b{ display:inline-flex; align-items:center; gap:7px; padding:10px 16px; border-radius:12px; font-size:13px; font-weight:600; cursor:pointer; transition:all 180ms cubic-bezier(.2,.7,.2,1); }
+.bar .b svg{ width:15px; height:15px; }
+.bar .b.ghost{ color:var(--ink-1); background:rgba(255,255,255,0.55); border:1px solid rgba(255,255,255,0.8); box-shadow:inset 0 1px 0 rgba(255,255,255,0.8); }
+.bar .b.ghost:hover{ background:rgba(255,255,255,0.78); }
+.bar .b.primary{ color:#fff; border:none; background:linear-gradient(135deg, #7a6fff, #6b5fff); box-shadow:0 4px 14px -2px rgba(107,95,255,0.5), inset 0 1px 0 rgba(255,255,255,0.35); }
+.bar .b.approve{ color:#fff; border:none; background:linear-gradient(135deg, #3ace86, #22b06a); box-shadow:0 4px 14px -2px rgba(52,199,125,0.5), inset 0 1px 0 rgba(255,255,255,0.35); }
+.bar .b.approve:hover, .bar .b.primary:hover{ transform:translateY(-1px); }
+.bar .per-status{ font-size:11px; font-weight:700; color:#b96c1a; background:rgba(247,152,74,0.16); padding:3px 9px; border-radius:7px; }
+
+/* barra de scroll del contenido principal — consistente y siempre visible */
+.main{ overflow-y:scroll; }
+.main::-webkit-scrollbar{ width:7px; }
+.main::-webkit-scrollbar-track{ background:transparent; }
+.main::-webkit-scrollbar-thumb{ background:rgba(13,20,36,0.14); border-radius:5px; border:2px solid transparent; background-clip:padding-box; }
+</style>
+</head>
+<body>
+  <div class="bg"><div class="base"></div><div class="glow"></div></div>
+
+  <div class="shell">
+    <!-- ════ SIDEBAR ════ -->
+    <aside class="sidebar glass-strong">
+      <div class="logo-row">
+        <span class="logo-mark"><svg viewBox="0 0 32 32"><defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#6b5fff"/><stop offset="100%" stop-color="#5b8cff"/></linearGradient></defs><g fill="url(#lg1)"><path d="M16 2 L18 14 L30 16 L18 18 L16 30 L14 18 L2 16 L14 14 Z"/></g></svg></span>
+        <span class="logo-text">Pandora</span>
+      </div>
+      <nav style="display:flex; flex-direction:column; gap:3px; flex:1; overflow-y:auto; min-height:0; padding-right:4px; margin-right:-4px;">
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="10" rx="2"/><rect x="13" y="3" width="8" height="6" rx="2"/><rect x="3" y="15" width="8" height="6" rx="2"/><rect x="13" y="11" width="8" height="10" rx="2"/></svg></div><span>Panel</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg></div><span>Venta</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01"/><path d="M18 12h.01"/></svg></div><span>Caja</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.58a2 2 0 0 1 0 2.83z"/><circle cx="7" cy="7" r="1.5"/></svg></div><span>Productos</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg></div><span>Clientes</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></div><span>Stock</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m15 9-6 6"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg></div><span>Ofertas</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h4"/></svg></div><span>Facturas</span></div>
+        <div class="nav-item active"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 15v-3"/><path d="M12 15V8"/><path d="M16 15v-5"/></svg></div><span>Reportes</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></div><span>Configuración</span></div>
+      </nav>
+      <div class="side-foot">
+        <div class="afip"><div class="afip-top"><span class="afip-dot"></span><span class="afip-name">AFIP conectado</span><span class="afip-live">LIVE</span></div><div class="afip-sub">WSFEv1 · 47 CAE hoy</div></div>
+        <div class="cashier"><span class="avatar-ring"><span class="cashier-av">AR</span></span><div><div class="cashier-name">Agus Rochelle</div><div class="cashier-role">Dueño</div></div><span class="cashier-live"></span></div>
+      </div>
+    </aside>
+
+    <!-- ════ MAIN ════ -->
+    <main class="main">
+      <div class="topbar">
+        <div class="search glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="Buscar reporte, producto o cliente…" /></div>
+        <div class="seg glass"><button>Día</button><button>Semana</button><button class="on">Mes</button><button>Año</button></div>
+        <div class="top-tools">
+          <button class="iconbtn glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg><span class="ndot">3</span></button>
+          <button class="iconbtn glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg><span class="ndot">7</span></button>
+          <button class="iconbtn glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8 2 2 0 1 1-2.8 2.8 1.7 1.7 0 0 0-2.8 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.8-1.2 2 2 0 1 1-2.8-2.8A1.7 1.7 0 0 0 4.6 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.8 2 2 0 1 1 2.8-2.8A1.7 1.7 0 0 0 11 4.6a2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.8 1.2 2 2 0 1 1 2.8 2.8A1.7 1.7 0 0 0 19.4 11a2 2 0 1 1 0 4z"/></svg></button>
+          <div class="user-chip glass"><span class="avatar-ring"><span class="cashier-av">AR</span></span><div><div class="user-name">Agus Rochelle</div><div class="user-role">Dueño</div></div></div>
+        </div>
+      </div>
+      <div class="bar">
+        <div class="bar-id"><span class="bar-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 15v-3"/><path d="M12 15V8"/><path d="M16 15v-5"/></svg></span><div><div class="bar-title">Reportes</div><div class="bar-sub">Junio 2026 · comparado con Mayo</div></div></div>
+        <div class="bar-actions"><button class="b ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m9 13 2 2 4-4"/></svg>Excel</button><button class="b ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15h6M9 18h4"/></svg>PDF</button></div>
+      </div>
+      <div class="rep-body">
+        <div class="rep-filters glass">
+          <span class="rf-item"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>01 jun – 30 jun 2026 <svg class="chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+          <span class="rf-item">Comparar: <b>Período anterior</b> <svg class="chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+          <span class="rf-item">Rubro: <b>Todos</b> <svg class="chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+          <span class="rf-item">Cajero: <b>Todos</b> <svg class="chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+          <button class="rf-apply">Aplicar</button>
+        </div>
+        <div class="insights"><div class="ins glass"><div class="ins-ic" style="background:rgba(52,199,125,0.13);color:#1a8e5a"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M17 7h4v4"/></svg></div><div class="ins-tx"><div class="ins-t">Tu mejor mes del año</div><div class="ins-s">+14,2% vs mayo · récord 2026</div></div></div><div class="ins glass"><div class="ins-ic" style="background:rgba(107,95,255,0.12);color:var(--purple)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div class="ins-tx"><div class="ins-t">El sábado es tu día fuerte</div><div class="ins-s">$1,24M promedio · 22% de la semana</div></div></div><div class="ins glass"><div class="ins-ic" style="background:rgba(91,140,255,0.12);color:var(--blue)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div class="ins-tx"><div class="ins-t">Pico de ventas 18–20 h</div><div class="ins-s">32% de las ventas del día</div></div></div><div class="ins glass"><div class="ins-ic" style="background:rgba(247,152,74,0.15);color:var(--orange)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8l9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg></div><div class="ins-tx"><div class="ins-t">3 productos sin rotación</div><div class="ins-s">$84.000 inmovilizado · revisá stock</div></div></div></div>
+        <div class="rep-kpi"><div class="card glass"><span class="upper-mini">Ventas del mes</span><div class="bignum tnum" style="font-size:26px;margin-top:7px;">$8.420.000</div><div style="margin-top:8px;"><span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg>14,2%</span> <span class="label-sm">vs mayo</span></div></div><div class="card glass"><span class="upper-mini">Tickets</span><div class="bignum tnum" style="font-size:26px;margin-top:7px;">2.847</div><div style="margin-top:8px;"><span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg>8,1%</span> <span class="label-sm">vs mayo</span></div></div><div class="card glass"><span class="upper-mini">Ticket promedio</span><div class="bignum tnum" style="font-size:26px;margin-top:7px;">$2.958</div><div style="margin-top:8px;"><span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg>5,6%</span> <span class="label-sm">vs mayo</span></div></div><div class="card glass"><span class="upper-mini">Ganancia bruta</span><div class="bignum tnum" style="font-size:26px;margin-top:7px;">$2.945.000</div><div style="margin-top:8px;"><span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg>11,0%</span> <span class="label-sm">vs mayo</span></div></div></div>
+        <section class="card glass">
+          <div class="card-title"><h3>Ventas en el tiempo</h3><div class="rep-leg"><span class="rl"><i class="d1"></i>Junio</span><span class="rl"><i class="d2"></i>Mayo</span></div></div>
+          <div class="rep-area-wrap"><svg class="rep-area" viewBox="0 0 720 180" preserveAspectRatio="none"><defs><linearGradient id="rg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(107,95,255,0.26)"/><stop offset="100%" stop-color="rgba(107,95,255,0)"/></linearGradient></defs><path d="M 0.0 180.0 L 0.0 81.3 L 24.8 83.4 L 49.7 75.1 L 74.5 83.5 L 99.3 75.8 L 124.1 47.1 L 149.0 52.8 L 173.8 74.5 L 198.6 81.4 L 223.4 74.5 L 248.3 79.9 L 273.1 79.0 L 297.9 40.7 L 322.8 31.2 L 347.6 76.8 L 372.4 74.6 L 397.2 67.3 L 422.1 61.4 L 446.9 67.0 L 471.7 36.1 L 496.6 22.2 L 521.4 74.4 L 546.2 59.8 L 571.0 69.1 L 595.9 71.1 L 620.7 71.0 L 645.5 32.9 L 670.3 20.3 L 695.2 68.3 L 720.0 60.6 L 720.0 180.0 Z" fill="url(#rg)"/><path d="M 0.0 85.2 L 24.8 88.5 L 49.7 85.7 L 74.5 92.2 L 99.3 91.9 L 124.1 62.5 L 149.0 53.1 L 173.8 85.7 L 198.6 87.0 L 223.4 82.7 L 248.3 84.3 L 273.1 86.2 L 297.9 48.1 L 322.8 49.5 L 347.6 86.0 L 372.4 80.8 L 397.2 81.2 L 422.1 75.6 L 446.9 77.4 L 471.7 54.8 L 496.6 40.6 L 521.4 85.6 L 546.2 80.7 L 571.0 75.2 L 595.9 84.1 L 620.7 78.6 L 645.5 56.7 L 670.3 43.5 L 695.2 73.3 L 720.0 75.9" fill="none" stroke="rgba(120,129,160,0.55)" stroke-width="1.6" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/><path d="M 0.0 81.3 L 24.8 83.4 L 49.7 75.1 L 74.5 83.5 L 99.3 75.8 L 124.1 47.1 L 149.0 52.8 L 173.8 74.5 L 198.6 81.4 L 223.4 74.5 L 248.3 79.9 L 273.1 79.0 L 297.9 40.7 L 322.8 31.2 L 347.6 76.8 L 372.4 74.6 L 397.2 67.3 L 422.1 61.4 L 446.9 67.0 L 471.7 36.1 L 496.6 22.2 L 521.4 74.4 L 546.2 59.8 L 571.0 69.1 L 595.9 71.1 L 620.7 71.0 L 645.5 32.9 L 670.3 20.3 L 695.2 68.3 L 720.0 60.6" fill="none" stroke="#6b5fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg></div>
+        </section>
+        <div class="g2">
+          <section class="card glass"><div class="card-title"><h3>Medios de pago</h3></div><div class="pdonut-wrap"><div class="pdonut" style="background:conic-gradient(#34c77d 0% 38%, #6b5fff 38% 64%, #5b8cff 64% 83%, #f7984a 83% 100%)"><div class="pdonut-c"><span class="big tnum">$8,42M</span><span class="lbl">total</span></div></div><div class="pl"><div class="pl-row"><span class="pl-dot" style="background:#34c77d"></span><span class="pl-name">Efectivo</span><span class="pl-val tnum">$3.199.600</span><span class="pl-pct">38%</span></div><div class="pl-row"><span class="pl-dot" style="background:#6b5fff"></span><span class="pl-name">QR / Transferencia</span><span class="pl-val tnum">$2.189.200</span><span class="pl-pct">26%</span></div><div class="pl-row"><span class="pl-dot" style="background:#5b8cff"></span><span class="pl-name">Débito</span><span class="pl-val tnum">$1.599.800</span><span class="pl-pct">19%</span></div><div class="pl-row"><span class="pl-dot" style="background:#f7984a"></span><span class="pl-name">Crédito</span><span class="pl-val tnum">$1.431.400</span><span class="pl-pct">17%</span></div></div></div></section>
+          <section class="card glass"><div class="card-title"><h3>Ventas por rubro</h3></div><div class="hbars"><div class="hb"><div class="hb-top"><span class="hb-name">Bebidas</span><span class="hb-val tnum">$2.358.000</span></div><div class="hb-track"><i style="width:100%;background:#6b5fff"></i></div></div><div class="hb"><div class="hb-top"><span class="hb-name">Almacén</span><span class="hb-val tnum">$1.852.000</span></div><div class="hb-track"><i style="width:79%;background:#5b8cff"></i></div></div><div class="hb"><div class="hb-top"><span class="hb-name">Cigarrillos</span><span class="hb-val tnum">$1.347.000</span></div><div class="hb-track"><i style="width:57%;background:#f7984a"></i></div></div><div class="hb"><div class="hb-top"><span class="hb-name">Golosinas</span><span class="hb-val tnum">$1.094.000</span></div><div class="hb-track"><i style="width:46%;background:#34c77d"></i></div></div><div class="hb"><div class="hb-top"><span class="hb-name">Otros</span><span class="hb-val tnum">$1.011.000</span></div><div class="hb-track"><i style="width:43%;background:#9aa3bd"></i></div></div><div class="hb"><div class="hb-top"><span class="hb-name">Limpieza</span><span class="hb-val tnum">$758.000</span></div><div class="hb-track"><i style="width:32%;background:#ee6a8e"></i></div></div></div></section>
+        </div>
+        <section class="card glass">
+          <div class="card-title"><h3>Ventas por hora y día</h3><span class="upper-mini">Pasá el mouse por cada franja</span></div>
+          <div class="vm"><div class="vm-grid"><div class="vm-corner"></div><div class="vm-h">8h</div><div class="vm-h">10h</div><div class="vm-h">12h</div><div class="vm-h">14h</div><div class="vm-h">16h</div><div class="vm-h">18h</div><div class="vm-h">20h</div><div class="vm-h">22h</div><div class="vm-h tot">Total</div><div class="vm-row">Lun</div><div class="vm-cell" style="background:#efebfb" data-day="Lunes" data-hour="08:00 h" data-k="11"></div><div class="vm-cell" style="background:#d8cdf6" data-day="Lunes" data-hour="10:00 h" data-k="19"></div><div class="vm-cell" style="background:#9c7ce9" data-day="Lunes" data-hour="12:00 h" data-k="30"></div><div class="vm-cell" style="background:#bca7f0" data-day="Lunes" data-hour="14:00 h" data-k="22"></div><div class="vm-cell" style="background:#bca7f0" data-day="Lunes" data-hour="16:00 h" data-k="25"></div><div class="vm-cell" style="background:#9c7ce9" data-day="Lunes" data-hour="18:00 h" data-k="33"></div><div class="vm-cell" style="background:#7b54e0" data-day="Lunes" data-hour="20:00 h" data-k="38"></div><div class="vm-cell" style="background:#d8cdf6" data-day="Lunes" data-hour="22:00 h" data-k="16"></div><div class="vm-daytot">$195k</div><div class="vm-row">Mar</div><div class="vm-cell" style="background:#efebfb" data-day="Martes" data-hour="08:00 h" data-k="12"></div><div class="vm-cell" style="background:#d8cdf6" data-day="Martes" data-hour="10:00 h" data-k="21"></div><div class="vm-cell" style="background:#9c7ce9" data-day="Martes" data-hour="12:00 h" data-k="32"></div><div class="vm-cell" style="background:#bca7f0" data-day="Martes" data-hour="14:00 h" data-k="23"></div><div class="vm-cell" style="background:#bca7f0" data-day="Martes" data-hour="16:00 h" data-k="26"></div><div class="vm-cell" style="background:#9c7ce9" data-day="Martes" data-hour="18:00 h" data-k="34"></div><div class="vm-cell" style="background:#7b54e0" data-day="Martes" data-hour="20:00 h" data-k="40"></div><div class="vm-cell" style="background:#d8cdf6" data-day="Martes" data-hour="22:00 h" data-k="18"></div><div class="vm-daytot">$206k</div><div class="vm-row">Mié</div><div class="vm-cell" style="background:#efebfb" data-day="Miércoles" data-hour="08:00 h" data-k="14"></div><div class="vm-cell" style="background:#bca7f0" data-day="Miércoles" data-hour="10:00 h" data-k="22"></div><div class="vm-cell" style="background:#9c7ce9" data-day="Miércoles" data-hour="12:00 h" data-k="33"></div><div class="vm-cell" style="background:#bca7f0" data-day="Miércoles" data-hour="14:00 h" data-k="25"></div><div class="vm-cell" style="background:#bca7f0" data-day="Miércoles" data-hour="16:00 h" data-k="28"></div><div class="vm-cell" style="background:#9c7ce9" data-day="Miércoles" data-hour="18:00 h" data-k="36"></div><div class="vm-cell" style="background:#7b54e0" data-day="Miércoles" data-hour="20:00 h" data-k="41"></div><div class="vm-cell" style="background:#d8cdf6" data-day="Miércoles" data-hour="22:00 h" data-k="19"></div><div class="vm-daytot">$217k</div><div class="vm-row">Jue</div><div class="vm-cell" style="background:#d8cdf6" data-day="Jueves" data-hour="08:00 h" data-k="15"></div><div class="vm-cell" style="background:#bca7f0" data-day="Jueves" data-hour="10:00 h" data-k="23"></div><div class="vm-cell" style="background:#9c7ce9" data-day="Jueves" data-hour="12:00 h" data-k="34"></div><div class="vm-cell" style="background:#bca7f0" data-day="Jueves" data-hour="14:00 h" data-k="26"></div><div class="vm-cell" style="background:#bca7f0" data-day="Jueves" data-hour="16:00 h" data-k="29"></div><div class="vm-cell" style="background:#7b54e0" data-day="Jueves" data-hour="18:00 h" data-k="38"></div><div class="vm-cell" style="background:#7b54e0" data-day="Jueves" data-hour="20:00 h" data-k="44"></div><div class="vm-cell" style="background:#bca7f0" data-day="Jueves" data-hour="22:00 h" data-k="22"></div><div class="vm-daytot">$232k</div><div class="vm-row">Vie</div><div class="vm-cell" style="background:#d8cdf6" data-day="Viernes" data-hour="08:00 h" data-k="19"></div><div class="vm-cell" style="background:#bca7f0" data-day="Viernes" data-hour="10:00 h" data-k="28"></div><div class="vm-cell" style="background:#7b54e0" data-day="Viernes" data-hour="12:00 h" data-k="38"></div><div class="vm-cell" style="background:#9c7ce9" data-day="Viernes" data-hour="14:00 h" data-k="30"></div><div class="vm-cell" style="background:#9c7ce9" data-day="Viernes" data-hour="16:00 h" data-k="34"></div><div class="vm-cell" style="background:#5b34cf" data-day="Viernes" data-hour="18:00 h" data-k="47"></div><div class="vm-cell" style="background:#3d1ba8" data-day="Viernes" data-hour="20:00 h" data-k="52"></div><div class="vm-cell" style="background:#9c7ce9" data-day="Viernes" data-hour="22:00 h" data-k="30"></div><div class="vm-daytot">$279k</div><div class="vm-row">Sáb</div><div class="vm-cell" style="background:#bca7f0" data-day="Sábado" data-hour="08:00 h" data-k="25"></div><div class="vm-cell" style="background:#9c7ce9" data-day="Sábado" data-hour="10:00 h" data-k="36"></div><div class="vm-cell" style="background:#7b54e0" data-day="Sábado" data-hour="12:00 h" data-k="44"></div><div class="vm-cell" style="background:#7b54e0" data-day="Sábado" data-hour="14:00 h" data-k="38"></div><div class="vm-cell" style="background:#7b54e0" data-day="Sábado" data-hour="16:00 h" data-k="41"></div><div class="vm-cell" style="background:#3d1ba8" data-day="Sábado" data-hour="18:00 h" data-k="52"></div><div class="vm-cell peak" style="background:#3d1ba8" data-day="Sábado" data-hour="20:00 h" data-k="55"></div><div class="vm-cell" style="background:#7b54e0" data-day="Sábado" data-hour="22:00 h" data-k="38"></div><div class="vm-daytot">$330k</div><div class="vm-row">Dom</div><div class="vm-cell" style="background:#d8cdf6" data-day="Domingo" data-hour="08:00 h" data-k="16"></div><div class="vm-cell" style="background:#bca7f0" data-day="Domingo" data-hour="10:00 h" data-k="25"></div><div class="vm-cell" style="background:#9c7ce9" data-day="Domingo" data-hour="12:00 h" data-k="33"></div><div class="vm-cell" style="background:#bca7f0" data-day="Domingo" data-hour="14:00 h" data-k="28"></div><div class="vm-cell" style="background:#9c7ce9" data-day="Domingo" data-hour="16:00 h" data-k="30"></div><div class="vm-cell" style="background:#7b54e0" data-day="Domingo" data-hour="18:00 h" data-k="41"></div><div class="vm-cell" style="background:#5b34cf" data-day="Domingo" data-hour="20:00 h" data-k="47"></div><div class="vm-cell" style="background:#bca7f0" data-day="Domingo" data-hour="22:00 h" data-k="28"></div><div class="vm-daytot">$248k</div></div><div class="vmtip" id="vmtip"><div class="pt-d"></div><div class="pt-v"></div></div><div class="vm-leg"><div class="vm-scale"><span>Menos ventas</span><span class="vm-sw" style="background:#efebfb"></span><span class="vm-sw" style="background:#d8cdf6"></span><span class="vm-sw" style="background:#bca7f0"></span><span class="vm-sw" style="background:#9c7ce9"></span><span class="vm-sw" style="background:#7b54e0"></span><span class="vm-sw" style="background:#5b34cf"></span><span class="vm-sw" style="background:#3d1ba8"></span><span>Más ventas</span></div><span class="vm-note">Cada celda = total de ventas en la franja de 2 horas</span></div></div>
+        </section>
+        <div class="g2">
+          <section class="card glass"><div class="card-title"><h3>Rentabilidad por producto</h3><span class="upper-mini">Margen</span></div><table class="rtbl"><thead><tr><th>Producto</th><th class="r">Facturado</th><th class="r">Margen</th></tr></thead><tbody><tr><td class="rp-name">Golosinas surtidas</td><td class="r"><span class="mono">$1.094.000</span></td><td class="r"><span class="mg ok">42%</span></td></tr><tr><td class="rp-name">Yerba La Tranquera</td><td class="r"><span class="mono">$1.602.000</span></td><td class="r"><span class="mg ok">38%</span></td></tr><tr><td class="rp-name">Agua mineral 2L</td><td class="r"><span class="mono">$642.000</span></td><td class="r"><span class="mg ok">33%</span></td></tr><tr><td class="rp-name">Coca-Cola 2,25L</td><td class="r"><span class="mono">$1.862.000</span></td><td class="r"><span class="mg mid">28%</span></td></tr><tr><td class="rp-name">Limpieza</td><td class="r"><span class="mono">$758.000</span></td><td class="r"><span class="mg mid">24%</span></td></tr><tr><td class="rp-name">Marlboro box 20</td><td class="r"><span class="mono">$1.130.000</span></td><td class="r"><span class="mg low">12%</span></td></tr></tbody></table></section>
+          <section class="card glass"><div class="card-title"><h3>Sin rotación</h3><span class="upper-mini">Slow movers</span></div><div class="slow"><div class="slow-row"><div class="slow-warn">!</div><div class="slow-tx"><div class="slow-name">Lavandina 5L</div><div class="slow-sub">2 u vendidas · 45 días sin venta</div></div><span class="slow-inmov tnum">$18.000</span></div><div class="slow-row"><div class="slow-warn">!</div><div class="slow-tx"><div class="slow-name">Pilas AA x4</div><div class="slow-sub">1 u vendidas · 62 días sin venta</div></div><span class="slow-inmov tnum">$9.500</span></div><div class="slow-row"><div class="slow-warn">!</div><div class="slow-tx"><div class="slow-name">Cuaderno A4 tapa dura</div><div class="slow-sub">0 u vendidas · 70 días sin venta</div></div><span class="slow-inmov tnum">$32.000</span></div><div class="slow-row"><div class="slow-warn">!</div><div class="slow-tx"><div class="slow-name">Encendedor recargable</div><div class="slow-sub">3 u vendidas · 38 días sin venta</div></div><span class="slow-inmov tnum">$24.500</span></div></div></section>
+        </div>
+        <div class="g2">
+          <section class="card glass"><div class="card-title"><h3>Ventas por cajero</h3></div><table class="rtbl"><thead><tr><th>Cajero</th><th class="r">Ventas</th><th class="r">Tickets</th><th class="r">Prom.</th><th class="r">Dif. caja</th></tr></thead><tbody><tr><td><span class="cj-cell"><span class="cj-av">MG</span>Mateo Giordano</span></td><td class="r"><span class="rp-amt">$4.820.000</span></td><td class="r"><span class="mono">1.612</span></td><td class="r"><span class="mono">$2.990</span></td><td class="r"><span class="mono c-red">−$2.400</span></td></tr><tr><td><span class="cj-cell"><span class="cj-av">LP</span>Lucía Pérez</span></td><td class="r"><span class="rp-amt">$3.600.000</span></td><td class="r"><span class="mono">1.235</span></td><td class="r"><span class="mono">$2.915</span></td><td class="r"><span class="mono c-green">+$300</span></td></tr></tbody></table></section>
+          <section class="card glass-strong"><div class="card-title"><h3>Posición de IVA</h3><span class="upper-mini">Junio</span></div><div class="kv"><span class="k">IVA débito (ventas)</span><span class="v">$1.461.000</span></div><div class="kv"><span class="k">IVA crédito (compras)</span><span class="v">−$612.000</span></div><div class="divider"></div><div class="iva-pos"><span>A pagar</span><span class="iva-amt tnum">$849.000</span></div></section>
+        </div>
+        <div class="g2">
+          <section class="card glass">
+            <div class="card-title"><h3>Ventas por segmento de cliente</h3><span class="upper-mini">Nuevo · tipo comercial</span></div>
+            <div class="pdonut-wrap">
+              <div class="pdonut" style="background:conic-gradient(#6b5fff 0% 30%, #5b8cff 30% 46%, #34c77d 46% 60%, #f7984a 60% 70%, #ee6a8e 70% 78%, #a8b0c5 78% 100%)"><div class="pdonut-c"><span class="big tnum">$8,42M</span><span class="lbl">total</span></div></div>
+              <div class="pl">
+                <div class="pl-row"><span class="pl-dot" style="background:#6b5fff"></span><span class="pl-name">Mayoristas</span><span class="pl-val tnum">$2.526.000</span><span class="pl-pct">30%</span></div>
+                <div class="pl-row"><span class="pl-dot" style="background:#5b8cff"></span><span class="pl-name">Jubilados</span><span class="pl-val tnum">$1.347.200</span><span class="pl-pct">16%</span></div>
+                <div class="pl-row"><span class="pl-dot" style="background:#34c77d"></span><span class="pl-name">Vecinos</span><span class="pl-val tnum">$1.178.800</span><span class="pl-pct">14%</span></div>
+                <div class="pl-row"><span class="pl-dot" style="background:#f7984a"></span><span class="pl-name">Estudiantes</span><span class="pl-val tnum">$842.000</span><span class="pl-pct">10%</span></div>
+                <div class="pl-row"><span class="pl-dot" style="background:#ee6a8e"></span><span class="pl-name">Clientes VIP</span><span class="pl-val tnum">$673.600</span><span class="pl-pct">8%</span></div>
+                <div class="pl-row"><span class="pl-dot" style="background:#a8b0c5"></span><span class="pl-name">Sin tipo (mostrador)</span><span class="pl-val tnum">$1.852.400</span><span class="pl-pct">22%</span></div>
+              </div>
+            </div>
+          </section>
+          <section class="card glass">
+            <div class="card-title"><h3>Descuento otorgado por promo</h3><span class="upper-mini">Mes · $836.000</span></div>
+            <div class="hbars">
+              <div class="hb"><div class="hb-top"><span class="hb-name">Descuento Jubilados</span><span class="hb-val tnum">$312.000</span></div><div class="hb-track"><i style="width:100%;background:#6b5fff"></i></div></div>
+              <div class="hb"><div class="hb-top"><span class="hb-name">10% superando $30.000</span><span class="hb-val tnum">$284.000</span></div><div class="hb-track"><i style="width:91%;background:#5b8cff"></i></div></div>
+              <div class="hb"><div class="hb-top"><span class="hb-name">2x1 en golosinas</span><span class="hb-val tnum">$142.000</span></div><div class="hb-track"><i style="width:46%;background:#d65db1"></i></div></div>
+              <div class="hb"><div class="hb-top"><span class="hb-name">Jueves −15% almacén</span><span class="hb-val tnum">$98.000</span></div><div class="hb-track"><i style="width:31%;background:#f7984a"></i></div></div>
+            </div>
+          </section>
+        </div>
+        <section class="card glass">
+          <div class="card-title"><h3>Descuento otorgado por semana</h3><span class="upper-mini">Junio · tendencia</span></div>
+          <div style="display:flex;align-items:flex-end;gap:16px;padding:10px 6px 0;">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;"><span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink-2);">$182k</span><div style="width:100%;height:71px;background:linear-gradient(180deg,#9088ff,#6b5fff);border-radius:7px 7px 3px 3px;"></div><span style="font-size:10.5px;color:var(--ink-3);">Sem 1</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;"><span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink-2);">$214k</span><div style="width:100%;height:83px;background:linear-gradient(180deg,#9088ff,#6b5fff);border-radius:7px 7px 3px 3px;"></div><span style="font-size:10.5px;color:var(--ink-3);">Sem 2</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;"><span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink-2);">$198k</span><div style="width:100%;height:77px;background:linear-gradient(180deg,#9088ff,#6b5fff);border-radius:7px 7px 3px 3px;"></div><span style="font-size:10.5px;color:var(--ink-3);">Sem 3</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;"><span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink);">$242k</span><div style="width:100%;height:94px;background:linear-gradient(180deg,#6b5fff,#5b34cf);border-radius:7px 7px 3px 3px;box-shadow:0 4px 12px rgba(107,95,255,0.4);"></div><span style="font-size:10.5px;color:var(--ink-3);">Sem 4</span></div>
+          </div>
+        </section>
+        <div class="g2">
+          <section class="card glass">
+            <div class="card-title"><h3>Promociones y descuentos</h3><span class="upper-mini">Impacto en margen</span></div>
+            <table class="rtbl">
+              <thead><tr><th>Promo</th><th class="r">Usos</th><th class="r">Descuento</th><th class="r">Margen</th></tr></thead>
+              <tbody>
+                <tr><td class="rp-name">Descuento Jubilados</td><td class="r"><span class="mono">312</span></td><td class="r"><span class="mono">$312.000</span></td><td class="r"><span class="mg ok">31%</span></td></tr>
+                <tr><td class="rp-name">10% superando $30.000</td><td class="r"><span class="mono">148</span></td><td class="r"><span class="mono">$284.000</span></td><td class="r"><span class="mg ok">29%</span></td></tr>
+                <tr><td class="rp-name">2x1 en golosinas</td><td class="r"><span class="mono">96</span></td><td class="r"><span class="mono">$142.000</span></td><td class="r"><span class="mg mid">18%</span></td></tr>
+                <tr><td class="rp-name">Jueves −15% almacén</td><td class="r"><span class="mono">73</span></td><td class="r"><span class="mono">$98.000</span></td><td class="r"><span class="mg low">9%</span></td></tr>
+              </tbody>
+            </table>
+            <div class="iva-pos" style="margin-top:12px;"><span>Descuento total otorgado</span><span class="iva-amt tnum">$836.000</span></div>
+            <div style="font-size:11px;color:var(--ink-3);margin-top:8px;">0,9% de las ventas del mes · "Jueves −15% almacén" es la de <b>menor margen</b> — evaluá si conviene mantenerla.</div>
+          </section>
+          <section class="card glass">
+            <div class="card-title"><h3>Descuentos manuales por cajero</h3><span class="upper-mini">Control · tope 15%</span></div>
+            <table class="rtbl">
+              <thead><tr><th>Cajero</th><th class="r">Veces</th><th class="r">Otorgado</th><th class="r">% s/ventas</th></tr></thead>
+              <tbody>
+                <tr><td><span class="cj-cell"><span class="cj-av">MG</span>Mateo Giordano</span></td><td class="r"><span class="mono">54</span></td><td class="r"><span class="mono">$146.000</span></td><td class="r"><span class="mono c-red">3,0%</span></td></tr>
+                <tr><td><span class="cj-cell"><span class="cj-av">LP</span>Lucía Pérez</span></td><td class="r"><span class="mono">21</span></td><td class="r"><span class="mono">$48.000</span></td><td class="r"><span class="mono c-green">1,3%</span></td></tr>
+              </tbody>
+            </table>
+            <div style="font-size:11px;color:var(--ink-3);margin-top:12px;">Mateo aplica más descuentos que el promedio (también tuvo descuadre de caja). El tope por rol es <b>15%</b> — se configura en Configuración › Usuarios. Ninguno lo superó.</div>
+          </section>
+        </div>
+        <div class="g2">
+          <section class="card glass"><div class="card-title"><h3>Ingresos vs Gastos</h3><span class="upper-mini">Junio</span></div><div class="flow"><div class="flow-row in"><span class="flow-k"><i></i>Ingresos (ventas)</span><span class="flow-v tnum">$8.420.000</span></div><div class="flow-bar"><i class="fin" style="width:100%"></i></div><div class="flow-row out"><span class="flow-k"><i></i>Gastos del mes</span><span class="flow-v tnum">−$621.800</span></div><div class="flow-bar"><i class="fout" style="width:7.4%"></i></div><div class="divider"></div><div class="flow-res"><span>Resultado</span><span class="flow-res-v tnum">$7.798.200</span></div></div></section>
+          <section class="card glass"><div class="card-title"><h3>Resumen fiscal</h3><span class="upper-mini">Junio</span></div><div class="fiscal-total"><span class="upper-mini">Total facturado</span><div class="bignum tnum" style="font-size:24px;margin-top:5px;">$8.420.000</div></div><div class="divider"></div><div class="kv"><span class="k">Comprobantes</span><span class="v">A 312 · B 2.485 · C 50</span></div><div class="kv"><span class="k">Neto gravado</span><span class="v">$6.960.000</span></div><div class="kv"><span class="k">Exento · Ley 19.640</span><span class="v">$284.000</span></div><button class="rx full"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 12 5 5 5-5"/><path d="M5 21h14"/></svg>Exportar Libro IVA</button></section>
+        </div>
+        <div class="g2">
+          <section class="card glass"><div class="card-title"><h3>Top productos</h3><span class="upper-mini">Por facturación</span></div><table class="rtbl"><thead><tr><th>Producto</th><th class="r">Unidades</th><th class="r">Facturado</th></tr></thead><tbody><tr><td><div class="rp-name">Coca-Cola 2,25L</div><div class="rp-sub">Bebidas</div></td><td class="r"><span class="mono">1.284</span></td><td class="r"><span class="rp-amt">$1.862.000</span></td></tr><tr><td><div class="rp-name">Yerba La Tranquera 1kg</div><div class="rp-sub">Almacén</div></td><td class="r"><span class="mono">654</span></td><td class="r"><span class="rp-amt">$1.602.000</span></td></tr><tr><td><div class="rp-name">Marlboro box 20</div><div class="rp-sub">Cigarrillos</div></td><td class="r"><span class="mono">942</span></td><td class="r"><span class="rp-amt">$1.130.000</span></td></tr><tr><td><div class="rp-name">Agua mineral 2L</div><div class="rp-sub">Bebidas</div></td><td class="r"><span class="mono">876</span></td><td class="r"><span class="rp-amt">$642.000</span></td></tr><tr><td><div class="rp-name">Pan lactal</div><div class="rp-sub">Almacén</div></td><td class="r"><span class="mono">588</span></td><td class="r"><span class="rp-amt">$447.000</span></td></tr></tbody></table></section>
+          <section class="card glass"><div class="card-title"><h3>Top clientes</h3><span class="upper-mini">B2B</span></div><div class="topc"><div class="tc-row"><span class="tc-av">GS</span><span class="tc-name">García SRL</span><span class="tc-val tnum">$412.000</span></div><div class="tc-row"><span class="tc-av">DA</span><span class="tc-name">Distribuidora Austral</span><span class="tc-val tnum">$298.000</span></div><div class="tc-row"><span class="tc-av">KN</span><span class="tc-name">Kiosco Norte SA</span><span class="tc-val tnum">$187.000</span></div><div class="tc-row"><span class="tc-av">AS</span><span class="tc-name">Almacén El Sol</span><span class="tc-val tnum">$134.000</span></div></div></section>
+        </div>
+      </div>
+    </main>
+  </div>
+<script>
+(function(){
+  var tip=document.getElementById('vmtip'); if(!tip) return;
+  var d=tip.querySelector('.pt-d'), v=tip.querySelector('.pt-v');
+  document.querySelectorAll('.vm-cell').forEach(function(c){
+    c.addEventListener('mouseenter', function(){
+      d.textContent = c.dataset.day + ' \u2013 ' + c.dataset.hour;
+      v.innerHTML = 'Ventas: <b>$' + c.dataset.k + 'k</b>';
+      tip.style.left = (c.offsetLeft + c.offsetWidth/2) + 'px';
+      tip.style.top = c.offsetTop + 'px';
+      tip.classList.add('on');
+    });
+    c.addEventListener('mouseleave', function(){ tip.classList.remove('on'); });
+  });
+})();
+</script>
+<script>
+(function(){
+  var map={'Panel':'dashboard.html','Venta':'checkpoint-v19-top-tools.html','Caja':'checkpoint-caja-v2.html','Productos':'productos-v3.html','Clientes':'clientes-v6.html','Stock':'stock-v2.html','Ofertas':'ofertas.html','Facturas':'facturas-v4.html','Presupuestos':'presupuestos-v1.html','Pedidos':'pedidos.html','Señas':'pedidos-senados.html','Devoluciones':'devoluciones.html','Reportes':'reportes-v2.html','Contador':'contador-v2.html','Integraciones':'integraciones.html','Configuración':'configuracion-v1.html'};
+  function txt(el){return (el.textContent||'').trim();}
+  function find(label){return [].slice.call(document.querySelectorAll('.nav-item')).filter(function(el){return txt(el)===label;})[0];}
+  function ins(label,after,svg){if(find(label))return;var a=find(after);if(!a)return;var d=document.createElement('div');d.className='nav-item';d.innerHTML='<div class="nav-icon-box">'+svg+'</div><span>'+label+'</span>';a.parentNode.insertBefore(d,a.nextSibling);}
+  ins('Presupuestos','Facturas','<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6"/><path d="M9 16h4"/></svg>');
+  ins('Contador','Reportes','<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8"/><path d="M8 10h8"/><path d="M8 14h3"/><circle cx="16" cy="16.5" r="1.6"/></svg>');
+  ins('Integraciones','Contador','<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>');
+  ins('Pedidos','Presupuestos','<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>');
+  ins('Devoluciones','Pedidos','<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>');
+  ins('Señas','Pedidos','<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>');
+  [].slice.call(document.querySelectorAll('.nav-item')).forEach(function(el){var u=map[txt(el)];if(u){el.style.cursor='pointer';el.addEventListener('click',function(){location.href=u;});}});
+})();
+</script>
+</body>
+</html>

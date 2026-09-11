@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pandora · Pedidos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --ink:#0d1424; --ink-1:#1f2a44; --ink-2:#4a5570; --ink-3:#7681a0; --ink-4:#a8b0c5;
+  --purple:#6b5fff; --purple-2:#9088ff; --blue:#5b8cff; --green:#34c77d; --orange:#f7984a; --pink:#ee6a8e; --red:#ef5d6a; --yellow:#f4c948; --teal:#0e8f9e; --rose:#d65db1;
+  --glass-bg:rgba(255,255,255,0.58); --glass-bg-2:rgba(255,255,255,0.72);
+  --glass-bd:1px solid rgba(255,255,255,0.85);
+  --glass-hi:inset 0 1px 0 rgba(255,255,255,0.9);
+  --glass-sh:0 8px 32px rgba(54,70,120,0.10), 0 2px 8px rgba(54,70,120,0.06);
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+button,input{ font:inherit; color:inherit; border:none; outline:none; background:none; cursor:pointer; }
+html,body{ height:100%; }
+body{ font-family:'Inter',ui-sans-serif,system-ui,sans-serif; -webkit-font-smoothing:antialiased; letter-spacing:-0.011em; color:var(--ink); height:100dvh; overflow:hidden; position:relative; }
+.bg{ position:fixed; inset:0; z-index:-10; }
+.bg .base{ position:absolute; inset:0; background:linear-gradient(175deg,#b5c6e8 0%,#c8d4ea 28%,#ddd0e0 62%,#eed6d0 100%); }
+.bg .glow{ position:absolute; inset:0; background:
+  radial-gradient(ellipse 70% 60% at 10% 95%, rgba(238,200,220,0.55) 0%, transparent 60%),
+  radial-gradient(ellipse 60% 50% at 88% 82%, rgba(240,210,175,0.40) 0%, transparent 60%),
+  radial-gradient(ellipse 55% 42% at 55% 22%, rgba(255,255,255,0.60) 0%, transparent 52%),
+  radial-gradient(ellipse 58% 48% at 10% 22%, rgba(195,215,248,0.65) 0%, transparent 62%); }
+::-webkit-scrollbar{ width:7px; height:7px; }
+::-webkit-scrollbar-track{ background:transparent; }
+::-webkit-scrollbar-thumb{ background:rgba(13,20,36,0.14); border-radius:5px; border:2px solid transparent; background-clip:padding-box; }
+.glass{ background:var(--glass-bg); backdrop-filter:blur(28px) saturate(140%); -webkit-backdrop-filter:blur(28px) saturate(140%); border:var(--glass-bd); border-radius:20px; box-shadow:var(--glass-hi), var(--glass-sh); }
+.glass-strong{ background:var(--glass-bg-2); backdrop-filter:blur(32px) saturate(150%); -webkit-backdrop-filter:blur(32px) saturate(150%); border:var(--glass-bd); border-radius:20px; box-shadow:var(--glass-hi), var(--glass-sh); }
+.tnum{ font-variant-numeric:tabular-nums; }
+
+/* shell + sidebar */
+.shell{ height:100dvh; padding:10px; display:grid; grid-template-columns:210px 1fr; gap:8px; }
+.sidebar{ display:flex; flex-direction:column; border-radius:20px; padding:22px 14px 18px; overflow:hidden; }
+.logo-row{ display:flex; align-items:center; gap:10px; padding:0 8px 22px; }
+.logo-mark{ width:26px; height:26px; flex-shrink:0; } .logo-mark svg{ width:100%; height:100%; display:block; }
+.logo-text{ font-size:19px; font-weight:700; letter-spacing:-0.025em; background:linear-gradient(135deg,#2a3454 0%,#4a5878 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.nav-item{ display:flex; align-items:center; gap:11px; padding:10px 11px; border-radius:12px; color:var(--ink-2); font-size:13.5px; font-weight:500; cursor:pointer; transition:all 200ms cubic-bezier(.4,0,.2,1); }
+.nav-item:hover{ color:var(--ink); background:rgba(255,255,255,0.4); }
+.nav-item.active{ background:rgba(255,255,255,0.92); color:var(--ink); box-shadow:0 1px 2px rgba(54,70,120,0.06), 0 4px 12px rgba(54,70,120,0.08); }
+.nav-item.active .nav-icon-box{ background:var(--purple); color:#fff; box-shadow:0 4px 10px rgba(107,95,255,0.4); }
+.nav-icon-box{ width:26px; height:26px; display:flex; align-items:center; justify-content:center; border-radius:7px; color:var(--ink-2); transition:all 200ms; flex-shrink:0; }
+.side-foot{ margin-top:auto; padding-top:12px; display:flex; flex-direction:column; gap:9px; }
+.afip{ padding:10px 11px; border-radius:13px; background:rgba(52,199,125,0.08); border:1px solid rgba(52,199,125,0.20); }
+.afip-top{ display:flex; align-items:center; gap:7px; }
+.afip-dot{ width:7px; height:7px; border-radius:50%; background:var(--green); flex:0 0 auto; animation:pg 2.4s ease-in-out infinite; }
+.afip-name{ font-size:11.5px; font-weight:700; color:#177a4a; }
+.afip-live{ margin-left:auto; font-size:8.5px; font-weight:800; letter-spacing:0.06em; color:var(--green); }
+.afip-sub{ font-size:10px; color:#5a9b78; padding-left:14px; margin-top:2px; }
+@keyframes pg{ 0%,100%{box-shadow:0 0 0 2px rgba(52,199,125,0.22)} 50%{box-shadow:0 0 0 5px rgba(52,199,125,0)} }
+.cashier{ display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:13px; background:rgba(255,255,255,0.66); border:1px solid rgba(255,255,255,0.9); box-shadow:var(--glass-hi); }
+.cashier-av{ width:32px; height:32px; flex:0 0 auto; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--blue)); display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:700; }
+.avatar-ring{ padding:2px; border-radius:50%; flex:0 0 auto; display:flex; background:conic-gradient(from 0deg,#6b5fff,#5b8cff,#34c77d,#f7984a,#ee6a8e,#6b5fff); }
+.avatar-ring > .cashier-av{ border:2px solid rgba(255,255,255,0.9); }
+.cashier-name{ font-size:12px; font-weight:600; line-height:1.2; }
+.cashier-role{ font-size:10px; color:var(--ink-3); }
+.cashier-live{ width:7px; height:7px; border-radius:50%; background:var(--green); margin-left:auto; flex:0 0 auto; animation:pg 2.4s ease-in-out infinite; }
+
+/* main + topbar */
+.main{ min-width:0; min-height:0; overflow-y:scroll; padding:4px 6px 18px 2px; }
+.main::-webkit-scrollbar{ width:7px; }
+.main::-webkit-scrollbar-track{ background:transparent; }
+.main::-webkit-scrollbar-thumb{ background:rgba(13,20,36,0.14); border-radius:5px; border:2px solid transparent; background-clip:padding-box; }
+.topbar{ display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+.search{ position:relative; flex:1; max-width:380px; display:flex; align-items:center; height:42px; border-radius:14px; padding:0 14px 0 40px; }
+.search svg{ position:absolute; left:13px; width:16px; height:16px; color:var(--ink-3); }
+.search input{ width:100%; font-size:13px; } .search input::placeholder{ color:var(--ink-3); }
+.top-tools{ display:flex; align-items:center; gap:8px; margin-left:auto; }
+.iconbtn{ width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:12px; color:var(--ink-1); position:relative; }
+.iconbtn svg{ width:18px; height:18px; }
+.iconbtn .ndot{ position:absolute; top:7px; right:7px; min-width:15px; height:15px; border-radius:999px; background:var(--pink); color:#fff; font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center; border:2px solid rgba(255,255,255,0.9); }
+.user-chip{ display:flex; align-items:center; gap:9px; padding:5px 13px 5px 5px; border-radius:999px; }
+.user-name{ font-size:12.5px; font-weight:600; line-height:1.25; } .user-role{ font-size:10.5px; color:var(--ink-3); }
+.upper-mini{ font-size:10.5px; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.08em; font-family:var(--mono); font-weight:500; }
+
+/* HEADER */
+.po-head{ display:flex; align-items:center; justify-content:space-between; padding:18px 24px; border-radius:20px; margin-bottom:16px; }
+.po-head-l{ display:flex; align-items:center; gap:15px; }
+.po-head-ic{ width:46px; height:46px; border-radius:14px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; color:#fff; background:linear-gradient(135deg,var(--purple),var(--blue)); box-shadow:0 6px 16px rgba(107,95,255,0.35); }
+.po-head-ic svg{ width:22px; height:22px; }
+.po-title{ font-size:23px; font-weight:700; letter-spacing:-0.03em; }
+.po-sub{ font-size:12.5px; color:var(--ink-2); margin-top:2px; }
+.po-new{ display:inline-flex; align-items:center; gap:8px; padding:11px 18px; border-radius:13px; background:linear-gradient(140deg,var(--purple),var(--purple-2)); color:#fff; font-size:13.5px; font-weight:700; box-shadow:0 7px 20px rgba(107,95,255,0.42); transition:all 170ms; }
+.po-new:hover{ transform:translateY(-1px); box-shadow:0 10px 26px rgba(107,95,255,0.52); }
+.po-new svg{ width:16px; height:16px; }
+
+/* KPIs */
+.po-kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:16px; }
+.po-kpi{ padding:16px 18px; border-radius:16px; position:relative; overflow:hidden; }
+.po-kpi .v{ font-size:24px; font-weight:700; letter-spacing:-0.02em; margin-top:6px; }
+.po-kpi .foot{ font-size:11px; color:var(--ink-3); margin-top:3px; }
+.po-kpi .spark{ position:absolute; right:14px; bottom:14px; opacity:.9; }
+
+/* CONTROLES (filtros) */
+.po-controls{ position:relative; z-index:30; display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:16px; margin-bottom:14px; flex-wrap:wrap; }
+.chips{ display:inline-flex; align-items:center; gap:3px; padding:4px; border-radius:12px; background:rgba(13,20,36,0.04); }
+.chip{ font-size:12px; font-weight:600; color:var(--ink-2); background:transparent; padding:7px 12px; border-radius:9px; transition:all 120ms; cursor:pointer; }
+.chip.on{ background:var(--ink); color:#fff; }
+.chip .c{ display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+.po-dd{ position:relative; }
+.po-dd-btn{ display:inline-flex; align-items:center; gap:8px; height:36px; padding:0 13px; border-radius:11px; background:#fff; border:1px solid rgba(13,20,36,0.1); font-size:12.5px; font-weight:600; color:var(--ink-1); }
+.po-dd-btn .who{ display:inline-flex; align-items:center; gap:6px; }
+.po-dd-btn svg{ width:13px; height:13px; color:var(--ink-3); transition:transform 160ms; }
+.po-dd.open .po-dd-btn svg.chev{ transform:rotate(180deg); }
+.po-dd-menu{ position:absolute; top:calc(100% + 6px); left:0; min-width:210px; z-index:40; display:none; flex-direction:column; padding:6px; border-radius:14px; background:rgba(255,255,255,0.93); backdrop-filter:blur(28px) saturate(150%); -webkit-backdrop-filter:blur(28px) saturate(150%); border:var(--glass-bd); box-shadow:0 16px 44px rgba(20,26,44,0.22); }
+.po-dd.open .po-dd-menu{ display:flex; }
+.po-dd-item{ display:flex; align-items:center; gap:9px; text-align:left; font-size:12.5px; font-weight:500; color:var(--ink-1); padding:8px 10px; border-radius:9px; }
+.po-dd-item:hover{ background:rgba(255,255,255,0.6); }
+.po-dd-item.on{ background:rgba(107,95,255,0.12); color:var(--purple); font-weight:700; }
+.tk{ width:24px; height:24px; border-radius:7px; display:inline-flex; align-items:center; justify-content:center; color:#fff; font-size:10px; font-weight:700; flex:0 0 auto; }
+.tk.agus{ background:linear-gradient(135deg,#6b5fff,#5b8cff); } .tk.mateo{ background:linear-gradient(135deg,#f7984a,#ee6a8e); } .tk.belen{ background:linear-gradient(135deg,#0e8f9e,#34c77d); } .tk.all{ background:linear-gradient(135deg,#7681a0,#a8b0c5); }
+.po-view{ margin-left:auto; display:inline-flex; gap:3px; padding:4px; border-radius:11px; background:rgba(13,20,36,0.04); }
+.po-view button{ font-size:12px; font-weight:600; color:var(--ink-2); padding:6px 12px; border-radius:8px; display:inline-flex; align-items:center; gap:6px; }
+.po-view button.on{ background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(13,20,36,0.1); }
+.po-view svg{ width:13px; height:13px; }
+
+/* TABLA */
+.po-card{ padding:6px 6px 10px; border-radius:20px; }
+.po-cardhead{ display:flex; align-items:center; justify-content:space-between; padding:13px 16px 11px; }
+.po-cardhead h3{ font-size:14px; font-weight:600; display:flex; align-items:center; gap:8px; }
+.po-count{ font-size:12px; color:var(--ink-3); font-weight:500; }
+.po-table{ width:100%; border-collapse:collapse; }
+.po-table th{ text-align:left; font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; font-family:var(--mono); color:var(--ink-3); font-weight:600; padding:0 14px 9px; }
+.po-table th.r, .po-table td.r{ text-align:right; }
+.po-table td{ padding:11px 14px; border-top:1px solid rgba(13,20,36,0.05); font-size:13px; vertical-align:middle; }
+.po-row{ cursor:pointer; transition:background 120ms; }
+.po-row:hover{ background:rgba(255,255,255,0.5); }
+.po-num{ font-family:var(--mono); font-size:12px; font-weight:600; color:var(--ink-3); }
+.po-date{ font-family:var(--mono); font-size:12px; color:var(--ink-2); }
+.po-cli{ display:flex; align-items:center; gap:10px; }
+.po-av{ width:30px; height:30px; border-radius:9px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:700; }
+.po-cli-n{ font-weight:600; font-size:13px; white-space:nowrap; }
+.po-cli-tag{ font-size:9.5px; font-weight:700; padding:1px 6px; border-radius:5px; margin-left:5px; vertical-align:middle; }
+.po-det{ color:var(--ink-2); max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.po-est{ display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; padding:4px 10px; border-radius:7px; white-space:nowrap; }
+.po-est .d{ width:6px; height:6px; border-radius:50%; }
+.po-est.tomado{ background:rgba(91,140,255,0.13); color:#3b6fd4; } .po-est.tomado .d{ background:var(--blue); }
+.po-est.prep{ background:rgba(107,95,255,0.12); color:var(--purple); } .po-est.prep .d{ background:var(--purple); }
+.po-est.listo{ background:rgba(52,199,125,0.14); color:#1a8e5a; } .po-est.listo .d{ background:var(--green); }
+.po-est.entregado{ background:rgba(13,20,36,0.05); color:var(--ink-3); } .po-est.entregado .d{ background:var(--ink-4); }
+.po-est.cancelado{ background:rgba(239,93,106,0.12); color:#c93545; } .po-est.cancelado .d{ background:var(--red); }
+.po-sena{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; }
+.po-sena.si{ color:#1a8e5a; } .po-sena.si b{ font-family:var(--mono); }
+.po-sena.no{ color:var(--ink-4); }
+.po-sena .lnk{ margin-left:6px; font-size:10px; font-weight:700; color:var(--purple); text-transform:uppercase; letter-spacing:0.03em; opacity:0; transition:opacity 120ms; }
+.po-row:hover .po-sena .lnk{ opacity:1; }
+.po-tot{ font-family:var(--mono); font-weight:700; font-size:13px; }
+.po-ent{ font-family:var(--mono); font-size:12px; color:var(--ink-2); }
+.po-ent.over{ color:#c93545; font-weight:700; }
+.po-ent.hoy{ color:#1a8e5a; font-weight:700; }
+.po-tomo{ display:inline-flex; align-items:center; gap:7px; }
+.po-tomo .nm{ font-size:12px; color:var(--ink-2); }
+.po-row.hide{ display:none; }
+/* group header row (por día) */
+.po-daygroup td{ padding:16px 14px 7px; border-top:none; }
+.po-daygroup.hide{ display:none; }
+.po-dg{ display:flex; align-items:center; gap:12px; }
+.po-dg .lbl{ font-size:12.5px; font-weight:700; color:var(--ink-1); white-space:nowrap; }
+.po-dg .lbl.hoy{ color:var(--purple); }
+.po-dg .meta{ font-size:11px; color:var(--ink-3); font-family:var(--mono); white-space:nowrap; }
+.po-dg .line{ flex:1; height:1px; background:rgba(13,20,36,0.07); }
+.po-empty{ display:none; padding:40px; text-align:center; color:var(--ink-3); font-size:13px; }
+
+/* modal */
+.modal-ov{ position:fixed; inset:0; z-index:100; background:rgba(20,26,44,0.42); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; padding:24px; }
+.modal-ov.open{ display:flex; }
+.modal{ width:100%; max-width:520px; max-height:88vh; overflow-y:auto; background:var(--glass-bg-2); backdrop-filter:blur(32px) saturate(150%); -webkit-backdrop-filter:blur(32px) saturate(150%); border:var(--glass-bd); border-radius:22px; box-shadow:0 24px 70px rgba(20,26,44,0.35); padding:24px; animation:mIn 220ms cubic-bezier(.16,1,.3,1); }
+@keyframes mIn{ from{ opacity:0; transform:translateY(16px) scale(.98); } }
+.m-head{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:16px; }
+.m-title{ font-size:19px; font-weight:700; letter-spacing:-0.02em; }
+.m-sub{ font-size:12.5px; color:var(--ink-3); margin-top:2px; }
+.m-x{ width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:var(--ink-2); background:rgba(13,20,36,0.05); flex:0 0 auto; }
+.m-x svg{ width:16px; height:16px; }
+.d-sec{ font-size:11px; text-transform:uppercase; letter-spacing:0.05em; font-family:var(--mono); font-weight:600; color:var(--ink-3); margin:16px 0 8px; }
+.d-item{ display:flex; justify-content:space-between; padding:9px 0; border-top:1px solid rgba(13,20,36,0.06); font-size:13px; } .d-item:first-child{ border-top:none; }
+.d-tl{ display:flex; flex-direction:column; gap:10px; }
+.d-tl .row{ display:flex; align-items:center; gap:11px; font-size:12.5px; }
+.d-tl .dot{ width:10px; height:10px; border-radius:50%; flex:0 0 auto; }
+.d-tl .row .dt{ margin-left:auto; font-family:var(--mono); font-size:11px; color:var(--ink-3); }
+.m-summary{ display:flex; gap:16px; padding:14px; border-radius:12px; background:rgba(255,255,255,0.6); border:1px solid rgba(255,255,255,0.85); margin:14px 0 16px; }
+.m-summary .s-cell{ flex:1; } .m-summary .s-k{ font-size:10.5px; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.05em; } .m-summary .s-v{ font-size:17px; font-weight:700; margin-top:3px; }
+.m-acts{ display:flex; gap:10px; justify-content:flex-end; }
+.m-btn{ font-size:13px; font-weight:600; padding:10px 17px; border-radius:11px; }
+.m-btn.ghost{ color:var(--ink-2); background:rgba(13,20,36,0.05); }
+.m-btn.primary{ color:#fff; background:linear-gradient(140deg,var(--purple),var(--purple-2)); box-shadow:0 6px 16px rgba(107,95,255,0.4); }
+@media (prefers-reduced-motion:reduce){ *{ animation:none !important; } }
+
+/* saldo + exportar + columnas + toast */
+.po-saldo{ font-family:var(--mono); font-weight:700; font-size:12.5px; }
+.po-saldo.pend{ color:var(--ink); } .po-saldo.ok{ color:#1a8e5a; } .po-saldo.na{ color:var(--ink-4); }
+.po-hcs{ display:flex; align-items:center; gap:8px; }
+.po-exp{ position:relative; }
+.po-exp-btn, .po-cols-btn{ display:inline-flex; align-items:center; gap:7px; height:34px; padding:0 13px; border-radius:10px; background:rgba(255,255,255,0.66); border:1px solid rgba(255,255,255,0.9); font-size:12.5px; font-weight:600; color:var(--ink-1); box-shadow:var(--glass-hi); }
+.po-exp-btn svg, .po-cols-btn svg{ width:14px; height:14px; color:var(--ink-3); }
+.po-exp-menu, .po-cols-menu{ position:absolute; top:calc(100% + 6px); right:0; min-width:190px; z-index:40; display:none; flex-direction:column; padding:6px; border-radius:13px; background:rgba(255,255,255,0.93); backdrop-filter:blur(28px) saturate(150%); -webkit-backdrop-filter:blur(28px) saturate(150%); border:var(--glass-bd); box-shadow:0 16px 44px rgba(20,26,44,0.22); }
+.po-exp.open .po-exp-menu, .po-cols.open .po-cols-menu{ display:flex; }
+.po-exp-menu button, .po-cols-menu button{ display:flex; align-items:center; gap:9px; text-align:left; font-size:12.5px; font-weight:500; color:var(--ink-1); padding:8px 10px; border-radius:9px; }
+.po-exp-menu button:hover, .po-cols-menu button:hover{ background:rgba(255,255,255,0.6); }
+.po-exp-menu button svg{ width:15px; height:15px; color:var(--ink-3); }
+.po-cols{ position:relative; }
+.po-chk{ width:16px; height:16px; border-radius:5px; border:1.5px solid var(--ink-4); display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; }
+.po-chk svg{ width:10px; height:10px; color:#fff; opacity:0; }
+.po-cols-menu button.on .po-chk{ background:var(--purple); border-color:var(--purple); } .po-cols-menu button.on .po-chk svg{ opacity:1; }
+/* ocultar columnas por posición (2 Fecha · 8 Saldo · 9 Entrega · 10 Tomó) */
+.po-table.h-fecha th:nth-child(2), .po-table.h-fecha td:nth-child(2){ display:none; }
+.po-table.h-saldo th:nth-child(8), .po-table.h-saldo td:nth-child(8){ display:none; }
+.po-table.h-entrega th:nth-child(9), .po-table.h-entrega td:nth-child(9){ display:none; }
+.po-table.h-tomo th:nth-child(10), .po-table.h-tomo td:nth-child(10){ display:none; }
+.toast{ position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(10px); z-index:200; display:flex; align-items:center; gap:9px; padding:12px 18px; border-radius:13px; background:var(--ink); color:#fff; font-size:13px; font-weight:600; box-shadow:0 12px 34px rgba(13,20,36,0.3); opacity:0; pointer-events:none; transition:all 220ms; }
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+.toast svg{ width:16px; height:16px; color:#5bd39a; }
+</style>
+</head>
+<body>
+  <div class="bg"><div class="base"></div><div class="glow"></div></div>
+  <div class="shell">
+    <!-- ════ SIDEBAR ════ -->
+    <aside class="sidebar glass-strong">
+      <div class="logo-row">
+        <span class="logo-mark"><svg viewBox="0 0 32 32"><defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#6b5fff"/><stop offset="100%" stop-color="#5b8cff"/></linearGradient></defs><g fill="url(#lg1)"><path d="M16 2 L18 14 L30 16 L18 18 L16 30 L14 18 L2 16 L14 14 Z"/></g></svg></span>
+        <span class="logo-text">Pandora</span>
+      </div>
+      <nav style="display:flex; flex-direction:column; gap:3px; flex:1; overflow-y:auto; min-height:0; padding-right:4px; margin-right:-4px;">
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="10" rx="2"/><rect x="13" y="3" width="8" height="6" rx="2"/><rect x="3" y="15" width="8" height="6" rx="2"/><rect x="13" y="11" width="8" height="10" rx="2"/></svg></div><span>Panel</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg></div><span>Venta</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01"/><path d="M18 12h.01"/></svg></div><span>Caja</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.58a2 2 0 0 1 0 2.83z"/><circle cx="7" cy="7" r="1.5"/></svg></div><span>Productos</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg></div><span>Clientes</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></div><span>Stock</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m15 9-6 6"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg></div><span>Ofertas</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h4"/></svg></div><span>Facturas</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h4"/></svg></div><span>Presupuestos</span></div>
+        <div class="nav-item active"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div><span>Pedidos</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg></div><span>Señas</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg></div><span>Devoluciones</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 15v-3"/><path d="M12 15V8"/><path d="M16 15v-5"/></svg></div><span>Reportes</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1-6 6 6 6 0 0 1 0-12 6 6 0 0 1 6 6z"/><path d="M8.5 8.5 4 21l4-2 4 2 1.2-3.4"/></svg></div><span>Contador</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></div><span>Integraciones</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8 2 2 0 1 1-2.8 2.8 1.7 1.7 0 0 0-2.8 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.8-1.2 2 2 0 1 1-2.8-2.8A1.7 1.7 0 0 0 4.6 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.8 2 2 0 1 1 2.8-2.8A1.7 1.7 0 0 0 11 4.6a2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.8 1.2 2 2 0 1 1 2.8 2.8A1.7 1.7 0 0 0 19.4 11a2 2 0 1 1 0 4z"/></svg></div><span>Configuración</span></div>
+      </nav>
+      <div class="side-foot">
+        <div class="afip"><div class="afip-top"><span class="afip-dot"></span><span class="afip-name">AFIP conectado</span><span class="afip-live">LIVE</span></div><div class="afip-sub">WSFEv1 · 47 CAE hoy</div></div>
+        <div class="cashier"><span class="avatar-ring"><span class="cashier-av">AR</span></span><div><div class="cashier-name">Agus Rochelle</div><div class="cashier-role">Dueño</div></div><span class="cashier-live"></span></div>
+      </div>
+    </aside>
+
+    <!-- ════ MAIN ════ -->
+    <main class="main">
+      <div class="topbar">
+        <div class="search glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="poSearch" placeholder="Buscar pedido, cliente o #…" /></div>
+        <div class="top-tools">
+          <button class="iconbtn glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg><span class="ndot">3</span></button>
+          <button class="iconbtn glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8 2 2 0 1 1-2.8 2.8 1.7 1.7 0 0 0-2.8 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.8-1.2 2 2 0 1 1-2.8-2.8A1.7 1.7 0 0 0 4.6 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.8 2 2 0 1 1 2.8-2.8A1.7 1.7 0 0 0 11 4.6a2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.8 1.2 2 2 0 1 1 2.8 2.8A1.7 1.7 0 0 0 19.4 11a2 2 0 1 1 0 4z"/></svg></button>
+          <div class="user-chip glass"><span class="avatar-ring"><span class="cashier-av">AR</span></span><div><div class="user-name">Agus Rochelle</div><div class="user-role">Dueño</div></div></div>
+        </div>
+      </div>
+
+      <!-- HEADER -->
+      <div class="po-head glass">
+        <div class="po-head-l">
+          <span class="po-head-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></span>
+          <div>
+            <h1 class="po-title">Pedidos</h1>
+            <p class="po-sub">Libro completo de encargos — todo lo que se tomó, con o sin seña. Los señados también viven en <b style="color:var(--purple)">Señas</b>.</p>
+          </div>
+        </div>
+        <button class="po-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>Nuevo pedido</button>
+      </div>
+
+      <!-- KPIs -->
+      <div class="po-kpis">
+        <div class="po-kpi glass"><div class="upper-mini">Pedidos del mes</div><div class="v tnum">14</div><div class="foot">tomados en julio</div>
+          <svg class="spark" width="70" height="26" viewBox="0 0 70 26" preserveAspectRatio="none"><path d="M0 20 C12 18 18 12 28 13 C40 14 46 6 58 7 C64 7 68 4 70 3" fill="none" stroke="var(--purple)" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div class="po-kpi glass"><div class="upper-mini">Activos</div><div class="v tnum" style="color:var(--purple)">5</div><div class="foot">en preparación o por retirar</div></div>
+        <div class="po-kpi glass"><div class="upper-mini">Entregados</div><div class="v tnum" style="color:#1a8e5a">5</div><div class="foot">cerrados este mes</div></div>
+        <div class="po-kpi glass"><div class="upper-mini">Comprometido con seña</div><div class="v tnum">$147.400</div><div class="foot">saldo por cobrar · 6 con seña</div></div>
+      </div>
+
+      <!-- CONTROLES -->
+      <div class="po-controls glass">
+        <div class="chips" id="poChips">
+          <button class="chip on" data-f="todos">Todos</button>
+          <button class="chip" data-f="activo"><span class="c" style="background:var(--purple)"></span>Activos</button>
+          <button class="chip" data-f="sena"><span class="c" style="background:var(--green)"></span>Señados</button>
+          <button class="chip" data-f="entregado"><span class="c" style="background:var(--ink-4)"></span>Terminados</button>
+          <button class="chip" data-f="cancelado"><span class="c" style="background:var(--red)"></span>Cancelados</button>
+        </div>
+        <div class="po-dd" id="poTakerDD">
+          <button class="po-dd-btn" id="poTakerBtn"><span class="who"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="color:var(--ink-3)"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg><span id="poTakerLbl">Tomado por: todos</span></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+          <div class="po-dd-menu" id="poTakerMenu">
+            <button class="po-dd-item on" data-t="todos"><span class="tk all">•</span>Todos los vendedores</button>
+            <button class="po-dd-item" data-t="agus"><span class="tk agus">AR</span>Agus Rochelle <span style="color:var(--ink-3);font-weight:500">· dueño</span></button>
+            <button class="po-dd-item" data-t="mateo"><span class="tk mateo">MG</span>Mateo Giordano</button>
+            <button class="po-dd-item" data-t="belen"><span class="tk belen">BE</span>Belén</button>
+          </div>
+        </div>
+        <div class="po-dd" id="poRangeDD">
+          <button class="po-dd-btn" id="poRangeBtn"><span class="who"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="color:var(--ink-3)"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span id="poRangeLbl">Todo el período</span></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+          <div class="po-dd-menu" id="poRangeMenu">
+            <button class="po-dd-item on" data-r="todo">Todo el período</button>
+            <button class="po-dd-item" data-r="mes">Este mes (julio)</button>
+            <button class="po-dd-item" data-r="sem">Últimos 7 días</button>
+            <button class="po-dd-item" data-r="hoy">Hoy</button>
+          </div>
+        </div>
+        <div class="po-view" id="poView">
+          <button class="on" data-v="dia"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Por día</button>
+          <button data-v="lista"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Lista</button>
+        </div>
+      </div>
+
+      <!-- TABLA -->
+      <div class="po-card glass">
+        <div class="po-cardhead"><h3>Historial de pedidos</h3>
+          <div class="po-hcs">
+            <span class="po-count" id="poCount">14 pedidos</span>
+            <div class="po-cols" id="poCols">
+              <button class="po-cols-btn" id="poColsBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>Columnas</button>
+              <div class="po-cols-menu" id="poColsMenu">
+                <button class="on" data-col="fecha"><span class="po-chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></span>Fecha</button>
+                <button class="on" data-col="saldo"><span class="po-chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></span>Saldo</button>
+                <button class="on" data-col="entrega"><span class="po-chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></span>Entrega</button>
+                <button class="on" data-col="tomo"><span class="po-chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></span>Tomó</button>
+              </div>
+            </div>
+            <div class="po-exp" id="poExp">
+              <button class="po-exp-btn" id="poExpBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Exportar</button>
+              <div class="po-exp-menu" id="poExpMenu">
+                <button data-x="Excel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8l8 8M16 8l-8 8"/></svg>Excel (.xlsx)</button>
+                <button data-x="CSV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>CSV</button>
+                <button data-x="Impresión"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Imprimir</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <table class="po-table">
+          <thead><tr>
+            <th style="width:52px">#</th><th style="width:60px">Fecha</th><th>Cliente</th><th>Detalle</th>
+            <th style="width:122px">Estado</th><th style="width:116px">Seña</th><th class="r" style="width:84px">Total</th><th class="r" style="width:84px">Saldo</th><th style="width:80px">Entrega</th><th style="width:98px">Tomó</th>
+          </tr></thead>
+          <tbody id="poBody">
+            <!-- HOY 07/07 -->
+            <tr class="po-daygroup" data-day="20260707"><td colspan="9"><div class="po-dg"><span class="lbl hoy">Hoy · 07/07</span><span class="meta"></span><span class="line"></span></div></td></tr>
+            <tr class="po-row" data-day="20260707" data-estado="activo" data-sena="si" data-taker="mateo" data-total="160000" data-txt="garcia srl tafeta 0055 mateo">
+              <td class="po-num">#0055</td><td class="po-date">07/07</td>
+              <td><div class="po-cli"><span class="po-av" style="background:linear-gradient(135deg,#6b5fff,#9088ff)">GA</span><span class="po-cli-n">García SRL<span class="po-cli-tag" style="background:rgba(214,93,177,0.14);color:var(--rose)">mayorista</span></span></div></td>
+              <td class="po-det">50 m de tafeta roja — bordó</td>
+              <td><span class="po-est prep"><span class="d"></span>En preparación</span></td>
+              <td><span class="po-sena si">Seña <b>$20.000</b><span class="lnk">→ señas</span></span></td>
+              <td class="r po-tot">$160.000</td><td class="po-ent">09/07</td>
+              <td><span class="po-tomo"><span class="tk mateo">MG</span><span class="nm">Mateo</span></span></td>
+            </tr>
+            <tr class="po-row" data-day="20260707" data-estado="activo" data-sena="no" data-taker="agus" data-total="12000" data-txt="lucia fernandez vestido 0058 agus">
+              <td class="po-num">#0058</td><td class="po-date">07/07</td>
+              <td><div class="po-cli"><span class="po-av" style="background:linear-gradient(135deg,#34c77d,#0e8f9e)">LF</span><span class="po-cli-n">Lucía Fernández</span></div></td>
+              <td class="po-det">Arreglo vestido de fiesta</td>
+              <td><span class="po-est tomado"><span class="d"></span>Tomado</span></td>
+              <td><span class="po-sena no">Sin seña</span></td>
+              <td class="r po-tot">$12.000</td><td class="po-ent">09/07</td>
+              <td><span class="po-tomo"><span class="tk agus">AR</span><span class="nm">Agus</span></span></td>
+            </tr>
+            <!-- AYER 06/07 -->
+            <tr class="po-daygroup" data-day="20260706"><td colspan="9"><div class="po-dg"><span class="lbl">Ayer · 06/07</span><span class="meta"></span><span class="line"></span></div></td></tr>
+            <tr class="po-row" data-day="20260706" data-estado="activo" data-sena="si" data-taker="agus" data-total="3800" data-txt="kiosco norte botones 0053 agus">
+              <td class="po-num">#0053</td><td class="po-date">06/07</td>
+              <td><div class="po-cli"><span class="po-av" style="background:linear-gradient(135deg,#f7984a,#f4c948)">KN</span><span class="po-cli-n">Kiosco Norte</span></div></td>
+              <td class="po-det">2 cajas de botones forrados (x100)</td>
+              <td><span class="po-est listo"><span class="d"></span>Listo</span></td>
+              <td><span class="po-sena si">Seña <b>$1.900</b><span class="lnk">→ señas</span></span></td>
+              <td class="r po-tot">$3.800</td><td class="po-ent hoy">Hoy</td>
+              <td><span class="po-tomo"><span class="tk agus">AR</span><span class="nm">Agus</span></span></td>
+            </tr>
+            <tr class="po-row" data-day="20260706" data-estado="activo" data-sena="si" data-taker="belen" data-total="8500" data-txt="merceria belen cierres 0044 belen">
+              <td class="po-num">#0044</td><td class="po-date">06/07</td>
+              <td><div class="po-cli"><span class="po-av" style="background:linear-gradient(135deg,#ef5d6a,#f7984a)">MB</span><span class="po-cli-n">Mercería Belén</span></div></td>
+              <td class="po-det">3 cierres invisibles 60 cm + hilos</td>
+              <td><span class="po-est listo"><span class="d"></span>Listo</span></td>
+              <td><span class="po-sena si">Seña <b>$3.000</b><span class="lnk">→ señas</span></span></td>
+              <td class="r po-tot">$8.500</td><td class="po-ent over">venc. 24/06</td>
+              <td><span class="po-tomo"><span class="tk belen">BE</span><span class="nm">Belén</span></span></td>
+            </tr>
+            <!-- 04/07 -->
+            <tr class="po-daygroup" data-day="20260704"><td colspan="9"><div class="po-dg"><span class="lbl">04/07</span><span class="meta"></span><span class="line"></span></div></td></tr>
+            <tr class="po-row" data-day="20260704" data-estado="activo" data-sena="si" data-taker="agus" data-total="24000" data-txt="laura mendez cortinado 0051 agus">
+              <td class="po-num">#0051</td><td class="po-date">04/07</td>
+              <td><div class="po-cli"><span class="po-av" style="background:linear-gradient(135deg,#34c77d,#0e8f9e)">LM</span><span class="po-cli-n">Laura Méndez</span></div></td>
+              <td class="po-det">Cortinado a medida — living 3,20 m</td>
+              <td><span class="po-est listo"><span class="d"></span>Listo · saldado</span></td>
+              <td><span class="po-sena si">Pagado <b>$24.000</b></span></td>
+              <td class="r po-tot">$24.000</td><td class="po-ent">08/07</td>
+              <td><span class="po-tomo"><span class="tk agus">AR</span><span class="nm">Agus</span></span></td>
+            </tr>
+            <tr class="po-row" data-day="20260704" data-estado="entregado" data-sena="no" data-taker="mateo" data-total="6200" data-txt="dona rosa blackout 0048 mateo">
+              <td class="po-num">#0048</td><td class="po-date">04/07</td>
+              <td><div class="po-cli"><span class="po-av" style="background:linear-gradient(135deg,#ee6a8e,#d65db1)">RG</span><span class="po-cli-n">Doña Rosa Giménez</span></div></td>
+              <td class="po-det">1 blackout ventana + colocación</td>
+              <td><span class="po-est entregado"><span class="d"></span>Entregado</span></td>
+              <td><span class="po-sena no">Sin seña</span></td>
+              <td class="r po-tot">$6.200</td><td class="po-ent">06/07</td>
+              <td><span class="po-tomo"><span class="tk mateo">MG</span><span class="nm">Mateo</span></span></td>
+            </tr>
+            <!-- 02/07 -->
+            <tr class="po-daygroup" data-day="20260702"><td colspan="9"><div class="po-dg"><span class="lbl">02/07</span><span class="meta"></span><span class="line"></span></div></td></tr>
+            <tr class="po-row" data-day="20260702" data-estado="entregado" data-sena="no" data-taker="belen" data-total="9500" data-txt="ferreteria sur elastico 0042 belen">
+              <td class="po-num">#0042</td><td class="po-date">02/07</td>
+              <td><div class="po-cli"><span class="po-av" style="background:linear-gradient(135deg,#f7984a,#ee6a8e)">FD</span><span class="po-cli-n">Ferretería del Sur</span></div></td>
+              <td class="po-det">20 m elástico + broches a presión</td>
+              <td><span class="po-est entregado"><span class="d"></span>Entregado</span></td>
+              <td><span class="po-sena no">Sin seña</span></td>
+              <td class="r po-tot">$9.500</td><td class="po-ent">04/07</td>
+              <td><span class="po-tomo"><span class="tk belen">BE</span><span class="nm">Belén</span></span></td>
+            </tr>
+            <tr class="po-row" data-day="20260702" data-estado="entregado" data-sena="no" data-taker="agus" data-total="2800" data-txt="martin ledesma cierre campera 0039 agus">
+              <td class="po-num">#0039</td><td class="po-date">02/07</td>
+              <td><div class="po-cli"><span class="po-av" style="background:linear-gradient(135deg,#5b8cff,#9088ff)">ML</span><span class="po-cli-n">Martín Ledesma</span></div></td>
+              <td class="po-det">Cambio de cierre campera</td>
+              <td><span class="po-est entregado"><span class="d"></span>Entregado</span></td>
+              <td><span class="po-sena no">Sin seña</span></td>
+              <td class="r po-tot">$2.800</td><td class="po-ent">03/07</td>
+              <td><span class="po-tomo"><span class="tk agus">AR</span><span class="nm">Agus</span></span></td>
+            </tr>
+            <!-- 28/06 -->
+            <tr class="po-daygroup" data-day="20260628"><td colspan="9"><div class="po-dg"><span class="lbl">28/06</span><span class="meta"></span><span class="line"></span></div></td></tr>
+            <tr class="po-row" data-day="20260628" data-estado="entregado" data-sena="si" data-taker="agus" data-total="32000" data-txt="distribuidora austral cinta 0028 agus">
+              <td class="po-num">#0028</td><td class="po-date">28/06</td>
+              <td><div class="po-cli"><span class="po-av" style="background:linear-gradient(135deg,#5b8cff,#8eb0ff)">DA</span><span class="po-cli-n">Distribuidora Austral</span></div></td>
+              <td class="po-det">100 m cinta bies + 12 conos hilo</td>
+              <td><span class="po-est entregado"><span class="d"></span>Entregado</span></td>
+              <td><span class="po-sena si">Seña <b>$8.000</b></span></td>
+              <td class="r po-tot">$32.000</td><td class="po-ent">30/06</td>
+              <td><span class="po-tomo"><span class="tk agus">AR</span><span class="nm">Agus</span></span></td>
+            </tr>
+            <tr class="po-row" data-day="20260628" data-estado="entregado" data-sena="no" data-taker="mateo" data-total="3600" data-txt="norma vecina ruedo 0030 mateo">
+              <td class="po-num">#0030</td><td class="po-date">28/06</td>
+              <td><div class="po-cli"><span class="po-av" style="background:linear-gradient(135deg,#0e8f9e,#34c77d)">VN</span><span class="po-cli-n">Norma (vecina)</span></div></td>
+              <td class="po-det">Ruedo de 3 pantalones</td>
+              <td><span class="po-est entregado"><span class="d"></span>Entregado</span></td>
+              <td><span class="po-sena no">Sin seña</span></td>
+              <td class="r po-tot">$3.600</td><td class="po-ent">30/06</td>
+              <td><span class="po-tomo"><span class="tk mateo">MG</span><span class="nm">Mateo</span></span></td>
+            </tr>
+            <!-- 20/06 -->
+            <tr class="po-daygroup" data-day="20260620"><td colspan="9"><div class="po-dg"><span class="lbl">20/06</span><span class="meta"></span><span class="line"></span></div></td></tr>
+            <tr class="po-row" data-day="20260620" data-estado="cancelado" data-sena="no" data-taker="agus" data-total="4500" data-txt="almacen el sol hilo 0036 agus">
+              <td class="po-num">#0036</td><td class="po-date">20/06</td>
+              <td><div class="po-cli"><span class="po-av" style="background:linear-gradient(135deg,#9088ff,#5b8cff)">AE</span><span class="po-cli-n">Almacén El Sol</span></div></td>
+              <td class="po-det">5 rollos hilo overlock</td>
+              <td><span class="po-est cancelado"><span class="d"></span>Cancelado</span></td>
+              <td><span class="po-sena no">Sin seña</span></td>
+              <td class="r po-tot" style="color:var(--ink-4)">$4.500</td><td class="po-ent">—</td>
+              <td><span class="po-tomo"><span class="tk agus">AR</span><span class="nm">Agus</span></span></td>
+            </tr>
+            <tr class="po-row" data-day="20260620" data-estado="cancelado" data-sena="si" data-taker="belen" data-total="7000" data-txt="kiosco norte cartel lona 0025 belen">
+              <td class="po-num">#0025</td><td class="po-date">20/06</td>
+              <td><div class="po-cli"><span class="po-av" style="background:linear-gradient(135deg,#f7984a,#f4c948)">KN</span><span class="po-cli-n">Kiosco Norte</span></div></td>
+              <td class="po-det">Cartel lona 1×2 m impreso</td>
+              <td><span class="po-est cancelado"><span class="d"></span>Cancelado · seña devuelta</span></td>
+              <td><span class="po-sena si" style="color:var(--ink-4)">Seña $1.500</span></td>
+              <td class="r po-tot" style="color:var(--ink-4)">$7.000</td><td class="po-ent">—</td>
+              <td><span class="po-tomo"><span class="tk belen">BE</span><span class="nm">Belén</span></span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="po-empty" id="poEmpty">No hay pedidos que coincidan con el filtro.</div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="poToast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span class="tmsg">—</span></div>
+
+  <!-- DETALLE -->
+  <div class="modal-ov" id="modalOv">
+    <div class="modal" id="modalDet">
+      <div class="m-head">
+        <div><div class="m-title" id="dName">Pedido</div><div class="m-sub" id="dMeta">—</div></div>
+        <button class="m-x" id="mX"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="d-sec">Detalle del encargo</div>
+      <div class="d-item"><div id="dItems">—</div><span class="po-tot" id="dTot">—</span></div>
+      <div class="d-sec">Estados</div>
+      <div class="d-tl" id="dTl"></div>
+      <div class="m-summary">
+        <div class="s-cell"><div class="s-k">Estado</div><div class="s-v" id="dEst" style="font-size:14px">—</div></div>
+        <div class="s-cell"><div class="s-k">Seña</div><div class="s-v tnum" id="dSena" style="font-size:15px">—</div></div>
+        <div class="s-cell"><div class="s-k">Tomado por</div><div class="s-v" id="dTomo" style="font-size:14px">—</div></div>
+      </div>
+      <div class="m-acts"><button class="m-btn ghost" id="mClose">Cerrar</button><button class="m-btn primary">Ver / editar pedido</button></div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    var rows = [].slice.call(document.querySelectorAll('.po-row'));
+    var groups = [].slice.call(document.querySelectorAll('.po-daygroup'));
+    var chips = [].slice.call(document.querySelectorAll('#poChips .chip'));
+    var search = document.getElementById('poSearch');
+    var count = document.getElementById('poCount');
+    var empty = document.getElementById('poEmpty');
+    var curF = 'todos', curT = 'todos', curV = 'dia';
+
+    function fmt(n){ return '$' + n.toLocaleString('es-AR'); }
+
+    var curR = 'todo';
+    var NOW = new Date(2026,6,7); // "hoy" del demo = 07/07
+    function parseDay(ds){ return new Date(+ds.slice(0,4), +ds.slice(4,6)-1, +ds.slice(6,8)); }
+    function inRange(ds){
+      if(curR==='todo') return true;
+      var d = parseDay(ds);
+      if(curR==='hoy') return d.getTime()===NOW.getTime();
+      if(curR==='mes') return d.getMonth()===NOW.getMonth() && d.getFullYear()===NOW.getFullYear();
+      if(curR==='sem'){ var wk=new Date(NOW); wk.setDate(wk.getDate()-6); return d>=wk && d<=NOW; }
+      return true;
+    }
+    // columna Saldo inyectada (calculada desde el DOM — sin tocar cada fila)
+    rows.forEach(function(r){
+      var est=r.dataset.estado, td=document.createElement('td'); td.className='r'; var s;
+      if(est==='cancelado') s=null;
+      else if(est==='entregado') s=0;
+      else { var t=r.querySelector('.po-sena').textContent;
+        if(/pagado/i.test(t)) s=0;
+        else { var m=t.replace(/\./g,'').match(/\$\s*(\d+)/); var sena=m?parseInt(m[1],10):0; s=Math.max(0,(parseInt(r.dataset.total,10)||0)-sena); } }
+      td.innerHTML = s===null ? '<span class="po-saldo na">—</span>' : (s===0 ? '<span class="po-saldo ok">$0</span>' : '<span class="po-saldo pend">'+fmt(s)+'</span>');
+      r.querySelector('.po-tot').insertAdjacentElement('afterend', td);
+    });
+    groups.forEach(function(g){ g.querySelector('td').colSpan = 10; });
+
+    function apply(){
+      var q = (search.value||'').trim().toLowerCase();
+      var vis = 0;
+      rows.forEach(function(r){
+        var okF = curF==='todos'
+          || (curF==='sena' && r.dataset.sena==='si')
+          || (r.dataset.estado===curF);
+        var okT = curT==='todos' || r.dataset.taker===curT;
+        var okQ = !q || (r.dataset.txt||'').indexOf(q)>=0;
+        var okR = inRange(r.dataset.day);
+        var show = okF && okT && okR && okQ;
+        r.classList.toggle('hide', !show);
+        if(show) vis++;
+      });
+      // grupos por día: mostrar solo en vista 'dia', con subtotal, ocultando vacíos
+      groups.forEach(function(g){
+        if(curV!=='dia'){ g.classList.add('hide'); return; }
+        var day = g.dataset.day;
+        var inDay = rows.filter(function(r){ return r.dataset.day===day && !r.classList.contains('hide'); });
+        if(inDay.length===0){ g.classList.add('hide'); return; }
+        g.classList.remove('hide');
+        var sum = inDay.reduce(function(a,r){ return a + (parseInt(r.dataset.total,10)||0); }, 0);
+        g.querySelector('.meta').textContent = inDay.length + (inDay.length===1?' pedido · ':' pedidos · ') + fmt(sum);
+      });
+      count.textContent = vis + (vis===1?' pedido':' pedidos');
+      empty.style.display = vis===0 ? 'block' : 'none';
+    }
+
+    chips.forEach(function(c){ c.addEventListener('click', function(){
+      chips.forEach(function(x){x.classList.remove('on');}); c.classList.add('on'); curF=c.dataset.f; apply();
+    }); });
+    search.addEventListener('input', apply);
+
+    // vista por día / lista
+    [].slice.call(document.querySelectorAll('#poView button')).forEach(function(b){
+      b.addEventListener('click', function(){
+        document.querySelectorAll('#poView button').forEach(function(x){x.classList.remove('on');});
+        b.classList.add('on'); curV=b.dataset.v; apply();
+      });
+    });
+
+    // dropdown "tomado por"
+    var dd=document.getElementById('poTakerDD'), btn=document.getElementById('poTakerBtn'),
+        menu=document.getElementById('poTakerMenu'), lbl=document.getElementById('poTakerLbl');
+    btn.addEventListener('click', function(e){ e.stopPropagation(); dd.classList.toggle('open'); });
+    menu.addEventListener('click', function(e){ e.stopPropagation(); });
+    document.addEventListener('click', function(){ dd.classList.remove('open'); });
+    [].slice.call(menu.querySelectorAll('.po-dd-item')).forEach(function(it){
+      it.addEventListener('click', function(){
+        menu.querySelectorAll('.po-dd-item').forEach(function(x){x.classList.remove('on');}); it.classList.add('on');
+        curT = it.dataset.t;
+        var name = it.dataset.t==='todos' ? 'todos' : it.textContent.trim().split(' ·')[0].replace(/^[A-Z]{2}/,'').trim() || it.textContent.trim();
+        lbl.textContent = 'Tomado por: ' + (it.dataset.t==='todos' ? 'todos' : name);
+        dd.classList.remove('open'); apply();
+      });
+    });
+
+    // dropdown rango de fechas
+    var rdd=document.getElementById('poRangeDD'), rbtn=document.getElementById('poRangeBtn'), rmenu=document.getElementById('poRangeMenu'), rlbl=document.getElementById('poRangeLbl');
+    rbtn.addEventListener('click', function(e){ e.stopPropagation(); rdd.classList.toggle('open'); });
+    rmenu.addEventListener('click', function(e){ e.stopPropagation(); });
+    document.addEventListener('click', function(){ rdd.classList.remove('open'); });
+    [].slice.call(rmenu.querySelectorAll('.po-dd-item')).forEach(function(it){
+      it.addEventListener('click', function(){
+        rmenu.querySelectorAll('.po-dd-item').forEach(function(x){x.classList.remove('on');}); it.classList.add('on');
+        curR=it.dataset.r; rlbl.textContent=it.textContent.trim(); rdd.classList.remove('open'); apply();
+      });
+    });
+
+    // selector de columnas
+    var cdd=document.getElementById('poCols'), cbtn=document.getElementById('poColsBtn'), cmenu=document.getElementById('poColsMenu');
+    var table=document.querySelector('.po-table');
+    cbtn.addEventListener('click', function(e){ e.stopPropagation(); cdd.classList.toggle('open'); });
+    cmenu.addEventListener('click', function(e){ e.stopPropagation(); });
+    document.addEventListener('click', function(){ cdd.classList.remove('open'); });
+    [].slice.call(cmenu.querySelectorAll('button')).forEach(function(b){
+      b.addEventListener('click', function(){
+        b.classList.toggle('on');
+        table.classList.toggle('h-'+b.dataset.col, !b.classList.contains('on'));
+      });
+    });
+
+    // exportar
+    var edd=document.getElementById('poExp'), ebtn=document.getElementById('poExpBtn'), emenu=document.getElementById('poExpMenu'), toast=document.getElementById('poToast'), toastT;
+    function showToast(msg){ toast.querySelector('.tmsg').textContent=msg; toast.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(function(){ toast.classList.remove('show'); }, 2600); }
+    ebtn.addEventListener('click', function(e){ e.stopPropagation(); edd.classList.toggle('open'); });
+    emenu.addEventListener('click', function(e){ e.stopPropagation(); });
+    document.addEventListener('click', function(){ edd.classList.remove('open'); });
+    [].slice.call(emenu.querySelectorAll('button')).forEach(function(b){
+      b.addEventListener('click', function(){ edd.classList.remove('open'); showToast('Exportando ' + document.getElementById('poCount').textContent + ' a ' + b.dataset.x + '…'); });
+    });
+
+    // deep-link "→ señas"
+    document.querySelectorAll('.po-sena .lnk').forEach(function(l){
+      l.addEventListener('click', function(e){ e.stopPropagation(); location.href='pedidos-senados.html'; });
+    });
+
+    // detalle
+    var ov=document.getElementById('modalOv');
+    var EST={tomado:['Tomado','var(--blue)'],prep:['En preparación','var(--purple)'],listo:['Listo para retirar','var(--green)'],entregado:['Entregado','var(--ink-3)'],cancelado:['Cancelado','var(--red)']};
+    function openDet(r){
+      var num=r.querySelector('.po-num').textContent;
+      var cli=r.querySelector('.po-cli-n').textContent;
+      var det2=r.querySelector('.po-det').textContent;
+      var estEl=r.querySelector('.po-est'); var estCls=estEl.className.split(' ').pop(); var estTxt=estEl.textContent.trim();
+      var sena=r.querySelector('.po-sena').textContent.trim();
+      var tot=r.querySelector('.po-tot').textContent;
+      var tomo=r.querySelector('.po-tomo .nm').textContent;
+      document.getElementById('dName').textContent = cli;
+      document.getElementById('dMeta').textContent = 'Pedido '+num+' · '+r.querySelector('.po-date').textContent;
+      document.getElementById('dItems').textContent = det2;
+      document.getElementById('dTot').textContent = tot;
+      document.getElementById('dEst').textContent = estTxt; document.getElementById('dEst').style.color=(EST[estCls]||['',''])[1];
+      document.getElementById('dSena').textContent = sena;
+      document.getElementById('dTomo').textContent = tomo;
+      var order=['tomado','prep','listo','entregado']; var idx = estCls==='cancelado' ? -1 : order.indexOf(estCls);
+      var tl=document.getElementById('dTl'); tl.innerHTML='';
+      if(estCls==='cancelado'){
+        tl.innerHTML='<div class="row"><span class="dot" style="background:var(--red)"></span>Pedido cancelado<span class="dt">'+r.querySelector('.po-date').textContent+'</span></div>';
+      } else {
+        ['Tomado','En preparación','Listo para retirar','Entregado'].forEach(function(l,i){
+          var done=i<=idx; var col=done?'var(--green)':'rgba(13,20,36,0.15)';
+          tl.innerHTML += '<div class="row" style="'+(done?'':'opacity:.5')+'"><span class="dot" style="background:'+col+'"></span>'+l+(i===idx?' <b style="color:var(--purple);margin-left:4px">· actual</b>':'')+'</div>';
+        });
+      }
+      ov.classList.add('open');
+    }
+    rows.forEach(function(r){ r.addEventListener('click', function(){ openDet(r); }); });
+    function closeM(){ ov.classList.remove('open'); }
+    document.getElementById('mX').addEventListener('click', closeM);
+    document.getElementById('mClose').addEventListener('click', closeM);
+    ov.addEventListener('click', function(e){ if(e.target===ov) closeM(); });
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeM(); });
+
+    apply();
+    if(location.hash==='#demo-detalle') openDet(rows[0]);
+    if(location.hash==='#demo-lista'){ document.querySelector('#poView button[data-v=lista]').click(); }
+  })();
+  </script>
+  <script>
+  (function(){
+    var map={'Panel':'dashboard.html','Venta':'checkpoint-v19-top-tools.html','Caja':'checkpoint-caja-v2.html','Productos':'productos-v3.html','Clientes':'clientes-v6.html','Stock':'stock-v2.html','Ofertas':'ofertas.html','Facturas':'facturas-v4.html','Presupuestos':'presupuestos-v1.html','Pedidos':'pedidos.html','Señas':'pedidos-senados.html','Devoluciones':'devoluciones.html','Reportes':'reportes-v2.html','Contador':'contador-v2.html','Integraciones':'integraciones.html','Configuración':'configuracion-v1.html'};
+    function txt(el){return (el.textContent||'').trim();}
+    [].slice.call(document.querySelectorAll('.nav-item')).forEach(function(el){var u=map[txt(el)];if(u){el.style.cursor='pointer';el.addEventListener('click',function(){location.href=u;});}});
+  })();
+  </script>
+</body>
+</html>

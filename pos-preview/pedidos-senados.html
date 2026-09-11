@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pandora · Señas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --ink:#0d1424; --ink-1:#1f2a44; --ink-2:#4a5570; --ink-3:#7681a0; --ink-4:#a8b0c5;
+  --purple:#6b5fff; --purple-2:#9088ff; --blue:#5b8cff; --green:#34c77d; --orange:#f7984a; --pink:#ee6a8e; --red:#ef5d6a; --yellow:#f4c948; --teal:#0e8f9e; --rose:#d65db1;
+  --glass-bg:rgba(255,255,255,0.58); --glass-bg-2:rgba(255,255,255,0.72);
+  --glass-bd:1px solid rgba(255,255,255,0.85);
+  --glass-hi:inset 0 1px 0 rgba(255,255,255,0.9);
+  --glass-sh:0 8px 32px rgba(54,70,120,0.10), 0 2px 8px rgba(54,70,120,0.06);
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+button,input{ font:inherit; color:inherit; border:none; outline:none; background:none; cursor:pointer; }
+html,body{ height:100%; }
+body{ font-family:'Inter',ui-sans-serif,system-ui,sans-serif; -webkit-font-smoothing:antialiased; letter-spacing:-0.011em; color:var(--ink); height:100dvh; overflow:hidden; position:relative; }
+.bg{ position:fixed; inset:0; z-index:-10; }
+.bg .base{ position:absolute; inset:0; background:linear-gradient(175deg,#b5c6e8 0%,#c8d4ea 28%,#ddd0e0 62%,#eed6d0 100%); }
+.bg .glow{ position:absolute; inset:0; background:
+  radial-gradient(ellipse 70% 60% at 10% 95%, rgba(238,200,220,0.55) 0%, transparent 60%),
+  radial-gradient(ellipse 60% 50% at 88% 82%, rgba(240,210,175,0.40) 0%, transparent 60%),
+  radial-gradient(ellipse 55% 42% at 55% 22%, rgba(255,255,255,0.60) 0%, transparent 52%),
+  radial-gradient(ellipse 58% 48% at 10% 22%, rgba(195,215,248,0.65) 0%, transparent 62%); }
+::-webkit-scrollbar{ width:7px; height:7px; }
+::-webkit-scrollbar-track{ background:transparent; }
+::-webkit-scrollbar-thumb{ background:rgba(13,20,36,0.14); border-radius:5px; border:2px solid transparent; background-clip:padding-box; }
+.glass{ background:var(--glass-bg); backdrop-filter:blur(28px) saturate(140%); -webkit-backdrop-filter:blur(28px) saturate(140%); border:var(--glass-bd); border-radius:20px; box-shadow:var(--glass-hi), var(--glass-sh); }
+.glass-strong{ background:var(--glass-bg-2); backdrop-filter:blur(32px) saturate(150%); -webkit-backdrop-filter:blur(32px) saturate(150%); border:var(--glass-bd); border-radius:20px; box-shadow:var(--glass-hi), var(--glass-sh); }
+.tnum{ font-variant-numeric:tabular-nums; }
+
+/* shell + sidebar */
+.shell{ height:100dvh; padding:10px; display:grid; grid-template-columns:210px 1fr; gap:8px; }
+.sidebar{ display:flex; flex-direction:column; border-radius:20px; padding:22px 14px 18px; overflow:hidden; }
+.logo-row{ display:flex; align-items:center; gap:10px; padding:0 8px 22px; }
+.logo-mark{ width:26px; height:26px; flex-shrink:0; } .logo-mark svg{ width:100%; height:100%; display:block; }
+.logo-text{ font-size:19px; font-weight:700; letter-spacing:-0.025em; background:linear-gradient(135deg,#2a3454 0%,#4a5878 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.nav-item{ display:flex; align-items:center; gap:11px; padding:10px 11px; border-radius:12px; color:var(--ink-2); font-size:13.5px; font-weight:500; cursor:pointer; transition:all 200ms cubic-bezier(.4,0,.2,1); }
+.nav-item:hover{ color:var(--ink); background:rgba(255,255,255,0.4); }
+.nav-item.active{ background:rgba(255,255,255,0.92); color:var(--ink); box-shadow:0 1px 2px rgba(54,70,120,0.06), 0 4px 12px rgba(54,70,120,0.08); }
+.nav-item.active .nav-icon-box{ background:var(--purple); color:#fff; box-shadow:0 4px 10px rgba(107,95,255,0.4); }
+.nav-icon-box{ width:26px; height:26px; display:flex; align-items:center; justify-content:center; border-radius:7px; color:var(--ink-2); transition:all 200ms; flex-shrink:0; }
+.side-foot{ margin-top:auto; padding-top:12px; display:flex; flex-direction:column; gap:9px; }
+.afip{ padding:10px 11px; border-radius:13px; background:rgba(52,199,125,0.08); border:1px solid rgba(52,199,125,0.20); }
+.afip-top{ display:flex; align-items:center; gap:7px; }
+.afip-dot{ width:7px; height:7px; border-radius:50%; background:var(--green); flex:0 0 auto; animation:pg 2.4s ease-in-out infinite; }
+.afip-name{ font-size:11.5px; font-weight:700; color:#177a4a; }
+.afip-live{ margin-left:auto; font-size:8.5px; font-weight:800; letter-spacing:0.06em; color:var(--green); }
+.afip-sub{ font-size:10px; color:#5a9b78; padding-left:14px; margin-top:2px; }
+@keyframes pg{ 0%,100%{box-shadow:0 0 0 2px rgba(52,199,125,0.22)} 50%{box-shadow:0 0 0 5px rgba(52,199,125,0)} }
+.cashier{ display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:13px; background:rgba(255,255,255,0.66); border:1px solid rgba(255,255,255,0.9); box-shadow:var(--glass-hi); }
+.cashier-av{ width:32px; height:32px; flex:0 0 auto; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--blue)); display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:700; }
+.avatar-ring{ padding:2px; border-radius:50%; flex:0 0 auto; display:flex; background:conic-gradient(from 0deg,#6b5fff,#5b8cff,#34c77d,#f7984a,#ee6a8e,#6b5fff); }
+.avatar-ring > .cashier-av{ border:2px solid rgba(255,255,255,0.9); }
+.cashier-name{ font-size:12px; font-weight:600; line-height:1.2; }
+.cashier-role{ font-size:10px; color:var(--ink-3); }
+.cashier-live{ width:7px; height:7px; border-radius:50%; background:var(--green); margin-left:auto; flex:0 0 auto; animation:pg 2.4s ease-in-out infinite; }
+
+/* main + topbar */
+.main{ min-width:0; min-height:0; overflow-y:auto; padding:4px 6px 18px 2px; }
+.topbar{ display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+.search{ position:relative; flex:1; max-width:380px; display:flex; align-items:center; height:42px; border-radius:14px; padding:0 14px 0 40px; }
+.search svg{ position:absolute; left:13px; width:16px; height:16px; color:var(--ink-3); }
+.search input{ width:100%; font-size:13px; } .search input::placeholder{ color:var(--ink-3); }
+.top-tools{ display:flex; align-items:center; gap:8px; margin-left:auto; }
+.iconbtn{ width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:12px; color:var(--ink-1); position:relative; }
+.iconbtn svg{ width:18px; height:18px; }
+.iconbtn .ndot{ position:absolute; top:7px; right:7px; min-width:15px; height:15px; border-radius:999px; background:var(--pink); color:#fff; font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center; border:2px solid rgba(255,255,255,0.9); }
+.user-chip{ display:flex; align-items:center; gap:9px; padding:5px 13px 5px 5px; border-radius:999px; }
+.user-name{ font-size:12.5px; font-weight:600; line-height:1.25; } .user-role{ font-size:10.5px; color:var(--ink-3); }
+
+.content{ display:flex; gap:16px; }
+.col-main{ flex:1; min-width:0; display:flex; flex-direction:column; gap:16px; }
+.col-side{ width:324px; flex-shrink:0; display:flex; flex-direction:column; gap:16px; }
+.card{ border-radius:20px; padding:20px; }
+.upper-mini{ font-size:10.5px; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.08em; font-family:var(--mono); font-weight:500; }
+.card-title{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.card-title h3{ font-size:14px; font-weight:600; color:var(--ink); }
+
+/* ===== PEDIDOS / SEÑAS ===== */
+.ps-head{ display:flex; align-items:center; justify-content:space-between; padding:18px 24px; border-radius:20px; }
+.ps-head-l{ display:flex; align-items:center; gap:15px; }
+.ps-head-ic{ width:46px; height:46px; border-radius:14px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; color:#fff; background:linear-gradient(135deg,var(--purple),var(--blue)); box-shadow:0 6px 16px rgba(107,95,255,0.35); }
+.ps-head-ic svg{ width:22px; height:22px; }
+.ps-title{ font-size:23px; font-weight:700; letter-spacing:-0.03em; }
+.ps-sub{ font-size:12.5px; color:var(--ink-2); margin-top:2px; }
+.ps-new{ display:inline-flex; align-items:center; gap:8px; padding:11px 18px; border-radius:13px; background:linear-gradient(140deg,var(--purple),var(--purple-2)); color:#fff; font-size:13.5px; font-weight:700; box-shadow:0 7px 20px rgba(107,95,255,0.42); transition:all 170ms; }
+.ps-new:hover{ transform:translateY(-1px); box-shadow:0 10px 26px rgba(107,95,255,0.52); }
+.ps-new svg{ width:16px; height:16px; }
+
+.ps-kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+.ps-kpi{ padding:16px 18px; border-radius:16px; }
+.ps-kpi .v{ font-size:24px; font-weight:700; letter-spacing:-0.02em; margin-top:6px; }
+.ps-kpi .foot{ font-size:11px; color:var(--ink-3); margin-top:3px; }
+.ps-kpi.alert{ background:rgba(239,93,106,0.10); border-color:rgba(239,93,106,0.28); }
+.ps-kpi.alert .v{ color:#c93545; }
+
+.ps-filters{ display:flex; align-items:center; gap:10px; padding:12px 14px; }
+.ps-search{ position:relative; flex:1; max-width:340px; display:flex; align-items:center; height:38px; border-radius:11px; background:#fff; border:1px solid rgba(13,20,36,0.1); padding:0 12px 0 36px; }
+.ps-search svg{ position:absolute; left:11px; width:15px; height:15px; color:var(--ink-3); }
+.ps-search input{ width:100%; font-size:13px; }
+.tb-chips{ display:inline-flex; align-items:center; gap:3px; padding:5px; border-radius:14px; margin-left:8px; }
+.tb-chips .ps-chip{ background:transparent; padding:7px 12px; }
+.tb-chips .ps-chip.on{ background:var(--ink); color:#fff; }
+.ps-chip{ font-size:12px; font-weight:600; color:var(--ink-2); background:rgba(13,20,36,0.05); padding:7px 13px; border-radius:9px; transition:all 120ms; }
+.ps-chip.on{ background:var(--ink); color:#fff; }
+.ps-chip .c{ display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+
+.ps-group{ font-size:11px; text-transform:uppercase; letter-spacing:0.06em; font-family:var(--mono); font-weight:700; color:var(--ink-3); margin:6px 4px 0; display:flex; align-items:center; gap:8px; }
+.ps-group .c{ width:8px; height:8px; border-radius:50%; }
+.ps-group.over{ color:#c93545; }
+.ps-group.ready{ color:#1a8e5a; }
+
+.ps-card{ padding:18px 20px; border-radius:18px; display:flex; flex-direction:column; gap:13px; }
+.ps-card.over{ box-shadow:var(--glass-hi), 0 8px 32px rgba(239,93,106,0.14); border-color:rgba(239,93,106,0.35); }
+.ps-c-top{ display:flex; align-items:flex-start; gap:13px; }
+.ps-av{ width:42px; height:42px; border-radius:12px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; font-weight:700; background:linear-gradient(135deg,var(--purple),var(--blue)); }
+.ps-c-id{ flex:1; min-width:0; }
+.ps-c-name{ font-size:15.5px; font-weight:700; letter-spacing:-0.01em; }
+.ps-c-items{ font-size:12.5px; color:var(--ink-2); margin-top:2px; }
+.ps-c-meta{ font-size:11px; color:var(--ink-3); margin-top:3px; font-family:var(--mono); }
+.ps-retiro{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; padding:6px 11px; border-radius:9px; background:rgba(91,140,255,0.12); color:#3b6fd4; flex:0 0 auto; }
+.ps-retiro svg{ width:13px; height:13px; }
+.ps-retiro.over{ background:rgba(239,93,106,0.14); color:#c93545; }
+.ps-retiro.ok{ background:rgba(52,199,125,0.14); color:#1a8e5a; }
+
+/* estado steps */
+.ps-steps{ display:flex; align-items:center; gap:0; }
+.ps-steps .st{ display:flex; align-items:center; gap:6px; font-size:11px; font-weight:600; color:var(--ink-4); }
+.ps-steps .st .d{ width:15px; height:15px; border-radius:50%; border:2px solid var(--ink-4); display:flex; align-items:center; justify-content:center; }
+.ps-steps .st .d svg{ width:9px; height:9px; color:#fff; opacity:0; }
+.ps-steps .st.done{ color:var(--green); } .ps-steps .st.done .d{ background:var(--green); border-color:var(--green); } .ps-steps .st.done .d svg{ opacity:1; }
+.ps-steps .st.on{ color:var(--purple); } .ps-steps .st.on .d{ border-color:var(--purple); background:rgba(107,95,255,0.15); box-shadow:0 0 0 3px rgba(107,95,255,0.12); }
+.ps-steps .line{ width:26px; height:2px; background:var(--ink-4); opacity:0.4; margin:0 7px; }
+.ps-steps .line.done{ background:var(--green); opacity:1; }
+
+/* money bar */
+.ps-money{ }
+.ps-bar{ height:8px; border-radius:999px; background:rgba(13,20,36,0.08); overflow:hidden; }
+.ps-bar span{ display:block; height:100%; border-radius:999px; background:linear-gradient(90deg,var(--green),#5bd39a); }
+.ps-amts{ display:flex; align-items:center; gap:14px; margin-top:8px; font-size:12.5px; }
+.ps-amts .sena{ color:var(--ink-2); } .ps-amts .sena b{ color:#1a8e5a; }
+.ps-amts .falta{ color:var(--ink-2); } .ps-amts .falta b{ color:var(--ink); }
+.ps-amts .tot{ margin-left:auto; color:var(--ink-3); font-family:var(--mono); }
+.ps-paid .ps-bar span{ background:linear-gradient(90deg,var(--green),#5bd39a); }
+
+/* acciones */
+.ps-acts{ display:flex; align-items:center; gap:8px; border-top:1px solid rgba(13,20,36,0.06); padding-top:12px; flex-wrap:wrap; }
+.ps-btn{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--ink-2); background:rgba(255,255,255,0.65); border:1px solid rgba(255,255,255,0.9); padding:7px 12px; border-radius:9px; transition:all 140ms; }
+.ps-btn:hover{ background:#fff; box-shadow:0 3px 10px rgba(54,70,120,0.1); }
+.ps-btn svg{ width:14px; height:14px; }
+.ps-btn.primary{ background:var(--purple); color:#fff; border-color:var(--purple); }
+.ps-btn.primary:hover{ background:#5a4ef0; }
+.ps-btn.wa{ color:#1a8e5a; }
+.ps-btn.ver{ margin-left:auto; color:var(--ink-3); }
+.ps-more{ align-self:center; font-size:12.5px; font-weight:600; color:var(--ink-2); background:rgba(255,255,255,0.5); border:1px solid rgba(255,255,255,0.85); padding:9px 18px; border-radius:11px; margin-top:2px; }
+
+/* col-side widgets */
+.side-list{ display:flex; flex-direction:column; gap:11px; }
+.sl-row{ display:flex; align-items:center; gap:11px; }
+.sl-date{ font-family:var(--mono); font-size:11px; font-weight:700; color:var(--ink-2); width:38px; flex:0 0 auto; }
+.sl-tx{ flex:1; min-width:0; } .sl-n{ font-size:12.5px; font-weight:500; } .sl-s{ font-size:10.5px; color:var(--ink-3); margin-top:1px; }
+.sl-amt{ font-family:var(--mono); font-size:12px; font-weight:700; color:var(--ink-1); }
+.wa-card{ padding:18px 20px; border-radius:18px; background:rgba(52,199,125,0.09); border:1px solid rgba(52,199,125,0.22); }
+.wa-btn{ width:100%; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:12px; padding:11px; border-radius:12px; background:#1fab5a; color:#fff; font-size:13px; font-weight:700; }
+.wa-btn svg{ width:16px; height:16px; }
+.tip{ font-size:11.5px; color:var(--ink-3); line-height:1.5; padding:14px 16px; border-radius:14px; background:rgba(107,95,255,0.06); border:1px solid rgba(107,95,255,0.15); }
+.tip b{ color:var(--ink-2); }
+.ps-card.hide, .ps-group.hide{ display:none; }
+/* ===== MODALES ===== */
+.modal-ov{ position:fixed; inset:0; z-index:100; background:rgba(20,26,44,0.42); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; padding:24px; }
+.modal-ov.open{ display:flex; }
+.modal{ display:none; width:100%; max-width:520px; max-height:88vh; overflow-y:auto; background:var(--glass-bg-2); backdrop-filter:blur(32px) saturate(150%); -webkit-backdrop-filter:blur(32px) saturate(150%); border:var(--glass-bd); border-radius:22px; box-shadow:0 24px 70px rgba(20,26,44,0.35); padding:24px; }
+.modal.show{ display:block; animation:mIn 220ms cubic-bezier(.16,1,.3,1); }
+@keyframes mIn{ from{ opacity:0; transform:translateY(16px) scale(.98); } }
+.m-head{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:18px; }
+.m-title{ font-size:19px; font-weight:700; letter-spacing:-0.02em; }
+.m-sub{ font-size:12.5px; color:var(--ink-3); margin-top:2px; }
+.m-x{ width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:var(--ink-2); background:rgba(13,20,36,0.05); flex:0 0 auto; }
+.m-x svg{ width:16px; height:16px; }
+.fld{ margin-bottom:14px; } .fld label{ display:block; font-size:11.5px; font-weight:600; color:var(--ink-2); margin-bottom:6px; }
+.fld input, .fld select{ width:100%; font-size:13.5px; background:#fff; border:1px solid rgba(13,20,36,0.12); border-radius:10px; padding:10px 12px; outline:none; font-family:inherit; box-sizing:border-box; }
+.fld input:focus, .fld select:focus{ border-color:var(--purple); }
+.fld-row{ display:flex; gap:10px; } .fld-row .fld{ flex:1; }
+.m-toggle{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border-radius:12px; background:rgba(107,95,255,0.06); border:1px solid rgba(107,95,255,0.15); margin-bottom:14px; }
+.m-toggle .t{ font-size:12.5px; font-weight:600; } .m-toggle .s{ font-size:11px; color:var(--ink-3); margin-top:1px; }
+.sw{ width:42px; height:24px; border-radius:999px; background:rgba(13,20,36,0.18); position:relative; flex:0 0 auto; transition:background 160ms; cursor:pointer; }
+.sw::after{ content:''; position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.2); transition:transform 160ms; }
+.sw.on{ background:var(--green); } .sw.on::after{ transform:translateX(18px); }
+.m-summary{ display:flex; gap:16px; padding:14px; border-radius:12px; background:rgba(255,255,255,0.6); border:1px solid rgba(255,255,255,0.85); margin:4px 0 16px; }
+.m-summary .s-cell{ flex:1; } .m-summary .s-k{ font-size:10.5px; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.05em; } .m-summary .s-v{ font-size:17px; font-weight:700; margin-top:3px; }
+.m-acts{ display:flex; gap:10px; justify-content:flex-end; }
+.m-btn{ font-size:13px; font-weight:600; padding:10px 17px; border-radius:11px; }
+.m-btn.ghost{ color:var(--ink-2); background:rgba(13,20,36,0.05); }
+.m-btn.primary{ color:#fff; background:linear-gradient(140deg,var(--purple),var(--purple-2)); box-shadow:0 6px 16px rgba(107,95,255,0.4); }
+.d-item{ display:flex; justify-content:space-between; padding:9px 0; border-top:1px solid rgba(13,20,36,0.06); font-size:13px; } .d-item:first-child{ border-top:none; }
+.d-item .q{ color:var(--ink-3); font-size:11.5px; } .d-item .a{ font-family:var(--mono); font-weight:600; }
+.d-pay{ display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid rgba(13,20,36,0.06); font-size:12.5px; } .d-pay:first-child{ border-top:none; }
+.d-pay .pd{ width:8px; height:8px; border-radius:50%; background:var(--green); flex:0 0 auto; }
+.d-pay .amt{ margin-left:auto; font-family:var(--mono); font-weight:700; }
+.d-sec{ font-size:11px; text-transform:uppercase; letter-spacing:0.05em; font-family:var(--mono); font-weight:600; color:var(--ink-3); margin:18px 0 6px; }
+@media (prefers-reduced-motion:reduce){ *{ animation:none !important; } }
+
+/* barra de scroll del contenido principal — consistente y siempre visible */
+.main{ overflow-y:scroll; }
+.main::-webkit-scrollbar{ width:7px; }
+.main::-webkit-scrollbar-track{ background:transparent; }
+.main::-webkit-scrollbar-thumb{ background:rgba(13,20,36,0.14); border-radius:5px; border:2px solid transparent; background-clip:padding-box; }
+</style>
+</head>
+<body>
+  <div class="bg"><div class="base"></div><div class="glow"></div></div>
+  <div class="shell">
+    <!-- ════ SIDEBAR ════ -->
+    <aside class="sidebar glass-strong">
+      <div class="logo-row">
+        <span class="logo-mark"><svg viewBox="0 0 32 32"><defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#6b5fff"/><stop offset="100%" stop-color="#5b8cff"/></linearGradient></defs><g fill="url(#lg1)"><path d="M16 2 L18 14 L30 16 L18 18 L16 30 L14 18 L2 16 L14 14 Z"/></g></svg></span>
+        <span class="logo-text">Pandora</span>
+      </div>
+      <nav style="display:flex; flex-direction:column; gap:3px; flex:1; overflow-y:auto; min-height:0; padding-right:4px; margin-right:-4px;">
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="10" rx="2"/><rect x="13" y="3" width="8" height="6" rx="2"/><rect x="3" y="15" width="8" height="6" rx="2"/><rect x="13" y="11" width="8" height="10" rx="2"/></svg></div><span>Panel</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg></div><span>Venta</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01"/><path d="M18 12h.01"/></svg></div><span>Caja</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.58a2 2 0 0 1 0 2.83z"/><circle cx="7" cy="7" r="1.5"/></svg></div><span>Productos</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg></div><span>Clientes</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></div><span>Stock</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m15 9-6 6"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg></div><span>Ofertas</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h4"/></svg></div><span>Facturas</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h4"/></svg></div><span>Presupuestos</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div><span>Pedidos</span></div>
+        <div class="nav-item active"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg></div><span>Señas</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg></div><span>Devoluciones</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 15v-3"/><path d="M12 15V8"/><path d="M16 15v-5"/></svg></div><span>Reportes</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1-6 6 6 6 0 0 1 0-12 6 6 0 0 1 6 6z"/><path d="M8.5 8.5 4 21l4-2 4 2 1.2-3.4"/></svg></div><span>Contador</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></div><span>Integraciones</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8 2 2 0 1 1-2.8 2.8 1.7 1.7 0 0 0-2.8 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.8-1.2 2 2 0 1 1-2.8-2.8A1.7 1.7 0 0 0 4.6 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.8 2 2 0 1 1 2.8-2.8A1.7 1.7 0 0 0 11 4.6a2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.8 1.2 2 2 0 1 1 2.8 2.8A1.7 1.7 0 0 0 19.4 11a2 2 0 1 1 0 4z"/></svg></div><span>Configuración</span></div>
+      </nav>
+      <div class="side-foot">
+        <div class="afip"><div class="afip-top"><span class="afip-dot"></span><span class="afip-name">AFIP conectado</span><span class="afip-live">LIVE</span></div><div class="afip-sub">WSFEv1 · 47 CAE hoy</div></div>
+        <div class="cashier"><span class="avatar-ring"><span class="cashier-av">AR</span></span><div><div class="cashier-name">Agus Rochelle</div><div class="cashier-role">Dueño</div></div><span class="cashier-live"></span></div>
+      </div>
+    </aside>
+
+    <!-- ════ MAIN ════ -->
+    <main class="main">
+      <div class="topbar">
+        <div class="search glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="Buscar pedido o cliente…" /></div>
+        <div class="tb-chips glass" id="psChips">
+          <button class="ps-chip on">Todos</button>
+          <button class="ps-chip"><span class="c" style="background:var(--red)"></span>Vencidos</button>
+          <button class="ps-chip"><span class="c" style="background:var(--green)"></span>Listos</button>
+          <button class="ps-chip"><span class="c" style="background:var(--purple)"></span>Señados</button>
+          <button class="ps-chip"><span class="c" style="background:var(--ink-4)"></span>Entregados</button>
+        </div>
+        <div class="top-tools">
+          <button class="iconbtn glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg><span class="ndot">3</span></button>
+          <button class="iconbtn glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8 2 2 0 1 1-2.8 2.8 1.7 1.7 0 0 0-2.8 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.8-1.2 2 2 0 1 1-2.8-2.8A1.7 1.7 0 0 0 4.6 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.8 2 2 0 1 1 2.8-2.8A1.7 1.7 0 0 0 11 4.6a2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.8 1.2 2 2 0 1 1 2.8 2.8A1.7 1.7 0 0 0 19.4 11a2 2 0 1 1 0 4z"/></svg></button>
+          <div class="user-chip glass"><span class="avatar-ring"><span class="cashier-av">AR</span></span><div><div class="user-name">Agus Rochelle</div><div class="user-role">Dueño</div></div></div>
+        </div>
+      </div>
+
+      <div class="content">
+        <!-- COLUMNA PRINCIPAL -->
+        <div class="col-main">
+          <!-- HEADER -->
+          <div class="ps-head glass">
+            <div class="ps-head-l">
+              <span class="ps-head-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></span>
+              <div>
+                <h1 class="ps-title">Señas</h1>
+                <p class="ps-sub">Encargos con seña, saldos por cobrar y retiros pendientes.</p>
+              </div>
+            </div>
+            <button class="ps-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>Nuevo pedido señado</button>
+          </div>
+
+          <!-- KPIs -->
+          <div class="ps-kpis">
+            <div class="ps-kpi glass"><div class="upper-mini">Saldo por cobrar</div><div class="v tnum">$147.400</div><div class="foot">4 pedidos con saldo</div></div>
+            <div class="ps-kpi glass"><div class="upper-mini">Pendientes de retiro</div><div class="v tnum">3</div><div class="foot">esperando al cliente</div></div>
+            <div class="ps-kpi alert glass"><div class="upper-mini">Vencidos</div><div class="v tnum">1</div><div class="foot">sin retirar a tiempo</div></div>
+            <div class="ps-kpi glass"><div class="upper-mini">Señas del mes</div><div class="v tnum">$48.900</div><div class="foot">adelantos cobrados</div></div>
+          </div>
+
+          <!-- FILTROS -->
+          <!-- ===== VENCIDOS ===== -->
+          <div class="ps-group over"><span class="c" style="background:var(--red)"></span>Vencidos · 1</div>
+          <div class="ps-card over glass">
+            <div class="ps-c-top">
+              <div class="ps-av" style="background:linear-gradient(135deg,#ef5d6a,#f7984a)">MB</div>
+              <div class="ps-c-id">
+                <div class="ps-c-name">Mercería Belén</div>
+                <div class="ps-c-items">3 cierres invisibles 60 cm + hilos de coser</div>
+                <div class="ps-c-meta">Pedido #0044 · señado 12/06</div>
+              </div>
+              <span class="ps-retiro over"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>Debía retirar el 24/06 · sin retirar</span>
+            </div>
+            <div class="ps-steps"><span class="st done"><span class="d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></span>Señado</span><span class="line"></span><span class="st on"><span class="d"></span>Listo</span><span class="line"></span><span class="st"><span class="d"></span>Entregado</span></div>
+            <div class="ps-money">
+              <div class="ps-bar"><span style="width:35%"></span></div>
+              <div class="ps-amts"><span class="sena">Seña <b>$3.000</b></span><span class="falta">Falta <b>$5.500</b></span><span class="tot">Total $8.500</span></div>
+            </div>
+            <div class="ps-acts">
+              <button class="ps-btn wa"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2z"/></svg>Avisar por WhatsApp</button>
+              <button class="ps-btn primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Cobrar saldo y entregar</button>
+              <button class="ps-btn ver">Ver detalle</button>
+            </div>
+          </div>
+
+          <!-- ===== LISTOS PARA RETIRAR ===== -->
+          <div class="ps-group ready"><span class="c" style="background:var(--green)"></span>Listos para retirar · 2</div>
+          <div class="ps-card glass">
+            <div class="ps-c-top">
+              <div class="ps-av" style="background:linear-gradient(135deg,#34c77d,#0e8f9e)">LM</div>
+              <div class="ps-c-id">
+                <div class="ps-c-name">Laura Méndez</div>
+                <div class="ps-c-items">Cortinado a medida — living 3,20 m</div>
+                <div class="ps-c-meta">Pedido #0051 · señado 08/06 · <b style="color:#1a8e5a">saldado</b></div>
+              </div>
+              <span class="ps-retiro ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Listo · avisado</span>
+            </div>
+            <div class="ps-steps"><span class="st done"><span class="d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></span>Señado</span><span class="line done"></span><span class="st on"><span class="d"></span>Listo</span><span class="line"></span><span class="st"><span class="d"></span>Entregado</span></div>
+            <div class="ps-money ps-paid">
+              <div class="ps-bar"><span style="width:100%"></span></div>
+              <div class="ps-amts"><span class="sena">Pagado <b>$24.000</b></span><span class="falta">Falta <b>$0</b></span><span class="tot">Total $24.000</span></div>
+            </div>
+            <div class="ps-acts">
+              <button class="ps-btn primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Marcar entregado</button>
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Recibo</button>
+              <button class="ps-btn ver">Ver detalle</button>
+            </div>
+          </div>
+          <div class="ps-card glass">
+            <div class="ps-c-top">
+              <div class="ps-av" style="background:linear-gradient(135deg,#f7984a,#f4c948)">KN</div>
+              <div class="ps-c-id">
+                <div class="ps-c-name">Kiosco Norte</div>
+                <div class="ps-c-items">2 cajas de botones forrados (x100)</div>
+                <div class="ps-c-meta">Pedido #0053 · señado 26/06 · mercadería recibida</div>
+              </div>
+              <span class="ps-retiro ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Retira hoy</span>
+            </div>
+            <div class="ps-steps"><span class="st done"><span class="d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></span>Señado</span><span class="line done"></span><span class="st on"><span class="d"></span>Listo</span><span class="line"></span><span class="st"><span class="d"></span>Entregado</span></div>
+            <div class="ps-money">
+              <div class="ps-bar"><span style="width:50%"></span></div>
+              <div class="ps-amts"><span class="sena">Seña <b>$1.900</b></span><span class="falta">Falta <b>$1.900</b></span><span class="tot">Total $3.800</span></div>
+            </div>
+            <div class="ps-acts">
+              <button class="ps-btn wa"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2z"/></svg>Avisar</button>
+              <button class="ps-btn primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Cobrar saldo y entregar</button>
+              <button class="ps-btn ver">Ver detalle</button>
+            </div>
+          </div>
+
+          <!-- ===== SEÑADOS / EN PREPARACIÓN ===== -->
+          <div class="ps-group"><span class="c" style="background:var(--purple)"></span>Señados · en preparación · 1</div>
+          <div class="ps-card glass">
+            <div class="ps-c-top">
+              <div class="ps-av">GA</div>
+              <div class="ps-c-id">
+                <div class="ps-c-name">García SRL <span style="font-size:11px;font-weight:600;color:var(--rose);background:rgba(214,93,177,0.14);padding:2px 8px;border-radius:6px;margin-left:4px;">mayorista</span></div>
+                <div class="ps-c-items">50 m de tafeta roja — tono bordó</div>
+                <div class="ps-c-meta">Pedido #0055 · señado hoy · por encargar al proveedor</div>
+              </div>
+              <span class="ps-retiro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Retira 05/07</span>
+            </div>
+            <div class="ps-steps"><span class="st on"><span class="d"></span>Señado</span><span class="line"></span><span class="st"><span class="d"></span>Listo</span><span class="line"></span><span class="st"><span class="d"></span>Entregado</span></div>
+            <div class="ps-money">
+              <div class="ps-bar"><span style="width:12.5%"></span></div>
+              <div class="ps-amts"><span class="sena">Seña <b>$20.000</b></span><span class="falta">Falta <b>$140.000</b></span><span class="tot">Total $160.000</span></div>
+            </div>
+            <div class="ps-acts">
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Marcar listo para retirar</button>
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Registrar pago parcial</button>
+              <button class="ps-btn ver">Ver detalle</button>
+            </div>
+          </div>
+
+          <button class="ps-more">Ver 12 pedidos entregados →</button>
+        </div>
+
+        <!-- COLUMNA LATERAL -->
+        <div class="col-side">
+          <section class="card glass">
+            <div class="card-title"><h3>Próximos retiros</h3></div>
+            <div class="side-list">
+              <div class="sl-row"><span class="sl-date" style="color:#c93545">24/06</span><div class="sl-tx"><div class="sl-n">Mercería Belén</div><div class="sl-s" style="color:#c93545">vencido · sin retirar</div></div><span class="sl-amt">$5.500</span></div>
+              <div class="sl-row"><span class="sl-date" style="color:#1a8e5a">Hoy</span><div class="sl-tx"><div class="sl-n">Kiosco Norte</div><div class="sl-s">listo · falta cobrar saldo</div></div><span class="sl-amt">$1.900</span></div>
+              <div class="sl-row"><span class="sl-date">05/07</span><div class="sl-tx"><div class="sl-n">García SRL</div><div class="sl-s">en preparación</div></div><span class="sl-amt">$140.000</span></div>
+            </div>
+          </section>
+
+          <section class="wa-card">
+            <div style="display:flex;align-items:center;gap:9px;"><span style="width:34px;height:34px;border-radius:10px;background:rgba(31,171,90,0.15);color:#1fab5a;display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2z"/></svg></span><div><div style="font-size:13px;font-weight:700;color:#177a4a;">Avisar a clientes</div><div style="font-size:11px;color:#5a9b78;">2 pedidos listos sin avisar</div></div></div>
+            <button class="wa-btn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2z"/></svg>Avisar por WhatsApp</button>
+          </section>
+
+          <div class="tip"><b>💡 Sobre la seña y la factura:</b> cuando la seña <b>congela el precio</b>, Pandora emite la factura de la seña en ese momento (con IVA), y la del saldo al entregar. Si no lo congela, se factura todo al retirar. <span style="color:var(--purple);font-weight:600;">Configurable por pedido.</span></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ═══ MODALES ═══ -->
+  <div class="modal-ov" id="modalOv">
+    <!-- NUEVO PEDIDO SEÑADO -->
+    <div class="modal" id="modalNuevo">
+      <div class="m-head">
+        <div><div class="m-title">Nuevo pedido señado</div><div class="m-sub">Encargo con seña y saldo pendiente.</div></div>
+        <button class="m-x"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="fld"><label>Cliente</label><input id="nCliente" placeholder="Nombre del cliente" /></div>
+      <div class="fld"><label>¿Qué encarga?</label><input id="nItem" placeholder="Ej: 50 m de tafeta roja — tono bordó" /></div>
+      <div class="fld-row">
+        <div class="fld"><label>Cantidad</label><input id="nCant" type="number" value="1" /></div>
+        <div class="fld"><label>Precio unit.</label><input id="nPrecio" type="number" placeholder="0" /></div>
+        <div class="fld"><label>Seña</label><input id="nSena" type="number" placeholder="0" /></div>
+      </div>
+      <div class="fld"><label>Fecha de retiro</label><input id="nFecha" type="date" /></div>
+      <div class="m-toggle">
+        <div><div class="t">La seña congela el precio</div><div class="s">Si está activo, se factura la seña con IVA ahora (RG 707/1999).</div></div>
+        <div class="sw on" id="swCongela"></div>
+      </div>
+      <div class="m-summary">
+        <div class="s-cell"><div class="s-k">Total</div><div class="s-v tnum" id="nTotalV">$0</div></div>
+        <div class="s-cell"><div class="s-k">Seña</div><div class="s-v tnum" id="nSenaV" style="color:#1a8e5a">$0</div></div>
+        <div class="s-cell"><div class="s-k">Saldo</div><div class="s-v tnum" id="nSaldoV">$0</div></div>
+      </div>
+      <div class="m-acts"><button class="m-btn ghost m-cancel">Cancelar</button><button class="m-btn primary" id="nSave">Guardar pedido</button></div>
+    </div>
+    <!-- DETALLE -->
+    <div class="modal" id="modalDetalle">
+      <div class="m-head">
+        <div><div class="m-title" id="dName">Pedido</div><div class="m-sub" id="dMeta">Pedido señado</div></div>
+        <button class="m-x"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="d-sec">Detalle del encargo</div>
+      <div class="d-item"><div><span id="dItems">—</span></div><span class="a" id="dItemAmt">—</span></div>
+      <div class="d-sec">Historial de pagos</div>
+      <div class="d-pay"><span class="pd"></span><div><div style="font-weight:600">Seña</div><div style="font-size:10.5px;color:var(--ink-3)">Efectivo · al señar</div></div><span class="amt" id="dSena">—</span></div>
+      <div class="d-pay" style="opacity:.55"><span class="pd" style="background:var(--ink-4)"></span><div><div style="font-weight:600">Saldo pendiente</div><div style="font-size:10.5px;color:var(--ink-3)">se cobra al retirar</div></div><span class="amt" id="dSaldo">—</span></div>
+      <div class="m-summary" style="margin-top:16px;">
+        <div class="s-cell"><div class="s-k">Total</div><div class="s-v tnum" id="dTotal">—</div></div>
+        <div class="s-cell"><div class="s-k">Fecha de retiro</div><div class="s-v" id="dRetiro" style="font-size:13.5px">—</div></div>
+      </div>
+      <div class="m-acts"><button class="m-btn ghost m-cancel">Cerrar</button><button class="m-btn primary">Cobrar saldo y entregar</button></div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    var cm = document.querySelector('.col-main');
+    var cur = 'senado';
+    cm.querySelectorAll('.ps-group, .ps-card').forEach(function(el){
+      if(el.classList.contains('ps-group')){ cur = el.classList.contains('over') ? 'vencido' : (el.classList.contains('ready') ? 'listo' : 'senado'); }
+      else { el.dataset.estado = cur; }
+    });
+    var chips = document.querySelectorAll('#psChips .ps-chip');
+    var map = { 'Todos':'all','Vencidos':'vencido','Listos':'listo','Señados':'senado','Entregados':'entregado' };
+    chips.forEach(function(ch){ ch.addEventListener('click', function(){
+      chips.forEach(function(x){ x.classList.remove('on'); }); ch.classList.add('on');
+      var f = map[ch.textContent.trim()] || 'all';
+      cm.querySelectorAll('.ps-card').forEach(function(c){ c.classList.toggle('hide', f!=='all' && c.dataset.estado!==f); });
+      cm.querySelectorAll('.ps-group').forEach(function(g){ var est = g.classList.contains('over')?'vencido':(g.classList.contains('ready')?'listo':'senado'); g.classList.toggle('hide', f!=='all' && f!==est); });
+    }); });
+    var ov = document.getElementById('modalOv');
+    function openM(id){ ov.classList.add('open'); ov.querySelectorAll('.modal').forEach(function(m){ m.classList.remove('show'); }); document.getElementById(id).classList.add('show'); }
+    function closeM(){ ov.classList.remove('open'); }
+    document.querySelector('.ps-new').addEventListener('click', function(){ openM('modalNuevo'); });
+    cm.addEventListener('click', function(e){
+      var b = e.target.closest('.ps-btn.ver'); if(!b) return;
+      var card = b.closest('.ps-card');
+      document.getElementById('dName').textContent = card.querySelector('.ps-c-name').childNodes[0].textContent.trim();
+      document.getElementById('dItems').textContent = card.querySelector('.ps-c-items').textContent;
+      document.getElementById('dMeta').textContent = card.querySelector('.ps-c-meta').textContent;
+      var amts = card.querySelectorAll('.ps-amts b');
+      document.getElementById('dSena').textContent = amts[0] ? amts[0].textContent : '—';
+      document.getElementById('dSaldo').textContent = amts[1] ? amts[1].textContent : '—';
+      var tot = card.querySelector('.ps-amts .tot');
+      var totTxt = tot ? tot.textContent.replace('Total ','') : '—';
+      document.getElementById('dTotal').textContent = totTxt;
+      document.getElementById('dItemAmt').textContent = totTxt;
+      var ret = card.querySelector('.ps-retiro');
+      document.getElementById('dRetiro').textContent = ret ? ret.textContent.trim() : '—';
+      openM('modalDetalle');
+    });
+    ov.addEventListener('click', function(e){ if(e.target===ov) closeM(); });
+    ov.querySelectorAll('.m-x, .m-cancel').forEach(function(x){ x.addEventListener('click', closeM); });
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeM(); });
+    var sw = document.getElementById('swCongela'); if(sw) sw.addEventListener('click', function(){ sw.classList.toggle('on'); });
+    function fmt(n){ return '$' + (n||0).toLocaleString('es-AR'); }
+    function calc(){
+      var cant = parseFloat(document.getElementById('nCant').value)||0;
+      var pre = parseFloat(document.getElementById('nPrecio').value)||0;
+      var sena = parseFloat(document.getElementById('nSena').value)||0;
+      var tot = cant*pre;
+      document.getElementById('nTotalV').textContent = fmt(tot);
+      document.getElementById('nSenaV').textContent = fmt(sena);
+      document.getElementById('nSaldoV').textContent = fmt(Math.max(0,tot-sena));
+    }
+    ['nCant','nPrecio','nSena'].forEach(function(id){ document.getElementById(id).addEventListener('input', calc); });
+    document.getElementById('nSave').addEventListener('click', function(){
+      var cli = (document.getElementById('nCliente').value||'').trim() || 'Cliente nuevo';
+      var item = (document.getElementById('nItem').value||'').trim() || 'Encargo';
+      var cant = parseFloat(document.getElementById('nCant').value)||1;
+      var pre = parseFloat(document.getElementById('nPrecio').value)||0;
+      var sena = parseFloat(document.getElementById('nSena').value)||0;
+      var tot = cant*pre, saldo = Math.max(0,tot-sena);
+      var fecha = document.getElementById('nFecha').value;
+      var ini = cli.split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase() || 'PS';
+      var pct = tot ? Math.min(100,Math.round(sena/tot*100)) : 0;
+      var retiroTxt = fecha ? ('Retira ' + fecha.split('-').reverse().slice(0,2).join('/')) : 'Sin fecha';
+      var card = document.createElement('div'); card.className='ps-card glass just-added'; card.dataset.estado='senado';
+      card.innerHTML = '<div class="ps-c-top"><div class="ps-av">'+ini+'</div><div class="ps-c-id"><div class="ps-c-name">'+cli+'</div><div class="ps-c-items">'+item+'</div><div class="ps-c-meta">Pedido nuevo · señado hoy</div></div><span class="ps-retiro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>'+retiroTxt+'</span></div>'
+        + '<div class="ps-steps"><span class="st on"><span class="d"></span>Señado</span><span class="line"></span><span class="st"><span class="d"></span>Listo</span><span class="line"></span><span class="st"><span class="d"></span>Entregado</span></div>'
+        + '<div class="ps-money"><div class="ps-bar"><span style="width:'+pct+'%"></span></div><div class="ps-amts"><span class="sena">Seña <b>'+fmt(sena)+'</b></span><span class="falta">Falta <b>'+fmt(saldo)+'</b></span><span class="tot">Total '+fmt(tot)+'</span></div></div>'
+        + '<div class="ps-acts"><button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Marcar listo para retirar</button><button class="ps-btn ver">Ver detalle</button></div>';
+      var senGroup = null; cm.querySelectorAll('.ps-group').forEach(function(g){ if(!g.classList.contains('over') && !g.classList.contains('ready')) senGroup = g; });
+      if(senGroup) senGroup.insertAdjacentElement('afterend', card); else cm.querySelector('.ps-more').insertAdjacentElement('beforebegin', card);
+      closeM();
+      document.getElementById('nCliente').value=''; document.getElementById('nItem').value=''; document.getElementById('nPrecio').value=''; document.getElementById('nSena').value=''; calc();
+      card.scrollIntoView({ block:'center', behavior:'smooth' });
+    });
+  })();
+  </script>
+  <script>
+  (function(){
+    var map={'Panel':'dashboard.html','Venta':'checkpoint-v19-top-tools.html','Caja':'checkpoint-caja-v2.html','Productos':'productos-v3.html','Clientes':'clientes-v6.html','Stock':'stock-v2.html','Ofertas':'ofertas.html','Facturas':'facturas-v4.html','Presupuestos':'presupuestos-v1.html','Pedidos':'pedidos.html','Señas':'pedidos-senados.html','Devoluciones':'devoluciones.html','Reportes':'reportes-v2.html','Contador':'contador-v2.html','Integraciones':'integraciones.html','Configuración':'configuracion-v1.html'};
+    function txt(el){return (el.textContent||'').trim();}
+    [].slice.call(document.querySelectorAll('.nav-item')).forEach(function(el){var u=map[txt(el)];if(u){el.style.cursor='pointer';el.addEventListener('click',function(){location.href=u;});}});
+  })();
+  </script>
+</body>
+</html>

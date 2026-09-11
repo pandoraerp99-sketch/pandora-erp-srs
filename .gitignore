@@ -35,3 +35,19 @@ desktop.ini
 # ──── Backups ──────────────────────────────────────
 *.bak
 *.orig
+
+# ──── Maquetas (pos-preview/) ──────────────────────
+# Regla: entra el TEXTO, no los binarios.
+#
+# SÍ se versionan los .html y los .md. Las maquetas son la autoridad visual del
+# proyecto —de ellas salen los ports a la app— así que tienen que tener
+# historial: si alguien pisa una, se recupera. Y son autocontenidas: ninguna
+# referencia un .png del disco, todas llevan las imágenes embebidas en data:
+# URI (por eso algunas pesan 670 KB). Verificado, no supuesto.
+#
+# NO se versionan las capturas sueltas ni los checkpoints viejos: son 27 de los
+# 31 MB de la carpeta, git no puede diffear un PNG, y ninguno es autoridad de
+# nada. Si alguna vez hace falta una captura vieja, está en el disco.
+pos-preview/_historico/
+pos-preview/*.png
+pos-preview/img/

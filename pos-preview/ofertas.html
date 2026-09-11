@@ -1,0 +1,933 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pandora · Ofertas y descuentos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --ink:#0d1424; --ink-1:#1f2a44; --ink-2:#4a5570; --ink-3:#7681a0; --ink-4:#a8b0c5;
+  --purple:#6b5fff; --purple-2:#9088ff; --blue:#5b8cff; --green:#34c77d; --orange:#f7984a; --pink:#ee6a8e; --red:#ef5d6a; --yellow:#f4c948; --teal:#0e8f9e; --rose:#d65db1;
+  --glass-bg:rgba(255,255,255,0.58); --glass-bg-2:rgba(255,255,255,0.72);
+  --glass-bd:1px solid rgba(255,255,255,0.85);
+  --glass-hi:inset 0 1px 0 rgba(255,255,255,0.9);
+  --glass-sh:0 8px 32px rgba(54,70,120,0.10), 0 2px 8px rgba(54,70,120,0.06);
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+button,input,select{ font:inherit; color:inherit; border:none; outline:none; background:none; cursor:pointer; }
+html,body{ height:100%; }
+body{ font-family:'Inter',ui-sans-serif,system-ui,sans-serif; -webkit-font-smoothing:antialiased; letter-spacing:-0.011em; color:var(--ink); height:100dvh; overflow:hidden; position:relative; }
+.bg{ position:fixed; inset:0; z-index:-10; }
+.bg .base{ position:absolute; inset:0; background:linear-gradient(175deg,#b5c6e8 0%,#c8d4ea 28%,#ddd0e0 62%,#eed6d0 100%); }
+.bg .glow{ position:absolute; inset:0; background:
+  radial-gradient(ellipse 70% 60% at 10% 95%, rgba(238,200,220,0.55) 0%, transparent 60%),
+  radial-gradient(ellipse 60% 50% at 88% 82%, rgba(240,210,175,0.40) 0%, transparent 60%),
+  radial-gradient(ellipse 55% 42% at 55% 22%, rgba(255,255,255,0.60) 0%, transparent 52%),
+  radial-gradient(ellipse 58% 48% at 10% 22%, rgba(195,215,248,0.65) 0%, transparent 62%); }
+::-webkit-scrollbar{ width:7px; height:7px; }
+::-webkit-scrollbar-track{ background:transparent; }
+::-webkit-scrollbar-thumb{ background:rgba(13,20,36,0.14); border-radius:5px; border:2px solid transparent; background-clip:padding-box; }
+.glass{ background:var(--glass-bg); backdrop-filter:blur(28px) saturate(140%); -webkit-backdrop-filter:blur(28px) saturate(140%); border:var(--glass-bd); border-radius:20px; box-shadow:var(--glass-hi), var(--glass-sh); }
+.glass-strong{ background:var(--glass-bg-2); backdrop-filter:blur(32px) saturate(150%); -webkit-backdrop-filter:blur(32px) saturate(150%); border:var(--glass-bd); border-radius:20px; box-shadow:var(--glass-hi), var(--glass-sh); }
+.tnum{ font-variant-numeric:tabular-nums; }
+
+/* shell + sidebar */
+.shell{ height:100dvh; padding:10px; display:grid; grid-template-columns:210px 1fr; gap:8px; }
+.sidebar{ display:flex; flex-direction:column; border-radius:20px; padding:22px 14px 18px; overflow:hidden; }
+.logo-row{ display:flex; align-items:center; gap:10px; padding:0 8px 22px; }
+.logo-mark{ width:26px; height:26px; flex-shrink:0; } .logo-mark svg{ width:100%; height:100%; display:block; }
+.logo-text{ font-size:19px; font-weight:700; letter-spacing:-0.025em; background:linear-gradient(135deg,#2a3454 0%,#4a5878 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.nav-item{ display:flex; align-items:center; gap:11px; padding:10px 11px; border-radius:12px; color:var(--ink-2); font-size:13.5px; font-weight:500; cursor:pointer; transition:all 200ms cubic-bezier(.4,0,.2,1); }
+.nav-item:hover{ color:var(--ink); background:rgba(255,255,255,0.4); }
+.nav-item.active{ background:rgba(255,255,255,0.92); color:var(--ink); box-shadow:0 1px 2px rgba(54,70,120,0.06), 0 4px 12px rgba(54,70,120,0.08); }
+.nav-item.active .nav-icon-box{ background:var(--purple); color:#fff; box-shadow:0 4px 10px rgba(107,95,255,0.4); }
+.nav-icon-box{ width:26px; height:26px; display:flex; align-items:center; justify-content:center; border-radius:7px; color:var(--ink-2); transition:all 200ms; flex-shrink:0; }
+.side-foot{ margin-top:auto; padding-top:12px; display:flex; flex-direction:column; gap:9px; }
+.afip{ padding:10px 11px; border-radius:13px; background:rgba(52,199,125,0.08); border:1px solid rgba(52,199,125,0.20); }
+.afip-top{ display:flex; align-items:center; gap:7px; }
+.afip-dot{ width:7px; height:7px; border-radius:50%; background:var(--green); flex:0 0 auto; animation:pg 2.4s ease-in-out infinite; }
+.afip-name{ font-size:11.5px; font-weight:700; color:#177a4a; }
+.afip-live{ margin-left:auto; font-size:8.5px; font-weight:800; letter-spacing:0.06em; color:var(--green); }
+.afip-sub{ font-size:10px; color:#5a9b78; padding-left:14px; margin-top:2px; }
+@keyframes pg{ 0%,100%{box-shadow:0 0 0 2px rgba(52,199,125,0.22)} 50%{box-shadow:0 0 0 5px rgba(52,199,125,0)} }
+.cashier{ display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:13px; background:rgba(255,255,255,0.66); border:1px solid rgba(255,255,255,0.9); box-shadow:var(--glass-hi); }
+.cashier-av{ width:32px; height:32px; flex:0 0 auto; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--blue)); display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:700; }
+.avatar-ring{ padding:2px; border-radius:50%; flex:0 0 auto; display:flex; background:conic-gradient(from 0deg,#6b5fff,#5b8cff,#34c77d,#f7984a,#ee6a8e,#6b5fff); }
+.avatar-ring > .cashier-av{ border:2px solid rgba(255,255,255,0.9); }
+.cashier-name{ font-size:12px; font-weight:600; line-height:1.2; }
+.cashier-role{ font-size:10px; color:var(--ink-3); }
+.cashier-live{ width:7px; height:7px; border-radius:50%; background:var(--green); margin-left:auto; flex:0 0 auto; animation:pg 2.4s ease-in-out infinite; }
+
+/* main + topbar */
+.main{ min-width:0; min-height:0; overflow-y:auto; padding:4px 6px 18px 2px; }
+.topbar{ display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+.search{ position:relative; flex:1; max-width:340px; display:flex; align-items:center; height:42px; border-radius:14px; padding:0 14px 0 40px; }
+.search svg{ position:absolute; left:13px; width:16px; height:16px; color:var(--ink-3); }
+.search input{ width:100%; font-size:13px; } .search input::placeholder{ color:var(--ink-3); }
+.top-tools{ display:flex; align-items:center; gap:8px; margin-left:auto; }
+.iconbtn{ width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:12px; color:var(--ink-1); position:relative; }
+.iconbtn svg{ width:18px; height:18px; }
+.iconbtn .ndot{ position:absolute; top:7px; right:7px; min-width:15px; height:15px; border-radius:999px; background:var(--pink); color:#fff; font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center; border:2px solid rgba(255,255,255,0.9); }
+.user-chip{ display:flex; align-items:center; gap:9px; padding:5px 13px 5px 5px; border-radius:999px; }
+.user-name{ font-size:12.5px; font-weight:600; line-height:1.25; } .user-role{ font-size:10.5px; color:var(--ink-3); }
+
+.content{ display:flex; gap:16px; }
+.col-main{ flex:1; min-width:0; display:flex; flex-direction:column; gap:16px; }
+.col-side{ width:324px; flex-shrink:0; display:flex; flex-direction:column; gap:16px; }
+.card{ border-radius:20px; padding:20px; }
+.upper-mini{ font-size:10.5px; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.08em; font-family:var(--mono); font-weight:500; }
+.card-title{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.card-title h3{ font-size:14px; font-weight:600; color:var(--ink); }
+
+/* header */
+.ps-head{ display:flex; align-items:center; justify-content:space-between; padding:18px 24px; border-radius:20px; }
+.ps-head-l{ display:flex; align-items:center; gap:15px; }
+.ps-head-ic{ width:46px; height:46px; border-radius:14px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; color:#fff; background:linear-gradient(135deg,var(--purple),var(--blue)); box-shadow:0 6px 16px rgba(107,95,255,0.35); }
+.ps-head-ic svg{ width:22px; height:22px; }
+.ps-title{ font-size:23px; font-weight:700; letter-spacing:-0.03em; }
+.ps-sub{ font-size:12.5px; color:var(--ink-2); margin-top:2px; }
+.ps-new{ display:inline-flex; align-items:center; gap:8px; padding:11px 18px; border-radius:13px; background:linear-gradient(140deg,var(--purple),var(--purple-2)); color:#fff; font-size:13.5px; font-weight:700; box-shadow:0 7px 20px rgba(107,95,255,0.42); transition:all 170ms; }
+.ps-new:hover{ transform:translateY(-1px); box-shadow:0 10px 26px rgba(107,95,255,0.52); }
+.ps-new svg{ width:16px; height:16px; }
+
+/* kpis */
+.ps-kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+.ps-kpi{ padding:16px 18px; border-radius:16px; }
+.ps-kpi .v{ font-size:24px; font-weight:700; letter-spacing:-0.02em; margin-top:6px; }
+.ps-kpi .foot{ font-size:11px; color:var(--ink-3); margin-top:3px; }
+.ps-kpi.alert{ background:rgba(244,201,72,0.12); border-color:rgba(244,201,72,0.34); }
+.ps-kpi.alert .v{ color:#9a7a10; }
+
+/* chips */
+.tb-chips{ display:inline-flex; align-items:center; gap:3px; padding:5px; border-radius:14px; }
+.tb-chips .ps-chip{ background:transparent; padding:7px 12px; }
+.tb-chips .ps-chip.on{ background:var(--ink); color:#fff; }
+.ps-chip{ font-size:12px; font-weight:600; color:var(--ink-2); background:rgba(13,20,36,0.05); padding:7px 13px; border-radius:9px; transition:all 120ms; }
+.ps-chip.on{ background:var(--ink); color:#fff; }
+.ps-chip .c{ display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+
+.ps-group{ font-size:11px; text-transform:uppercase; letter-spacing:0.06em; font-family:var(--mono); font-weight:700; color:var(--ink-3); margin:6px 4px 0; display:flex; align-items:center; gap:8px; }
+.ps-group .c{ width:8px; height:8px; border-radius:50%; }
+.ps-group.act{ color:#1a8e5a; }
+.ps-group.prog{ color:#3b6fd4; }
+.ps-group.exp{ color:#c93545; }
+
+/* ===== OFERTA CARD ===== */
+.of-card{ padding:18px 20px; border-radius:18px; display:flex; flex-direction:column; gap:14px; }
+.of-card.bad{ box-shadow:var(--glass-hi), 0 8px 32px rgba(239,93,106,0.13); border-color:rgba(239,93,106,0.32); }
+.of-top{ display:flex; align-items:flex-start; gap:14px; }
+.of-badge{ width:58px; height:58px; border-radius:15px; flex:0 0 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; font-weight:800; letter-spacing:-0.02em; box-shadow:0 6px 14px rgba(54,70,120,0.18); }
+.of-badge .big{ font-size:20px; line-height:1; }
+.of-badge .sm{ font-size:8.5px; font-weight:700; opacity:.9; margin-top:3px; text-transform:uppercase; letter-spacing:0.05em; }
+.of-badge.pct{ background:linear-gradient(135deg,var(--purple),var(--blue)); }
+.of-badge.fijo{ background:linear-gradient(135deg,var(--teal),var(--green)); }
+.of-badge.global{ background:linear-gradient(135deg,var(--orange),var(--yellow)); box-shadow:0 6px 14px rgba(247,152,74,0.28); }
+.of-badge.qty{ background:linear-gradient(135deg,var(--rose),var(--purple)); box-shadow:0 6px 14px rgba(214,93,177,0.28); }
+.of-badge.qty .big{ font-size:17px; }
+.of-id{ flex:1; min-width:0; }
+.of-name{ font-size:15.5px; font-weight:700; letter-spacing:-0.01em; display:flex; align-items:center; flex-wrap:wrap; gap:2px; }
+.of-type{ font-size:10.5px; font-weight:600; color:var(--ink-2); background:rgba(13,20,36,0.06); padding:2px 8px; border-radius:6px; margin-left:6px; }
+.of-cond{ font-size:12px; color:var(--ink-2); margin-top:3px; }
+.of-meta{ font-size:11px; color:var(--ink-3); margin-top:3px; font-family:var(--mono); }
+.of-margin{ display:inline-flex; align-items:center; gap:7px; font-size:11.5px; font-weight:700; padding:8px 12px; border-radius:11px; flex:0 0 auto; align-self:flex-start; }
+.of-margin .dot{ width:8px; height:8px; border-radius:50%; }
+.of-margin.ok{ background:rgba(52,199,125,0.13); color:#1a8e5a; } .of-margin.ok .dot{ background:var(--green); }
+.of-margin.tight{ background:rgba(244,201,72,0.17); color:#9a7a10; } .of-margin.tight .dot{ background:var(--yellow); }
+.of-margin.bad{ background:rgba(239,93,106,0.14); color:#c93545; } .of-margin.bad .dot{ background:var(--red); }
+
+.of-mid{ display:flex; align-items:center; gap:12px; }
+.of-vig{ flex:1; display:flex; align-items:center; gap:10px; font-size:11.5px; color:var(--ink-3); }
+.of-vbar{ flex:1; max-width:190px; height:6px; border-radius:999px; background:rgba(13,20,36,0.08); overflow:hidden; }
+.of-vbar span{ display:block; height:100%; border-radius:999px; background:linear-gradient(90deg,var(--purple),var(--blue)); }
+.of-vbar.exp span{ background:linear-gradient(90deg,var(--red),var(--orange)); }
+.of-vig b{ color:var(--ink-2); font-weight:600; }
+.of-vig .soon{ color:#c93545; font-weight:700; }
+.of-uses{ font-size:11px; color:var(--ink-3); font-family:var(--mono); flex:0 0 auto; }
+
+.of-acts{ display:flex; align-items:center; gap:8px; border-top:1px solid rgba(13,20,36,0.06); padding-top:12px; flex-wrap:wrap; }
+.ps-btn{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--ink-2); background:rgba(255,255,255,0.65); border:1px solid rgba(255,255,255,0.9); padding:7px 12px; border-radius:9px; transition:all 140ms; }
+.ps-btn:hover{ background:#fff; box-shadow:0 3px 10px rgba(54,70,120,0.1); }
+.ps-btn svg{ width:14px; height:14px; }
+.ps-btn.warn{ color:#c93545; background:rgba(239,93,106,0.09); border-color:rgba(239,93,106,0.25); }
+.ps-btn.ver{ margin-left:auto; color:var(--ink-3); }
+.ps-more{ align-self:center; font-size:12.5px; font-weight:600; color:var(--ink-2); background:rgba(255,255,255,0.5); border:1px solid rgba(255,255,255,0.85); padding:9px 18px; border-radius:11px; margin-top:2px; }
+
+/* col-side widgets */
+.side-list{ display:flex; flex-direction:column; gap:11px; }
+.sl-row{ display:flex; align-items:center; gap:11px; }
+.sl-date{ font-family:var(--mono); font-size:11px; font-weight:700; color:var(--ink-2); width:44px; flex:0 0 auto; }
+.sl-tx{ flex:1; min-width:0; } .sl-n{ font-size:12.5px; font-weight:500; } .sl-s{ font-size:10.5px; color:var(--ink-3); margin-top:1px; }
+.sl-amt{ font-family:var(--mono); font-size:12px; font-weight:700; color:var(--ink-1); }
+.mg-row{ display:flex; align-items:center; gap:11px; padding:9px 0; border-top:1px solid rgba(13,20,36,0.06); }
+.mg-row:first-child{ border-top:none; }
+.mg-dot{ width:10px; height:10px; border-radius:50%; flex:0 0 auto; }
+.mg-lbl{ font-size:12.5px; font-weight:500; flex:1; } .mg-lbl small{ display:block; font-size:10.5px; color:var(--ink-3); font-weight:400; }
+.mg-n{ font-family:var(--mono); font-size:15px; font-weight:700; }
+.tip{ font-size:11.5px; color:var(--ink-3); line-height:1.5; padding:14px 16px; border-radius:14px; background:rgba(107,95,255,0.06); border:1px solid rgba(107,95,255,0.15); }
+.tip b{ color:var(--ink-2); }
+.of-card.hide, .ps-group.hide{ display:none; }
+
+/* ===== MODALES ===== */
+.modal-ov{ position:fixed; inset:0; z-index:100; background:rgba(20,26,44,0.42); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; padding:24px; }
+.modal-ov.open{ display:flex; }
+.modal{ display:none; width:100%; max-width:560px; max-height:92vh; overflow-y:auto; background:var(--glass-bg-2); backdrop-filter:blur(32px) saturate(150%); -webkit-backdrop-filter:blur(32px) saturate(150%); border:var(--glass-bd); border-radius:22px; box-shadow:0 24px 70px rgba(20,26,44,0.35); padding:24px; }
+.modal.show{ display:block; animation:mIn 220ms cubic-bezier(.16,1,.3,1); }
+@keyframes mIn{ from{ opacity:0; transform:translateY(16px) scale(.98); } }
+.m-head{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:18px; }
+.m-title{ font-size:19px; font-weight:700; letter-spacing:-0.02em; }
+.m-sub{ font-size:12.5px; color:var(--ink-3); margin-top:2px; }
+.m-x{ width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:var(--ink-2); background:rgba(13,20,36,0.05); flex:0 0 auto; }
+.m-x svg{ width:16px; height:16px; }
+.fld{ margin-bottom:14px; } .fld label{ display:block; font-size:11.5px; font-weight:600; color:var(--ink-2); margin-bottom:6px; }
+.fld label .req{ color:var(--red); }
+.fld input, .fld select{ width:100%; font-size:13.5px; background:#fff; border:1px solid rgba(13,20,36,0.12); border-radius:10px; padding:10px 12px; outline:none; font-family:inherit; box-sizing:border-box; }
+.fld input:focus, .fld select:focus{ border-color:var(--purple); }
+.fld-row{ display:flex; gap:10px; } .fld-row .fld{ flex:1; }
+.m-toggle{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border-radius:12px; background:rgba(107,95,255,0.06); border:1px solid rgba(107,95,255,0.15); margin-bottom:14px; }
+.m-toggle .t{ font-size:12.5px; font-weight:600; } .m-toggle .s{ font-size:11px; color:var(--ink-3); margin-top:1px; }
+.sw{ width:42px; height:24px; border-radius:999px; background:rgba(13,20,36,0.18); position:relative; flex:0 0 auto; transition:background 160ms; cursor:pointer; }
+.sw::after{ content:''; position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.2); transition:transform 160ms; }
+.sw.on{ background:var(--green); } .sw.on::after{ transform:translateX(18px); }
+
+/* selección de productos / categorías */
+.seg{ display:inline-flex; gap:3px; padding:4px; border-radius:11px; background:rgba(13,20,36,0.05); }
+.seg-b{ font-size:12px; font-weight:600; color:var(--ink-2); padding:7px 13px; border-radius:8px; transition:all 120ms; }
+.seg-b.on{ background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(54,70,120,0.12); }
+.chips-wrap{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px; }
+.cchip{ font-size:12.5px; font-weight:600; color:var(--ink-2); background:rgba(13,20,36,0.05); border:1px solid transparent; padding:8px 13px; border-radius:10px; transition:all 120ms; display:inline-flex; align-items:center; gap:7px; }
+.cchip .n{ font-size:10.5px; color:var(--ink-3); font-family:var(--mono); background:rgba(13,20,36,0.06); padding:1px 6px; border-radius:6px; }
+.cchip.on{ background:rgba(107,95,255,0.12); color:var(--purple); border-color:rgba(107,95,255,0.3); }
+.cchip.on .n{ color:var(--purple); background:rgba(107,95,255,0.12); }
+.prod-search{ position:relative; display:flex; align-items:center; height:38px; border-radius:10px; background:#fff; border:1px solid rgba(13,20,36,0.12); padding:0 12px 0 34px; margin-bottom:8px; }
+.prod-search svg{ position:absolute; left:11px; width:15px; height:15px; color:var(--ink-3); }
+.prod-search input{ width:100%; font-size:13px; }
+.prod-list{ max-height:184px; overflow-y:auto; display:flex; flex-direction:column; gap:2px; border:1px solid rgba(13,20,36,0.08); border-radius:11px; padding:6px; }
+.prod-row{ display:flex; align-items:center; gap:10px; padding:8px 9px; border-radius:8px; cursor:pointer; transition:background 100ms; }
+.prod-row:hover{ background:rgba(13,20,36,0.04); }
+.prod-row.on{ background:rgba(107,95,255,0.08); }
+.prc{ width:18px; height:18px; border-radius:6px; border:2px solid rgba(13,20,36,0.2); flex:0 0 auto; display:flex; align-items:center; justify-content:center; }
+.prod-row.on .prc{ background:var(--purple); border-color:var(--purple); }
+.prc svg{ width:11px; height:11px; color:#fff; opacity:0; } .prod-row.on .prc svg{ opacity:1; }
+.prod-row .pn{ flex:1; font-size:12.5px; font-weight:500; } .prod-row .pn small{ display:block; font-size:10.5px; color:var(--ink-3); font-weight:400; }
+.prod-row .pp{ font-family:var(--mono); font-size:12px; font-weight:600; color:var(--ink-2); }
+.day-row{ display:flex; gap:6px; flex-wrap:wrap; }
+.daychip{ width:38px; height:34px; border-radius:9px; font-size:12.5px; font-weight:700; color:var(--ink-2); background:rgba(13,20,36,0.05); border:1px solid transparent; transition:all 120ms; }
+.daychip.on{ background:rgba(107,95,255,0.12); color:var(--purple); border-color:rgba(107,95,255,0.3); }
+.time-row{ display:flex; align-items:center; gap:8px; margin-top:10px; font-size:12px; color:var(--ink-2); }
+.time-row input[type=time]{ width:auto; flex:0 0 auto; padding:8px 10px; }
+.time-row .sep{ color:var(--ink-3); }
+.cchip .cx{ display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; margin-left:1px; border-radius:5px; color:var(--ink-4); }
+.cchip .cx:hover{ background:rgba(239,93,106,0.16); color:var(--red); }
+.cchip .cx svg{ width:10px; height:10px; }
+.cchip-add{ border:1px dashed rgba(107,95,255,0.45) !important; color:var(--purple) !important; background:transparent !important; }
+.cchip-add:hover{ background:rgba(107,95,255,0.08) !important; }
+.seg-add{ display:none; gap:8px; margin-top:8px; }
+.seg-add.show{ display:flex; }
+.seg-add input{ flex:1; font-size:13px; background:#fff; border:1px solid rgba(13,20,36,0.12); border-radius:9px; padding:8px 11px; outline:none; }
+.seg-add input:focus{ border-color:var(--purple); }
+.seg-add-btn{ font-size:12.5px; font-weight:600; color:#fff; background:var(--purple); padding:8px 15px; border-radius:9px; flex:0 0 auto; }
+
+.of-warn{ display:none; align-items:center; gap:9px; padding:11px 13px; border-radius:11px; background:rgba(239,93,106,0.10); border:1px solid rgba(239,93,106,0.32); color:#c93545; font-size:12px; font-weight:600; margin:14px 0; line-height:1.4; }
+.of-warn.show{ display:flex; }
+.of-warn svg{ width:17px; height:17px; flex:0 0 auto; }
+.sel-impact{ padding:13px 14px; border-radius:12px; background:rgba(255,255,255,0.62); border:1px solid rgba(255,255,255,0.85); margin:14px 0 16px; }
+.si-head{ font-size:12px; color:var(--ink-2); margin-bottom:9px; } .si-head b{ color:var(--ink); }
+.si-bars{ display:flex; gap:8px; flex-wrap:wrap; }
+.si-pill{ font-size:11.5px; font-weight:700; padding:6px 11px; border-radius:9px; }
+.si-pill.ok{ background:rgba(52,199,125,0.12); color:#1a8e5a; }
+.si-pill.tight{ background:rgba(244,201,72,0.16); color:#9a7a10; }
+.si-pill.bad{ background:rgba(239,93,106,0.13); color:#c93545; }
+.si-list{ margin-top:10px; display:flex; flex-direction:column; gap:5px; }
+.si-item{ font-size:11.5px; color:#c93545; display:flex; justify-content:space-between; gap:10px; }
+.si-item .a{ font-family:var(--mono); font-weight:600; flex:0 0 auto; }
+
+.m-acts{ display:flex; gap:10px; justify-content:flex-end; }
+.m-btn{ font-size:13px; font-weight:600; padding:10px 17px; border-radius:11px; }
+.m-btn.ghost{ color:var(--ink-2); background:rgba(13,20,36,0.05); }
+.m-btn.primary{ color:#fff; background:linear-gradient(140deg,var(--purple),var(--purple-2)); box-shadow:0 6px 16px rgba(107,95,255,0.4); }
+.m-btn.primary[disabled]{ opacity:.5; cursor:not-allowed; box-shadow:none; }
+.d-sec{ font-size:11px; text-transform:uppercase; letter-spacing:0.05em; font-family:var(--mono); font-weight:600; color:var(--ink-3); margin:18px 0 6px; }
+.d-item{ display:flex; justify-content:space-between; padding:9px 0; border-top:1px solid rgba(13,20,36,0.06); font-size:13px; } .d-item:first-child{ border-top:none; }
+.d-item .a{ font-family:var(--mono); font-weight:600; }
+@media (prefers-reduced-motion:reduce){ *{ animation:none !important; } }
+
+/* barra de scroll del contenido principal — consistente y siempre visible */
+.main{ overflow-y:scroll; }
+.main::-webkit-scrollbar{ width:7px; }
+.main::-webkit-scrollbar-track{ background:transparent; }
+.main::-webkit-scrollbar-thumb{ background:rgba(13,20,36,0.14); border-radius:5px; border:2px solid transparent; background-clip:padding-box; }
+</style>
+</head>
+<body>
+  <div class="bg"><div class="base"></div><div class="glow"></div></div>
+  <div class="shell">
+    <!-- ════ SIDEBAR ════ -->
+    <aside class="sidebar glass-strong">
+      <div class="logo-row">
+        <span class="logo-mark"><svg viewBox="0 0 32 32"><defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#6b5fff"/><stop offset="100%" stop-color="#5b8cff"/></linearGradient></defs><g fill="url(#lg1)"><path d="M16 2 L18 14 L30 16 L18 18 L16 30 L14 18 L2 16 L14 14 Z"/></g></svg></span>
+        <span class="logo-text">Pandora</span>
+      </div>
+      <nav style="display:flex; flex-direction:column; gap:3px; flex:1; overflow-y:auto; min-height:0; padding-right:4px; margin-right:-4px;">
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="10" rx="2"/><rect x="13" y="3" width="8" height="6" rx="2"/><rect x="3" y="15" width="8" height="6" rx="2"/><rect x="13" y="11" width="8" height="10" rx="2"/></svg></div><span>Panel</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg></div><span>Venta</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01"/><path d="M18 12h.01"/></svg></div><span>Caja</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.58a2 2 0 0 1 0 2.83z"/><circle cx="7" cy="7" r="1.5"/></svg></div><span>Productos</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg></div><span>Clientes</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></div><span>Stock</span></div>
+        <div class="nav-item active"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m15 9-6 6"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg></div><span>Ofertas</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h4"/></svg></div><span>Facturas</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h4"/></svg></div><span>Presupuestos</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div><span>Pedidos</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg></div><span>Señas</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg></div><span>Devoluciones</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 15v-3"/><path d="M12 15V8"/><path d="M16 15v-5"/></svg></div><span>Reportes</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1-6 6 6 6 0 0 1 0-12 6 6 0 0 1 6 6z"/><path d="M8.5 8.5 4 21l4-2 4 2 1.2-3.4"/></svg></div><span>Contador</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></div><span>Integraciones</span></div>
+        <div class="nav-item"><div class="nav-icon-box"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8 2 2 0 1 1-2.8 2.8 1.7 1.7 0 0 0-2.8 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.8-1.2 2 2 0 1 1-2.8-2.8A1.7 1.7 0 0 0 4.6 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.8 2 2 0 1 1 2.8-2.8A1.7 1.7 0 0 0 11 4.6a2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.8 1.2 2 2 0 1 1 2.8 2.8A1.7 1.7 0 0 0 19.4 11a2 2 0 1 1 0 4z"/></svg></div><span>Configuración</span></div>
+      </nav>
+      <div class="side-foot">
+        <div class="afip"><div class="afip-top"><span class="afip-dot"></span><span class="afip-name">AFIP conectado</span><span class="afip-live">LIVE</span></div><div class="afip-sub">WSFEv1 · 47 CAE hoy</div></div>
+        <div class="cashier"><span class="avatar-ring"><span class="cashier-av">AR</span></span><div><div class="cashier-name">Agus Rochelle</div><div class="cashier-role">Dueño</div></div><span class="cashier-live"></span></div>
+      </div>
+    </aside>
+
+    <!-- ════ MAIN ════ -->
+    <main class="main">
+      <div class="topbar">
+        <div class="search glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="Buscar promoción…" /></div>
+        <div class="tb-chips glass" id="ofChips">
+          <button class="ps-chip on">Todas</button>
+          <button class="ps-chip"><span class="c" style="background:var(--green)"></span>Activas</button>
+          <button class="ps-chip"><span class="c" style="background:var(--blue)"></span>Programadas</button>
+          <button class="ps-chip"><span class="c" style="background:var(--red)"></span>Por vencer</button>
+        </div>
+        <div class="top-tools">
+          <button class="iconbtn glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg><span class="ndot">1</span></button>
+          <button class="iconbtn glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8 2 2 0 1 1-2.8 2.8 1.7 1.7 0 0 0-2.8 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.8-1.2 2 2 0 1 1-2.8-2.8A1.7 1.7 0 0 0 4.6 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.8 2 2 0 1 1 2.8-2.8A1.7 1.7 0 0 0 11 4.6a2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.8 1.2 2 2 0 1 1 2.8 2.8A1.7 1.7 0 0 0 19.4 11a2 2 0 1 1 0 4z"/></svg></button>
+          <div class="user-chip glass"><span class="avatar-ring"><span class="cashier-av">AR</span></span><div><div class="user-name">Agus Rochelle</div><div class="user-role">Dueño</div></div></div>
+        </div>
+      </div>
+
+      <div class="content">
+        <!-- COLUMNA PRINCIPAL -->
+        <div class="col-main">
+          <!-- HEADER -->
+          <div class="ps-head glass">
+            <div class="ps-head-l">
+              <span class="ps-head-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m15 9-6 6"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg></span>
+              <div>
+                <h1 class="ps-title">Ofertas y descuentos</h1>
+                <p class="ps-sub">Promociones vigentes y control de margen en vivo.</p>
+              </div>
+            </div>
+            <button class="ps-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>Nueva promoción</button>
+          </div>
+
+          <!-- KPIs -->
+          <div class="ps-kpis">
+            <div class="ps-kpi glass"><div class="upper-mini">Descuento otorgado</div><div class="v tnum">$86.400</div><div class="foot">este mes · 214 ventas</div></div>
+            <div class="ps-kpi glass"><div class="upper-mini">Promos activas</div><div class="v tnum">7</div><div class="foot">+1 programada</div></div>
+            <div class="ps-kpi alert glass"><div class="upper-mini">Margen a revisar</div><div class="v tnum">1</div><div class="foot">promo por debajo del costo</div></div>
+            <div class="ps-kpi glass"><div class="upper-mini">Más usada</div><div class="v" style="font-size:17px;margin-top:9px">20% Mercería</div><div class="foot">142 ventas la aplicaron</div></div>
+          </div>
+
+          <!-- ===== ACTIVAS ===== -->
+          <div class="ps-group act"><span class="c" style="background:var(--green)"></span>Activas · 7</div>
+
+          <div class="of-card glass">
+            <div class="of-top">
+              <div class="of-badge pct"><span class="big">20%</span><span class="sm">off</span></div>
+              <div class="of-id">
+                <div class="of-name">20% en toda la mercería <span class="of-type">% categoría</span></div>
+                <div class="of-cond">Aplica a: Mercería (23 productos) · mín. $10.000 · no combinable</div>
+                <div class="of-meta">Vigente 01/07 → 15/07 · 142 usos</div>
+              </div>
+              <span class="of-margin ok"><span class="dot"></span>Margen sano · 34%</span>
+            </div>
+            <div class="of-mid">
+              <div class="of-vig"><span>Quedan <b>12 días</b></span><span class="of-vbar"><span style="width:45%"></span></span></div>
+              <span class="of-uses">−$210 prom./ticket</span>
+            </div>
+            <div class="of-acts">
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>Pausar</button>
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Editar</button>
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicar</button>
+              <button class="ps-btn ver">Ver detalle</button>
+            </div>
+          </div>
+
+          <div class="of-card glass">
+            <div class="of-top">
+              <div class="of-badge qty"><span class="big">2x1</span><span class="sm">llevá 2</span></div>
+              <div class="of-id">
+                <div class="of-name">2x1 en agujas y alfileres <span class="of-type">2x1</span></div>
+                <div class="of-cond">Aplica a: Mercería · 5 productos elegidos · no combinable</div>
+                <div class="of-meta">Vigente 01/07 → 20/07 · 27 usos</div>
+              </div>
+              <span class="of-margin ok"><span class="dot"></span>Margen sano · 41%</span>
+            </div>
+            <div class="of-mid">
+              <div class="of-vig"><span>Quedan <b>17 días</b></span><span class="of-vbar"><span style="width:32%"></span></span></div>
+              <span class="of-uses">2ª unidad gratis · descuenta 2 de stock</span>
+            </div>
+            <div class="of-acts">
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>Pausar</button>
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Editar</button>
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicar</button>
+              <button class="ps-btn ver">Ver detalle</button>
+            </div>
+          </div>
+
+          <div class="of-card glass">
+            <div class="of-top">
+              <div class="of-badge fijo"><span class="big">$2K</span><span class="sm">fijo</span></div>
+              <div class="of-id">
+                <div class="of-name">$2.000 off en telas por metro <span class="of-type">$ producto</span></div>
+                <div class="of-cond">Aplica a: Telas (2 productos) · sin mínimo · no combinable</div>
+                <div class="of-meta">Vigente 28/06 → 10/07 · 39 usos</div>
+              </div>
+              <span class="of-margin tight"><span class="dot"></span>Margen ajustado · 11%</span>
+            </div>
+            <div class="of-mid">
+              <div class="of-vig"><span>Quedan <b>7 días</b></span><span class="of-vbar"><span style="width:58%"></span></span></div>
+              <span class="of-uses">−$2.000 / metro</span>
+            </div>
+            <div class="of-acts">
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>Pausar</button>
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Editar</button>
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicar</button>
+              <button class="ps-btn ver">Ver detalle</button>
+            </div>
+          </div>
+
+          <div class="of-card glass">
+            <div class="of-top">
+              <div class="of-badge pct"><span class="big">10%</span><span class="sm">off</span></div>
+              <div class="of-id">
+                <div class="of-name">10% a jubilados y estudiantes <span class="of-type">% + segmento</span></div>
+                <div class="of-cond">Aplica a: toda la compra · solo jubilados, estudiantes · con DNI</div>
+                <div class="of-meta">Vigente 01/07 → 31/07 · 58 usos</div>
+              </div>
+              <span class="of-margin ok"><span class="dot"></span>Margen sano · 30%</span>
+            </div>
+            <div class="of-mid">
+              <div class="of-vig"><span>Quedan <b>28 días</b></span><span class="of-vbar"><span style="width:12%"></span></span></div>
+              <span class="of-uses">requiere identificar cliente</span>
+            </div>
+            <div class="of-acts">
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>Pausar</button>
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Editar</button>
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicar</button>
+              <button class="ps-btn ver">Ver detalle</button>
+            </div>
+          </div>
+
+          <div class="of-card glass">
+            <div class="of-top">
+              <div class="of-badge pct"><span class="big">15%</span><span class="sm">off</span></div>
+              <div class="of-id">
+                <div class="of-name">Jueves de mercería −15% <span class="of-type">% + día</span></div>
+                <div class="of-cond">Aplica a: Mercería · solo jueves · todo el día</div>
+                <div class="of-meta">Vigente 01/07 → 31/07 · 44 usos</div>
+              </div>
+              <span class="of-margin ok"><span class="dot"></span>Margen sano · 31%</span>
+            </div>
+            <div class="of-mid">
+              <div class="of-vig"><span>Todos los <b>jueves</b></span><span class="of-vbar"><span style="width:50%"></span></span></div>
+              <span class="of-uses">día fijo semanal</span>
+            </div>
+            <div class="of-acts">
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>Pausar</button>
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Editar</button>
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicar</button>
+              <button class="ps-btn ver">Ver detalle</button>
+            </div>
+          </div>
+
+          <div class="of-card glass">
+            <div class="of-top">
+              <div class="of-badge global"><span class="big">10%</span><span class="sm">+$30K</span></div>
+              <div class="of-id">
+                <div class="of-name">10% superando $30.000 <span class="of-type">por monto</span></div>
+                <div class="of-cond">Aplica a: toda la compra · superando $30.000 · no combinable</div>
+                <div class="of-meta">Vigente 01/07 → 31/07 · 73 usos</div>
+              </div>
+              <span class="of-margin ok"><span class="dot"></span>Margen sano · 26%</span>
+            </div>
+            <div class="of-mid">
+              <div class="of-vig"><span>Quedan <b>28 días</b></span><span class="of-vbar"><span style="width:12%"></span></span></div>
+              <span class="of-uses">incentiva ticket más grande</span>
+            </div>
+            <div class="of-acts">
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>Pausar</button>
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Editar</button>
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicar</button>
+              <button class="ps-btn ver">Ver detalle</button>
+            </div>
+          </div>
+
+          <div class="of-card bad glass">
+            <div class="of-top">
+              <div class="of-badge global"><span class="big">40%</span><span class="sm">off</span></div>
+              <div class="of-id">
+                <div class="of-name">Liquidación lanas −40% <span class="of-type">% categoría</span></div>
+                <div class="of-cond">Aplica a: Lanas de invierno (2 productos) · liquidación</div>
+                <div class="of-meta">Vigente 25/06 → 08/07 · 61 usos</div>
+              </div>
+              <span class="of-margin bad"><span class="dot"></span>Vende bajo costo</span>
+            </div>
+            <div class="of-mid">
+              <div class="of-vig"><span class="soon">Vence en 5 días</span><span class="of-vbar exp"><span style="width:85%"></span></span></div>
+              <span class="of-uses">−$1.480 / ovillo</span>
+            </div>
+            <div class="of-acts">
+              <button class="ps-btn warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>Revisar margen</button>
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>Pausar</button>
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Editar</button>
+              <button class="ps-btn ver">Ver detalle</button>
+            </div>
+          </div>
+
+          <!-- ===== PROGRAMADAS ===== -->
+          <div class="ps-group prog"><span class="c" style="background:var(--blue)"></span>Programadas · 1</div>
+          <div class="of-card glass">
+            <div class="of-top">
+              <div class="of-badge global"><span class="big">10%</span><span class="sm">total</span></div>
+              <div class="of-id">
+                <div class="of-name">10% Día de la Madre <span class="of-type">% sobre el total</span></div>
+                <div class="of-cond">Aplica a: toda la compra · mín. $15.000 · no combinable</div>
+                <div class="of-meta">Empieza 13/10 → 19/10 · sin usos aún</div>
+              </div>
+              <span class="of-margin ok"><span class="dot"></span>Margen sano · 28%</span>
+            </div>
+            <div class="of-mid">
+              <div class="of-vig"><span>Arranca en <b>3 meses</b></span><span class="of-vbar"><span style="width:6%"></span></span></div>
+              <span class="of-uses">programada</span>
+            </div>
+            <div class="of-acts">
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-14 9V3z"/></svg>Activar ahora</button>
+              <button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Editar</button>
+              <button class="ps-btn ver">Ver detalle</button>
+            </div>
+          </div>
+
+          <button class="ps-more">Ver 6 promociones finalizadas →</button>
+        </div>
+
+        <!-- COLUMNA LATERAL -->
+        <div class="col-side">
+          <section class="card glass">
+            <div class="card-title"><h3>Por vencer</h3></div>
+            <div class="side-list">
+              <div class="sl-row"><span class="sl-date" style="color:#c93545">08/07</span><div class="sl-tx"><div class="sl-n">Liquidación lanas −40%</div><div class="sl-s" style="color:#c93545">vence en 5 días · bajo costo</div></div><span class="sl-amt">61</span></div>
+              <div class="sl-row"><span class="sl-date">10/07</span><div class="sl-tx"><div class="sl-n">$2.000 off telas</div><div class="sl-s">vence en 7 días</div></div><span class="sl-amt">39</span></div>
+              <div class="sl-row"><span class="sl-date">15/07</span><div class="sl-tx"><div class="sl-n">20% en mercería</div><div class="sl-s">vence en 12 días</div></div><span class="sl-amt">142</span></div>
+            </div>
+          </section>
+
+          <section class="card glass">
+            <div class="card-title"><h3>Control de margen</h3></div>
+            <div class="mg-row"><span class="mg-dot" style="background:var(--green)"></span><span class="mg-lbl">Margen sano<small>ganancia por encima del objetivo</small></span><span class="mg-n" style="color:#1a8e5a">6</span></div>
+            <div class="mg-row"><span class="mg-dot" style="background:var(--yellow)"></span><span class="mg-lbl">Margen ajustado<small>ganan poco — ojo</small></span><span class="mg-n" style="color:#9a7a10">1</span></div>
+            <div class="mg-row"><span class="mg-dot" style="background:var(--red)"></span><span class="mg-lbl">Vende bajo costo<small>estás perdiendo plata</small></span><span class="mg-n" style="color:#c93545">1</span></div>
+          </section>
+
+          <div class="tip"><b>💡 Cómo cuenta el descuento:</b> se aplica sobre el precio <b>sin IVA</b>, y el IVA se calcula sobre el valor ya descontado (Ley IVA art. 10). El <b>precio es único</b>: no se cobra distinto según el medio de pago. Toda promo lleva <b style="color:var(--purple)">fecha de inicio y fin</b> (obligatorio, Ley 24.240).</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ═══ MODALES ═══ -->
+  <div class="modal-ov" id="modalOv">
+    <!-- NUEVA PROMOCIÓN -->
+    <div class="modal" id="modalNueva">
+      <div class="m-head">
+        <div><div class="m-title">Nueva promoción</div><div class="m-sub">Elegí productos o una categoría — te avisamos si algún precio queda bajo costo.</div></div>
+        <button class="m-x"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="fld"><label>Nombre de la promo</label><input id="pNombre" placeholder="Ej: 20% en toda la mercería" /></div>
+      <div class="fld-row">
+        <div class="fld"><label>Tipo</label><select id="pTipo">
+          <option value="pct">% de descuento</option>
+          <option value="fijo">$ fijo de descuento</option>
+          <option value="global">% sobre el total</option>
+          <option value="umbral">Por monto total (superás $X → % off)</option>
+          <option value="2x1">2x1 — llevá 2, pagás 1</option>
+          <option value="3x2">3x2 — llevá 3, pagás 2</option>
+          <option value="nxm">Llevá N, pagás M</option>
+        </select></div>
+        <div class="fld" id="fldValor"><label>Valor</label><input id="pValor" type="number" placeholder="0" /></div>
+      </div>
+      <div class="fld-row" id="fldNxm" style="display:none">
+        <div class="fld"><label>Llevá</label><input id="pN" type="number" value="3" /></div>
+        <div class="fld"><label>Pagás</label><input id="pM" type="number" value="2" /></div>
+      </div>
+      <div class="fld" id="fldUmbral" style="display:none"><label>Superando este monto de compra</label><input id="pUmbral" type="number" placeholder="Ej: 30000" /></div>
+
+      <div class="fld" style="margin-bottom:8px">
+        <label>¿A qué se aplica?</label>
+        <div class="seg" id="applyToggle">
+          <button class="seg-b on" data-mode="cat">Por categoría</button>
+          <button class="seg-b" data-mode="prod">Productos elegidos</button>
+        </div>
+      </div>
+      <div id="catPane"><div class="chips-wrap" id="catChips"></div></div>
+      <div id="prodPane" style="display:none">
+        <div class="prod-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="prodSearch" placeholder="Buscar producto…" /></div>
+        <div class="prod-list" id="prodList"></div>
+      </div>
+
+      <div class="fld" style="margin-top:14px; margin-bottom:10px">
+        <label>¿Para quién? <span style="color:var(--ink-3);font-weight:400">— creá o eliminá tus tipos de cliente</span></label>
+        <div class="chips-wrap" id="segChips"></div>
+        <div class="seg-add" id="segAdd">
+          <input id="segNew" placeholder="Nombre del tipo (ej: Mayoristas, Vecinos del barrio)" maxlength="24" />
+          <button class="seg-add-btn" id="segAddBtn">Agregar</button>
+        </div>
+      </div>
+
+      <div class="fld-row" style="margin-top:14px">
+        <div class="fld"><label>Desde <span class="req">*</span></label><input id="pDesde" type="date" /></div>
+        <div class="fld"><label>Hasta <span class="req">*</span></label><input id="pHasta" type="date" /></div>
+      </div>
+
+      <div class="fld" style="margin-bottom:12px">
+        <label>Días y horario <span style="color:var(--ink-3);font-weight:400">(opcional — dejalo vacío para todos los días)</span></label>
+        <div class="day-row" id="dayChips">
+          <button class="daychip" data-day="lun">L</button>
+          <button class="daychip" data-day="mar">M</button>
+          <button class="daychip" data-day="mie">M</button>
+          <button class="daychip" data-day="jue">J</button>
+          <button class="daychip" data-day="vie">V</button>
+          <button class="daychip" data-day="sab">S</button>
+          <button class="daychip" data-day="dom">D</button>
+        </div>
+        <div class="time-row"><span>Franja horaria:</span><input type="time" id="pTimeFrom" /><span class="sep">a</span><input type="time" id="pTimeTo" /></div>
+      </div>
+
+      <div class="m-toggle">
+        <div><div class="t">Combinable con otras promos</div><div class="s">Por defecto no se acumula (evita descuentos encimados).</div></div>
+        <div class="sw" id="swComb"></div>
+      </div>
+
+      <div class="of-warn" id="pWarn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg><span id="pWarnTxt">Con este descuento algún precio queda por debajo del costo.</span></div>
+
+      <div class="sel-impact" id="pImpact">
+        <div class="si-head">Impacto en tu selección · <b id="siCount">0 productos</b></div>
+        <div class="si-bars">
+          <span class="si-pill ok">🟢 <b id="siOk">0</b> sanos</span>
+          <span class="si-pill tight">🟡 <b id="siTight">0</b> ajustados</span>
+          <span class="si-pill bad">🔴 <b id="siBad">0</b> bajo costo</span>
+        </div>
+        <div class="si-list" id="siList"></div>
+      </div>
+      <div class="m-acts"><button class="m-btn ghost m-cancel">Cancelar</button><button class="m-btn primary" id="pSave" disabled>Crear promoción</button></div>
+    </div>
+
+    <!-- DETALLE -->
+    <div class="modal" id="modalDetalle">
+      <div class="m-head">
+        <div><div class="m-title" id="dName">Promoción</div><div class="m-sub" id="dMeta">Detalle</div></div>
+        <button class="m-x"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="d-sec">Condiciones</div>
+      <div class="d-item" id="dCond"><span>—</span></div>
+      <div class="d-sec">Vigencia y uso</div>
+      <div class="d-item"><span>Período</span><span class="a" id="dVig">—</span></div>
+      <div class="d-item"><span>Veces aplicada</span><span class="a" id="dUses">—</span></div>
+      <div class="d-item"><span>Impacto en margen</span><span class="a" id="dMg">—</span></div>
+      <div class="m-acts" style="margin-top:18px"><button class="m-btn ghost m-cancel">Cerrar</button><button class="m-btn primary">Editar promoción</button></div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    var cm = document.querySelector('.col-main');
+    var cur = 'act';
+    cm.querySelectorAll('.ps-group, .of-card').forEach(function(el){
+      if(el.classList.contains('ps-group')){ cur = el.classList.contains('prog') ? 'prog' : (el.classList.contains('exp') ? 'exp' : 'act'); }
+      else { el.dataset.estado = cur; if(el.querySelector('.of-vig .soon')) el.dataset.soon = '1'; }
+    });
+    var chips = document.querySelectorAll('#ofChips .ps-chip');
+    var fmap = { 'Todas':'all','Activas':'act','Programadas':'prog','Por vencer':'soon' };
+    chips.forEach(function(ch){ ch.addEventListener('click', function(){
+      chips.forEach(function(x){ x.classList.remove('on'); }); ch.classList.add('on');
+      var f = fmap[ch.textContent.trim()] || 'all';
+      cm.querySelectorAll('.of-card').forEach(function(c){
+        var show = (f==='all') || (f==='soon' ? c.dataset.soon==='1' : c.dataset.estado===f);
+        c.classList.toggle('hide', !show);
+      });
+      cm.querySelectorAll('.ps-group').forEach(function(g){
+        var est = g.classList.contains('prog')?'prog':(g.classList.contains('exp')?'exp':'act');
+        g.classList.toggle('hide', f==='soon' ? true : (f!=='all' && f!==est));
+      });
+    }); });
+
+    var ov = document.getElementById('modalOv');
+    function openM(id){ ov.classList.add('open'); ov.querySelectorAll('.modal').forEach(function(m){ m.classList.remove('show'); }); document.getElementById(id).classList.add('show'); }
+    function closeM(){ ov.classList.remove('open'); }
+    document.querySelector('.ps-new').addEventListener('click', function(){ openM('modalNueva'); });
+    ov.addEventListener('click', function(e){ if(e.target===ov) closeM(); });
+    ov.querySelectorAll('.m-x, .m-cancel').forEach(function(x){ x.addEventListener('click', closeM); });
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeM(); });
+    var swC = document.getElementById('swComb'); swC.addEventListener('click', function(){ swC.classList.toggle('on'); });
+
+    cm.addEventListener('click', function(e){
+      var b = e.target.closest('.ps-btn.ver'); if(!b) return;
+      var card = b.closest('.of-card');
+      document.getElementById('dName').textContent = card.querySelector('.of-name').childNodes[0].textContent.trim();
+      var type = card.querySelector('.of-type'); document.getElementById('dMeta').textContent = type ? type.textContent : 'Promoción';
+      document.getElementById('dCond').innerHTML = '<span>'+card.querySelector('.of-cond').textContent+'</span>';
+      document.getElementById('dVig').textContent = card.querySelector('.of-meta').textContent.split('·')[0].replace('Vigente','').replace('Empieza','').trim();
+      document.getElementById('dUses').textContent = card.querySelector('.of-meta').textContent.split('·').pop().trim();
+      document.getElementById('dMg').textContent = card.querySelector('.of-margin').textContent.trim();
+      openM('modalDetalle');
+    });
+
+    // ===== catálogo demo (mercería) =====
+    var PRODS = [
+      {n:'Cierre invisible 60 cm', c:'Mercería', p:1200, k:780},
+      {n:'Botones forrados x100', c:'Mercería', p:3800, k:2400},
+      {n:'Hilo de coser (cono)', c:'Mercería', p:900, k:520},
+      {n:'Aguja lanera x5', c:'Mercería', p:650, k:300},
+      {n:'Elástico blanco x metro', c:'Mercería', p:480, k:300},
+      {n:'Tafeta x metro', c:'Telas', p:4200, k:2900},
+      {n:'Gabardina x metro', c:'Telas', p:5100, k:3600},
+      {n:'Ovillo lana invierno', c:'Lanas', p:3700, k:2600},
+      {n:'Lana merino', c:'Lanas', p:4900, k:3500},
+      {n:'Cinta de raso 10 m', c:'Cintas', p:1500, k:850}
+    ];
+    var CATS = []; PRODS.forEach(function(x){ if(CATS.indexOf(x.c)<0) CATS.push(x.c); });
+    var mode = 'cat', selCat = {}, selProd = {};
+
+    var catChips = document.getElementById('catChips');
+    function renderCats(){
+      catChips.innerHTML = '';
+      var allOn = CATS.length && CATS.every(function(c){ return selCat[c]; });
+      var allBtn = document.createElement('button'); allBtn.className = 'cchip'+(allOn?' on':'');
+      allBtn.innerHTML = 'Todas las categorías <span class="n">'+PRODS.length+'</span>';
+      allBtn.addEventListener('click', function(){
+        if(allOn){ selCat = {}; } else { CATS.forEach(function(c){ selCat[c]=1; }); }
+        renderCats(); impact();
+      });
+      catChips.appendChild(allBtn);
+      CATS.forEach(function(c){
+        var n = PRODS.filter(function(x){ return x.c===c; }).length;
+        var b = document.createElement('button'); b.className = 'cchip'+(selCat[c]?' on':''); b.dataset.cat = c;
+        b.innerHTML = c + ' <span class="n">'+n+'</span>';
+        b.addEventListener('click', function(){ if(selCat[c]) delete selCat[c]; else selCat[c]=1; renderCats(); impact(); });
+        catChips.appendChild(b);
+      });
+    }
+    renderCats();
+
+    var prodList = document.getElementById('prodList');
+    function renderProds(q){
+      prodList.innerHTML = '';
+      PRODS.filter(function(x){ return !q || x.n.toLowerCase().indexOf(q)>=0 || x.c.toLowerCase().indexOf(q)>=0; }).forEach(function(x){
+        var r = document.createElement('div'); r.className = 'prod-row'+(selProd[x.n]?' on':'');
+        r.innerHTML = '<span class="prc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></span><div class="pn">'+x.n+'<small>'+x.c+'</small></div><span class="pp">$'+x.p.toLocaleString('es-AR')+'</span>';
+        r.addEventListener('click', function(){ if(selProd[x.n]) delete selProd[x.n]; else selProd[x.n]=1; r.classList.toggle('on'); impact(); });
+        prodList.appendChild(r);
+      });
+    }
+    renderProds('');
+    document.getElementById('prodSearch').addEventListener('input', function(){ renderProds(this.value.toLowerCase().trim()); });
+
+    var applyToggle = document.getElementById('applyToggle');
+    applyToggle.querySelectorAll('.seg-b').forEach(function(sb){ sb.addEventListener('click', function(){
+      applyToggle.querySelectorAll('.seg-b').forEach(function(x){ x.classList.remove('on'); }); sb.classList.add('on');
+      mode = sb.dataset.mode;
+      document.getElementById('catPane').style.display = mode==='cat' ? 'block' : 'none';
+      document.getElementById('prodPane').style.display = mode==='prod' ? 'block' : 'none';
+      impact();
+    }); });
+
+    // ¿Para quién? — tipos de cliente que el usuario puede crear y eliminar
+    var segChips = document.getElementById('segChips');
+    var segAdd = document.getElementById('segAdd');
+    var segNew = document.getElementById('segNew');
+    var SEGMENTS = [
+      { id:'todos', label:'Todos los clientes', fixed:true },
+      { id:'jubilados', label:'Jubilados' },
+      { id:'estudiantes', label:'Estudiantes' },
+      { id:'vip', label:'Clientes VIP' },
+      { id:'empleados', label:'Empleados' }
+    ];
+    var segSel = { todos:1 };
+    var CX = '<span class="cx" title="Eliminar tipo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span>';
+    function renderSegs(){
+      segChips.innerHTML = '';
+      SEGMENTS.forEach(function(s){
+        var b = document.createElement('button'); b.className = 'cchip'+(segSel[s.id]?' on':''); b.dataset.seg = s.id;
+        b.innerHTML = '<span>'+s.label+'</span>' + (s.fixed ? '' : CX);
+        b.addEventListener('click', function(){
+          if(s.id==='todos'){ segSel = { todos:1 }; }
+          else { delete segSel.todos; if(segSel[s.id]) delete segSel[s.id]; else segSel[s.id]=1; if(!Object.keys(segSel).length) segSel.todos=1; }
+          renderSegs();
+        });
+        var cx = b.querySelector('.cx');
+        if(cx) cx.addEventListener('click', function(e){ e.stopPropagation();
+          if(confirm('¿Eliminar el tipo de cliente "'+s.label+'"? Dejará de estar disponible para las promos.')){
+            SEGMENTS = SEGMENTS.filter(function(x){ return x.id!==s.id; });
+            delete segSel[s.id]; if(!Object.keys(segSel).length) segSel.todos = 1;
+            renderSegs();
+          }
+        });
+        segChips.appendChild(b);
+      });
+      var add = document.createElement('button'); add.className = 'cchip cchip-add'; add.innerHTML = '+ Nuevo tipo';
+      add.addEventListener('click', function(){ segAdd.classList.add('show'); segNew.focus(); });
+      segChips.appendChild(add);
+    }
+    function addSeg(){
+      var v = (segNew.value||'').trim(); if(!v) return;
+      var id = 'c'+Date.now();
+      SEGMENTS.push({ id:id, label:v });
+      delete segSel.todos; segSel[id] = 1;
+      segNew.value = ''; segAdd.classList.remove('show');
+      renderSegs();
+    }
+    document.getElementById('segAddBtn').addEventListener('click', addSeg);
+    segNew.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); addSeg(); } });
+    renderSegs();
+    function segLabel(){
+      var ids = Object.keys(segSel);
+      if(ids.indexOf('todos')>=0 || !ids.length) return '';
+      var labels = SEGMENTS.filter(function(s){ return segSel[s.id] && s.id!=='todos'; }).map(function(s){ return s.label; });
+      return labels.length ? ' · solo ' + labels.join(', ') : '';
+    }
+    // Días y horario
+    var dayChips = document.getElementById('dayChips');
+    dayChips.querySelectorAll('.daychip').forEach(function(d){ d.addEventListener('click', function(){ d.classList.toggle('on'); }); });
+    var DAYN = { lun:'lunes', mar:'martes', mie:'miércoles', jue:'jueves', vie:'viernes', sab:'sábado', dom:'domingo' };
+    function dayLabel(){
+      var on = [].slice.call(dayChips.querySelectorAll('.daychip.on'));
+      if(on.length===0 || on.length===7) return '';
+      return ' · ' + on.map(function(x){ return DAYN[x.dataset.day]; }).join(', ');
+    }
+    function timeLabel(){
+      var f = document.getElementById('pTimeFrom').value, t = document.getElementById('pTimeTo').value;
+      if(f && t) return ' · ' + f + '–' + t + ' h';
+      return '';
+    }
+
+    var pTipo = document.getElementById('pTipo');
+    function tipoUI(){
+      var t = pTipo.value;
+      document.getElementById('fldValor').style.display = (t==='pct'||t==='fijo'||t==='global'||t==='umbral') ? 'block' : 'none';
+      document.getElementById('fldNxm').style.display = (t==='nxm') ? 'flex' : 'none';
+      document.getElementById('fldUmbral').style.display = (t==='umbral') ? 'block' : 'none';
+      impact();
+    }
+    pTipo.addEventListener('change', tipoUI);
+    ['pValor','pN','pM'].forEach(function(id){ document.getElementById(id).addEventListener('input', impact); });
+
+    function fmt(n){ return '$' + Math.round(n||0).toLocaleString('es-AR'); }
+    function finalOf(p){
+      var t = pTipo.value, v = parseFloat(document.getElementById('pValor').value)||0;
+      if(t==='fijo') return Math.max(0, p - v);
+      if(t==='pct' || t==='global' || t==='umbral') return p*(1 - v/100);
+      if(t==='2x1') return p*0.5;
+      if(t==='3x2') return p*2/3;
+      if(t==='nxm'){ var n=parseFloat(document.getElementById('pN').value)||1, m=parseFloat(document.getElementById('pM').value)||1; return p*(Math.min(m,n)/n); }
+      return p;
+    }
+    function selected(){ return mode==='cat' ? PRODS.filter(function(x){ return selCat[x.c]; }) : PRODS.filter(function(x){ return selProd[x.n]; }); }
+    var save = document.getElementById('pSave');
+    function impact(){
+      var sel = selected(), ok=0, tight=0, bad=0, badList=[];
+      sel.forEach(function(x){ var f = finalOf(x.p); var mg = f>0 ? (f-x.k)/f*100 : -100; if(f<x.k){ bad++; badList.push({n:x.n,f:f,k:x.k}); } else if(mg<15){ tight++; } else { ok++; } });
+      document.getElementById('siCount').textContent = sel.length + ' producto' + (sel.length===1?'':'s');
+      document.getElementById('siOk').textContent = ok; document.getElementById('siTight').textContent = tight; document.getElementById('siBad').textContent = bad;
+      var siList = document.getElementById('siList'); siList.innerHTML = '';
+      badList.slice(0,4).forEach(function(b){ var d = document.createElement('div'); d.className='si-item'; d.innerHTML = '<span>⚠ '+b.n+'</span><span class="a">'+fmt(b.f)+' &lt; costo '+fmt(b.k)+'</span>'; siList.appendChild(d); });
+      var warn = document.getElementById('pWarn'), warnTxt = document.getElementById('pWarnTxt');
+      if(bad>0){ warn.classList.add('show'); warnTxt.textContent = bad+' producto'+(bad>1?'s quedan':' queda')+' por debajo del costo con esta promo. Revisá antes de activarla.'; save.setAttribute('disabled',''); }
+      else if(sel.length===0){ warn.classList.remove('show'); save.setAttribute('disabled',''); }
+      else { warn.classList.remove('show'); save.removeAttribute('disabled'); }
+    }
+    tipoUI();
+
+    save.addEventListener('click', function(){
+      if(save.hasAttribute('disabled')) return;
+      var nombre = (document.getElementById('pNombre').value||'').trim() || 'Promoción nueva';
+      var t = pTipo.value, v = parseFloat(document.getElementById('pValor').value)||0;
+      var threshold = parseFloat(document.getElementById('pUmbral').value)||0;
+      var sel = selected();
+      var comb = document.getElementById('swComb').classList.contains('on');
+      var desde = document.getElementById('pDesde').value, hasta = document.getElementById('pHasta').value;
+      var badgeCls, badgeBig, badgeSm, typeLbl;
+      if(t==='fijo'){ badgeCls='fijo'; badgeBig='$'+(v>=1000?Math.round(v/1000)+'K':v); badgeSm='fijo'; typeLbl='$ producto'; }
+      else if(t==='global'){ badgeCls='global'; badgeBig=v+'%'; badgeSm='total'; typeLbl='% sobre el total'; }
+      else if(t==='umbral'){ badgeCls='global'; badgeBig=v+'%'; badgeSm='+$'+(threshold>=1000?Math.round(threshold/1000)+'K':threshold); typeLbl='por monto'; }
+      else if(t==='2x1'){ badgeCls='qty'; badgeBig='2x1'; badgeSm='llevá 2'; typeLbl='2x1'; }
+      else if(t==='3x2'){ badgeCls='qty'; badgeBig='3x2'; badgeSm='llevá 3'; typeLbl='3x2'; }
+      else if(t==='nxm'){ var n=document.getElementById('pN').value||3, m=document.getElementById('pM').value||2; badgeCls='qty'; badgeBig=n+'x'+m; badgeSm='llevá '+n; typeLbl=n+'x'+m; }
+      else { badgeCls='pct'; badgeBig=v+'%'; badgeSm='off'; typeLbl='% descuento'; }
+      var worst = null; sel.forEach(function(x){ var f = finalOf(x.p); var mg = f>0 ? (f-x.k)/f*100 : -100; if(worst===null || mg<worst) worst = mg; });
+      var mgCls='ok', mgTxt='Margen sano';
+      if(worst!==null){ if(worst<0){ mgCls='bad'; mgTxt='Vende bajo costo'; } else if(worst<15){ mgCls='tight'; mgTxt='Margen ajustado · '+Math.round(worst)+'%'; } else { mgTxt='Margen sano · '+Math.round(worst)+'%'; } }
+      var aplica;
+      if(mode==='cat'){ var cs = Object.keys(selCat); var allC = CATS.length && CATS.every(function(c){ return selCat[c]; }); aplica = (allC ? 'todas las categorías' : (cs.length ? cs.join(', ') : 'categoría')) + ' · ' + sel.length + ' productos'; }
+      else { aplica = sel.length + ' producto' + (sel.length===1?'':'s') + ' elegido' + (sel.length===1?'':'s'); }
+      var vig = (desde&&hasta) ? ('Vigente '+desde.split('-').reverse().slice(0,2).join('/')+' → '+hasta.split('-').reverse().slice(0,2).join('/')) : 'Vigente hoy';
+      var card = document.createElement('div'); card.className = 'of-card glass'+(mgCls==='bad'?' bad':''); card.dataset.estado='act';
+      card.innerHTML =
+        '<div class="of-top"><div class="of-badge '+badgeCls+'"><span class="big">'+badgeBig+'</span><span class="sm">'+badgeSm+'</span></div>'
+        + '<div class="of-id"><div class="of-name">'+nombre+' <span class="of-type">'+typeLbl+'</span></div>'
+        + '<div class="of-cond">Aplica a: '+aplica+((t==='umbral'&&threshold)?' · superando '+fmt(threshold):'')+segLabel()+dayLabel()+timeLabel()+' · '+(comb?'combinable':'no combinable')+'</div>'
+        + '<div class="of-meta">'+vig+' · sin usos aún</div></div>'
+        + '<span class="of-margin '+mgCls+'"><span class="dot"></span>'+mgTxt+'</span></div>'
+        + '<div class="of-mid"><div class="of-vig"><span>recién creada</span><span class="of-vbar"><span style="width:4%"></span></span></div><span class="of-uses">'+sel.length+' productos</span></div>'
+        + '<div class="of-acts"><button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>Pausar</button>'
+        + '<button class="ps-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Editar</button>'
+        + '<button class="ps-btn ver">Ver detalle</button></div>';
+      var actGroup = null; cm.querySelectorAll('.ps-group.act').forEach(function(g){ actGroup=g; });
+      if(actGroup) actGroup.insertAdjacentElement('afterend', card); else cm.querySelector('.ps-more').insertAdjacentElement('beforebegin', card);
+      closeM();
+      document.getElementById('pNombre').value=''; document.getElementById('pValor').value=''; document.getElementById('pUmbral').value='';
+      selCat = {}; selProd = {}; renderCats(); renderProds('');
+      segSel = { todos:1 }; renderSegs();
+      dayChips.querySelectorAll('.daychip').forEach(function(x){ x.classList.remove('on'); });
+      document.getElementById('pTimeFrom').value=''; document.getElementById('pTimeTo').value='';
+      impact();
+      card.scrollIntoView({ block:'center', behavior:'smooth' });
+    });
+
+    // deep-link demo: #demo-nueva abre con un ejemplo que vende bajo costo (categoría Lanas −40%)
+    if(location.hash==='#demo-nueva'){
+      document.getElementById('pNombre').value='Liquidación lanas −40%';
+      pTipo.value='pct'; tipoUI();
+      document.getElementById('pValor').value='40';
+      selCat['Lanas']=1; renderCats();
+      impact(); openM('modalNueva');
+    }
+    if(location.hash==='#demo-tipos'){
+      SEGMENTS.push({ id:'may', label:'Mayoristas' }); segSel = { may:1 }; renderSegs();
+      segAdd.classList.add('show'); segNew.value='Vecinos del barrio';
+      openM('modalNueva');
+    }
+    if(location.hash==='#demo-umbral'){
+      document.getElementById('pNombre').value='10% superando $30.000';
+      pTipo.value='umbral'; tipoUI();
+      document.getElementById('pValor').value='10'; document.getElementById('pUmbral').value='30000';
+      CATS.forEach(function(c){ selCat[c]=1; }); renderCats();
+      impact(); openM('modalNueva');
+    }
+  })();
+  </script>
+  <script>
+  (function(){
+    var map={'Panel':'dashboard.html','Venta':'checkpoint-v19-top-tools.html','Caja':'checkpoint-caja-v2.html','Productos':'productos-v3.html','Clientes':'clientes-v6.html','Stock':'stock-v2.html','Ofertas':'ofertas.html','Facturas':'facturas-v4.html','Presupuestos':'presupuestos-v1.html','Pedidos':'pedidos.html','Señas':'pedidos-senados.html','Devoluciones':'devoluciones.html','Reportes':'reportes-v2.html','Contador':'contador-v2.html','Integraciones':'integraciones.html','Configuración':'configuracion-v1.html'};
+    function txt(el){return (el.textContent||'').trim();}
+    [].slice.call(document.querySelectorAll('.nav-item')).forEach(function(el){var u=map[txt(el)];if(u){el.style.cursor='pointer';el.addEventListener('click',function(){location.href=u;});}});
+  })();
+  </script>
+</body>
+</html>
