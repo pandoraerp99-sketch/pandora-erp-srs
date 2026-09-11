@@ -243,8 +243,23 @@ Es más de un slice y conviene verlo entre medio. Orden propuesto:
    mirando qué anota el comercio, no adivinando), el segmentado día/mes/año
    `.todo-seg` (lo reemplazó el agrupado por vencimiento) y las filas de agenda
    con importe `.cal-agenda`/`.ag-*` (necesitan el calendario fiscal verificado).
-3. **Proyecciones** ← **ACÁ VA LO PRÓXIMO**. En este orden interno: **días de
-   stock** → cierre de mes → patrón semanal → contra el año pasado.
+3. **Proyecciones** — 1 de 4 hecho.
+
+   - ~~**días de stock**~~ — ✅ **HECHO** 2026-09-10 (`f534d17`, `35183c1`).
+     Cálculo puro en `src/lib/stock/dias-de-stock.ts` + `stock.report.ts`.
+     **Compuerta:** antes de 14 días de operación REAL no muestra número, dice
+     cuántos faltan. La historia se mide desde la **primera venta**, no desde
+     el alta de la empresa. **Cuatro estados, no un número:** `sin_stock` (el
+     quiebre ya pasó — 0 días sería mentira), `se_acaba`, `sin_rotacion` (0
+     ventas ≠ infinitos días) y `holgado`.
+
+     Filtros distintos a los de la tarjeta *Reponer*, a propósito: acá **no**
+     se exige `stock_minimum`, porque 20.001 de los 20.009 productos de la base
+     no lo tienen cargado y un producto sin mínimo igual tiene velocidad. Sí se
+     comparte `stock_tracking_enabled`.
+   - **cierre de mes** ← **ACÁ VA LO PRÓXIMO**
+   - patrón semanal (necesita ~2-3 meses de operación real)
+   - contra el año pasado (necesita 13 meses)
 
    > ⚠️ Releer §6 antes de escribir una línea. Lo que hoy parece "patrón semanal
    > sólido" en los datos de desarrollo es el patrón que **yo mismo escribí** en
