@@ -194,6 +194,32 @@ Con el stock a la fecha (reconstruible desde el ledger, que desde hoy tiene
 signo) y las compras ordenadas por fecha descendente, se toman lotes hasta
 cubrir la cantidad. Es una función pura, testeable, sin estado mutable.
 
+#### 🔴 8.4.1 El tercer estado: unidades sin compra asociada
+
+**Agregado 2026-09-12, después de cerrar el hallazgo del stock inicial**
+(commit `2f58a96` + migration 0035).
+
+Caminando las compras hacia atrás **siempre van a sobrar unidades sin lote**:
+el stock con el que el comercio arrancó, el que se regularizó con la migration
+0035, y todo ajuste manual de entrada. No es un caso raro — un comercio que
+abrió con mercadería heredada lo tiene desde el día uno.
+
+Esas unidades **no se pueden valorizar como una compra**: no tienen
+comprobante, ni proveedor, ni costo verificable. Lo único disponible es
+`products.cost`, que es un valor **declarado** (y hasta hoy editable a mano
+desde la pantalla de Productos).
+
+Entonces el reporte tiene que mostrar tres cosas separadas, no dos:
+
+1. Unidades con lote → valorizadas al costo del comprobante, con su fecha.
+2. Unidades **sin compra asociada** → cantidad + valuación al costo declarado,
+   **diciendo que es declarado**, no un importe de compra.
+3. El total, que sólo se entiende si los dos anteriores están a la vista.
+
+Mezclar (2) dentro de (1) daría un único número prolijo que la contadora no
+puede auditar contra ningún papel. Mismo criterio que los tres estados de
+Rentabilidad y de Días de stock: **el hueco se muestra, no se rellena.**
+
 ### 8.5 Corrección
 
 Se adopta el patrón ADR-0026 (`corrects_id` en `expenses` + las consultas
