@@ -104,6 +104,48 @@ una fecha pasada. **Decisión:** quedan fuera del inventario y el reporte dice
 cuántos son. Valorizarlos con un número que no se puede reconstruir sería
 ensuciar el total con lo único que no se puede auditar.
 
+### 🔴 6.4 La cantidad y los lotes miraban relojes distintos (encontrado DESPUÉS de `3be8928`)
+
+La primera versión reconstruía la cantidad con `stock_movements.created_at`
+—**cuándo se cargó** la fila— y filtraba los lotes por `expenses.fecha` —**la
+del comprobante**—. Un comprobante de julio cargado en septiembre, que es el
+caso de todos los días, quedaba de un lado del cierre para la cantidad y del
+otro para el lote.
+
+Medido en dev (`scripts/dos-relojes.sh`): **2 de 3** compras discrepaban al
+31/07. El reporte decía que 8 yerbas al cierre venían de un comprobante del
+20/07, mientras la cantidad al cierre no las contenía.
+
+Por qué no se vio:
+- El cruce contra SQL repetía **la misma regla**, así que coincidía.
+- El total cerraba **de casualidad**: el costo del lote era igual al costo
+  declarado, así que 8 unidades "con lote" o "sin compra" daban la misma plata.
+- **T-INV-12 lo tapaba**: sus tests reescribían `created_at` a mano para que
+  coincidiera con la fecha del comprobante.
+
+**Decisión (del usuario, 2026-09-12):** el movimiento tiene **fecha propia**
+(`stock_movements.fecha`, migration 0037, `d970bb6`):
+
+| Movimiento | Fecha |
+|---|---|
+| `purchase` | la del comprobante |
+| reversa de una anulación | la del comprobante **original** (igual que la fila de anulación en `expenses`), y guarda `related_expense_id` |
+| todo lo demás | el día del comercio en que se cargó (default de la columna) |
+
+Nunca futura: el stock cambia en el momento, y un movimiento futuro rompería
+el invariante de la 0035 (libro hasta hoy = stock de hoy).
+
+En dev el inventario al 31/07 pasó de **$185.100** a **$243.300**: las 60
+aguas y 8 yerbas de comprobantes de julio cargados en septiembre no estaban en
+la cantidad.
+
+**Consecuencia esperada, no un bug:** `annulExpense` sólo mira el stock de
+**hoy** para permitir anular. Si una compra de julio se vendió en julio y se
+repuso en agosto, hoy hay stock y la anulación pasa — pero la reversa va
+fechada en julio, y la cantidad **al 31/07** queda negativa. Aparece como
+`anomalia` en el reporte (visible, fuera del total). Es lo correcto: esa
+anulación dice que en julio se vendió mercadería que no había entrado.
+
 ## 7. Qué NO vamos a implementar
 
 | Qué | Por qué |
@@ -121,9 +163,10 @@ ensuciar el total con lo único que no se puede auditar.
 1. **Función pura** `valorizarInventario(cantidades, compras, fechaCierre)` →
    por producto: unidades con lote (cada uno con fecha e importe), unidades sin
    compra, y los subtotales.
-2. **Lectura**: stock a la fecha desde `stock_movements` (suma con signo hasta
-   la fecha), compras desde `expense_items` de gastos **vigentes** con
-   `fecha <= cierre`.
+2. **Lectura**: stock a la fecha desde `stock_movements` (suma con signo de
+   los movimientos con `fecha <= cierre` — la fecha de negocio, **no**
+   `created_at`, ver §6.4), compras desde `expense_items` de gastos
+   **vigentes** con `fecha <= cierre`. Un solo reloj para las dos.
 3. **Bloque nuevo en `/contador`**, séptimo, con la fecha de cierre en el
    encabezado y el método declarado.
 4. **CSV** con una fila por lote: producto, fecha de adquisición, cantidad,
@@ -147,3 +190,8 @@ ensuciar el total con lo único que no se puede auditar.
   PEPS y se declara.
 - **Anotado, sin acción:** el KPI de Productos debería nombrar su criterio
   (§6.1).
+- **Resuelto después del primer commit:** los dos relojes (§6.4, `d970bb6`).
+  En la misma pasada, `e65883c` corrigió el mes de `/contador`, que se elegía
+  y se cortaba en UTC (una venta de las 22:30 del último día se mudaba de mes).
+- **Queda, sin acción:** `customer.service.ts` arma la serie mensual de cada
+  cliente con el mes UTC — mismo error, pantalla de Clientes.
