@@ -3,12 +3,124 @@
 **Proyecto:** Pandora ERP — SaaS POS+ERP fiscal para comercios chicos AR
 **Owner:** Agus Rochelle · agusrochelle@gmail.com
 **Status doc:** Listo para imprimir. **Dos reuniones independientes** documentadas en este archivo. Imprimir por separado según a quién consultes.
-**Última actualización:** 2026-06-03 PM v4 (extracción Manual QR fiscal RG 4892/2020 — **ADR-0023 §QR Decisión 2 = 100% validado oficialmente** 13/13 campos. A-22 a/b/c parcialmente resueltas técnicamente; falta solo confirmación LEGAL contadora. A-25 nueva — Tipo C ImpOpEx=0 obliga rever régimen Monotributistas TDF Ley 19.640. A-23 + A-24 algunas sub-preguntas ya respondidas empíricamente — ver `tax-policy-versions/ar-2026-06-v2.md`)
+**Última actualización:** 2026-07-10 PM (**CAMBIO DE ENFOQUE:** Pandora decidió TODO provisionalmente — ver "🎯 DECISIONES PROVISIONALES PANDORA" arriba. La reunión pasa de "responder 40 preguntas" a "revisar decisiones + marcar qué está mal". Se implementa en homologación; NO se emite a cliente real hasta el OK de la contadora. Solo 2 rojos: A-11.c + A-25. Previo mismo día: **barrido de fuentes primarias** para sacar de la lista de la contadora lo factual/normativo verificable — ver bloque "✅ RESUELTO POR INVESTIGACIÓN 2026-07-10". Resueltas verbatim con BO/Infoleg/manuales ARCA: **A-11.a/b** leyenda 27.743 + label "IVA Contenido", **A-18.a/b** leyenda RG 5003/Ley 27.618, **A-19.a/b** leyendas RG 5762, **A-20.a-d** mecánica CAEA, **A-9** + mecanismo de **A-2**. **A-23.a/b RESUELTO** por re-extracción del Manual v4.5 (02/07/2026): CondicionIVAReceptorId sigue OPCIONAL, schema NULL-allowed correcto (ver `tax-policy-versions/ar-2026-07-v1.md`). Corregido "IVA (21%)"→"IVA Contenido" en CLAUDE.md §8.6 + mockup facturas per RG 5614. Previa: 2026-07-02 — agregada **B-IA** — transferencia de datos de tenant a proveedor de IA externo, F1+/F2, NO bloquea sprints actuales — al evaluar las ideas IA/analítica del owner; extiende ADR-0024). Previa: 2026-06-03 PM v4 (extracción Manual QR fiscal RG 4892/2020 — **ADR-0023 §QR Decisión 2 = 100% validado oficialmente** 13/13 campos. A-22 a/b/c parcialmente resueltas técnicamente; falta solo confirmación LEGAL contadora. A-25 nueva — Tipo C ImpOpEx=0 obliga rever régimen Monotributistas TDF Ley 19.640. A-23 + A-24 algunas sub-preguntas ya respondidas empíricamente — ver `tax-policy-versions/ar-2026-06-v2.md`)
 
 | Reunión | Duración | Honorarios USD | Output esperado |
 |---|---|---|---|
 | **Parte A — Contador** (matriculado, idealmente con experiencia TDF) | ~2-2.5h | USD 100-300 | Definiciones cerradas en los 11 items críticos + lineamiento en los importantes |
 | **Parte B — Abogado** (especializado en SaaS / protección de datos AAIP) | ~1-1.5h | USD 100-300 | Definiciones cerradas en 5 puntos críticos legales + lineamiento T&C |
+
+---
+
+## 🎯 DECISIONES PROVISIONALES PANDORA — la contadora marca ✓ / ✗ (2026-07-10)
+
+> **Cómo usar este bloque (cambio de enfoque 2026-07-10):** en vez de llevarle 40 preguntas abiertas, Pandora **ya decidió todo** con la mejor investigación disponible. La reunión se convierte en **"revisá nuestras decisiones y marcá qué está mal"** — mucho más rápido.
+>
+> **Regla de seguridad (no negociable):** estas decisiones se implementan y prueban **solo contra AFIP homologación** (ADR-0019 S13). **NO se emite ni un comprobante a cliente real hasta que la contadora dé el OK.** Así "decido ahora, corrijo después" es 100% compatible con "cero errores fiscales": lo que se muestra es un artefacto revisable, no facturas reales.
+>
+> **Confianza:** 🟢 verificado en fuente primaria (rubber-stamp) · 🟡 defendible/derivado (mirada rápida) · 🔴 adivinado (acá gastá tu tiempo).
+
+| ID | Decisión provisional de Pandora | Fundamento / fuente | Conf. | ✓/✗ |
+|---|---|---|---|---|
+| **BASE** | **El comprobante que puede emitir el POS depende de la condición del COMERCIO (emisor):** RI → **A** (+ sub-tipos RG 5762) y **B**; Monotributista → **SOLO C** (nunca A/B, no discrimina IVA). A-18 y A-19 aplican **solo a comercios RI** | Régimen Monotributo (emisor C) | 🟢 | ☐ |
+| **A-1** | **PER_LINE** (ya implementado). Diferencia de centavos absorbida por la proyección (invariante `ImpIVA == Σ Iva[].Importe` tol 0). En TDF casi todo es exento o mono-alícuota → rara vez difiere de PER_BRACKET | Decisión de ingeniería; WSFEv1 tol 0 | 🟡 | ☐ |
+| **A-2** | F0 = **CAE-online + fail-closed**: si AFIP no responde tras retry, la venta **NO se cierra fiscalmente** (ofrecer cancelar). SIN "constancia provisoria". CAEA → F0.5 | Investigación CAEA + fail-closed §8.12 | 🟡 | ☐ |
+| **A-3** | `legal_name` / `fiscal_address` **opcionales** (nullable) en customer_snapshot; poblar desde Padrón A5 si están | WSFEv1 no los exige | 🟢 | ☐ |
+| **A-4** | Caché Padrón **24h**; revalidar si stale antes de emitir A/B; Padrón timeout con receptor identificado → **fail-closed**; CF cash no requiere Padrón | AFIP: CUIT inválida = rechazo | 🟡 | ☐ |
+| **A-5** | Cambio de condición IVA del tenant = **forward-only**, sin reemitir históricos | No hay norma que obligue reemisión | 🟡 | ☐ |
+| **A-6** | **F1+** — notas de crédito NO están en F0. Diferir | Scope F0 = solo facturas | 🟢 | ☐ |
+| **A-7** | AFIP "observed" → `manual_resolution_required` (no auto-entregar). Raro en F0 | Fail-closed | 🟡 | ☐ |
+| **A-8** | **F1+** — no hay XMLs de +1 año en F0. Cold storage diferido | Scope | 🟢 | ☐ |
+| **A-9** | Único mecanismo diferido = **CAEA** (F0.5). F0 = CAE-online | Manual v4.5 + investigación | 🟢 | ☐ |
+| **A-10.a** | Leyenda TDF provisional: **"Operación exenta – Ley N° 19.640"** + condición receptor código **10 "IVA Liberado – Ley N° 19.640"** | Catálogo WSFEv1 código 10; sin string canónico único hallado | 🟡 | ☐ |
+| **A-10.b** | Exención **BLANKET por régimen** (no per-producto): `merchant LEY_19640` + in-zona → exento por defecto para toda la venta de bienes | **Ley 19.640 Art. 1/2** (Infoleg 28185) | 🟢 | ☐ |
+| **A-10.c** | Default para comercio amparado = **EXENTO** (a ImpOpEx) | Deriva de A-10.b | 🟡 | ☐ |
+| **A-10 scope** | F0 cubre el **comercio LOCAL de TDF** (código 10 + ImpOpEx + leyenda). NO el caso venta-desde-el-continente-a-TDF (Factura E, vendedor continental) | Distinción export vs venta local | 🟡 | ☐ |
+| **A-11.a/b** | Título **"Régimen de Transparencia Fiscal al Consumidor (Ley 27.743)"** + **"IVA Contenido"** + **"Otros Impuestos Nacionales Indirectos"**, en inferior izquierdo | RG 5614/2024 Art. 2 inc. 7 (Infoleg 407183) | 🟢 | ☐ |
+| **A-11.c** | Bloque transparencia se muestra en B y C a consumidor final; en TDF exento → **"IVA Contenido $0"** + leyenda Ley 19.640 | Adivinado (nuance no verificada) | 🔴 | ☐ |
+| **A-11.d** | Cumplir siempre; NO depender de período de gracia | Conservador | 🟢 | ☐ |
+| **A-12–17** | Empírico "si sobra tiempo" — no bloquea nada. Charlar solo si queda tiempo | — | 🟢 | ☐ |
+| **A-18.a/b** | **(Solo si el comercio emisor es RI.)** Leyenda RG 5003 verbatim: *"El crédito fiscal discriminado… sólo podrá ser computado a efectos del Régimen… de la Ley N° 27.618"*; aplica a comprobantes A (incl. electrónico) emitidos por un RI a un receptor Monotri | RG 5003/2021 (Infoleg 350574) | 🟢 | ☐ |
+| **A-18.c** | Factura A a Monotri (receptor con crédito fiscal) → **NO lleva bloque 27.743** (el receptor no es consumidor final frente al IVA); solo leyenda RG 5003 | Defendible | 🟡 | ☐ |
+| **A-18.d** | Leyenda RG 5003 normal; la exención TDF va aparte vía ImpOpEx / código 10 | Defendible | 🟡 | ☐ |
+| **A-18.e** | Verificar condición del receptor en Padrón A5 antes de emitir A a Monotri | Operativo | 🟡 | ☐ |
+| **A-19.a/b** | **(Solo si el comercio emisor es RI.)** Leyendas **"OPERACIÓN SUJETA A RETENCIÓN"** / **"PAGO EN CBU INFORMADA"**; la solvencia la asigna ARCA en la habilitación | RG 5762/2025 | 🟢 | ☐ |
+| **A-19.c/d** | Pandora lee del **setup** la clase habilitada del comercio y auto-aplica la leyenda (default A estándar; ALEY si ARCA la asignó) | Ingeniería + setup | 🟡 | ☐ |
+| **A-19.e** | Apilar las leyendas que apliquen según la operación (5762 + 5003 + 27.743) | Defendible | 🟡 | ☐ |
+| **A-20.a-d** | CAEA: `FECAEASolicitar` → `FECAEARegInformativo` + DDJJ F.2051; tope 5% mensual; vig. 01/08/2026 | RG 5782/5852 + RG 4290 | 🟢 | ☐ |
+| **A-20.f** | CAEA → **F0.5** (F0 = CAE-online + fail-closed) | Decisión de scope | 🟡 | ☐ |
+| **A-21** | Capturar código de actividad (Nomenclador) en el **setup** del comercio (RG 5824 es opcional; bajo costo) | RG 5824/2026 opcional | 🟢 | ☐ |
+| **A-22** | Persistir `qr_payload_json` + `qr_version` + `qr_url_base_at_emission`; QR regenerado = válido | Manual QR RG 4892 (verificado); confirmación legal diferida | 🟢 | ☐ |
+| **A-23.a/b** | `CondicionIVAReceptorId` **OPCIONAL** (schema NULL-allowed); CF cash → código **5** u omitir | Manual COMPG v4.5 (verificado) | 🟢 | ☐ |
+| **A-23.d** | Receptor TDF amparado identificado → código **10**; CF cash → 5 u omitir | Catálogo v4.5 | 🟡 | ☐ |
+| **A-24** | Códigos de error del catálogo v4.5 → `error-codes.ts`; los deltas v4.3-4.5 están fuera de F0 | Manual v4.5 (verificado) | 🟢 | ☐ |
+| **A-25** | Monotri TDF (Tipo C): ya exento de IVA por su régimen → **leyenda "Operación exenta – Ley 19.640" como texto libre**, `ImpOpEx = 0` (obligatorio en Tipo C). F0 soporta **RI TDF** (código 10 + ImpOpEx) **y Monotri TDF** (solo leyenda) | Hipótesis + Manual v4.5 (ImpOpEx=0 en C) | 🔴 | ☐ |
+| **A-26** | **Arqueo separa efectivo / débito / crédito / QR-transferencia** (RESUELTO por investigación 2026-07-12 — NO bloquea, NO es fiscal). El posnet AR **liquida y reporta débito y crédito por separado** (crédito incluso por plazo/cuotas) → el cierre concilia cada uno contra su lote; el mockup ya lo modela bien. La **forma de pago NO viaja en el CAE** de B/C → esto es concern de **caja/conciliación**, no de emisión fiscal → decisión de producto, no de la contadora. **Acción de ingeniería (no fiscal):** extender el enum `sale_payments.method` (hoy `efectivo/tarjeta/mp_qr`) a `efectivo/debito/credito/qr`. Único matiz opcional para la contadora: si tu posnet además separa crédito **por cuotas/plazo** (reporting fino, no bloquea). | PosNet AR (liquidación con débito, crédito 48hs y crédito resto de plazos por separado); forma de pago fuera del CAE (Manual WSFEv1) | 🟢 | ☐ |
+
+**Para la contadora, en 15 minutos:** mirá los **2 rojos (A-11.c, A-25)** y los amarillos; los verdes son verificados en fuente oficial y solo necesitan tu visto. El resto del documento (abajo) es el detalle de respaldo de cada decisión.
+
+---
+
+## ✅ BARRIDO 2026-09-03 — más items sacados de la lista de la contadora
+
+> Regla aplicada, igual que el 2026-07-10: sale de la lista solo si es **factual** y hay **fuente primaria vigente e inequívoca**. Si las fuentes se contradicen o la norma calla, **se queda** — con el artículo exacto donde está la duda, para que ella no tenga que buscarlo.
+
+| ID | Qué se resolvió | Fuente primaria | Qué QUEDA |
+|---|---|---|---|
+| **A-11.c (1/3)** | **Tipo C SÍ está alcanzado** por Transparencia Fiscal. RG 5614 Art. 2° punto 4 incorpora el inciso al *"Apartado A — DATOS QUE DEBEN CONTENER LOS COMPROBANTES CLASE **'A', 'B', 'C' o 'E'**"*. No hay exclusión de C. | RG 5614/2024 Art. 2° pto 4, [texto oficial argentina.gob.ar](https://www.argentina.gob.ar/normativa/nacional/resoluci%C3%B3n-5614-2024-407183/texto) | — cerrado |
+| **A-10.a** | **NO existe leyenda obligatoria** para Ley 19.640. La RG 1415 (régimen de facturación) **no fija ningún texto** para operaciones amparadas ni para TDF; la única leyenda de exención que sí fija es *"IVA EXENTO OPERACION DE EXPORTACION"*, que es otro caso. → cualquier texto claro cumple; nuestro provisorio *"Operación exenta – Ley N° 19.640"* sirve. La práctica de mercado usa *"IVA EXENTO - LEY 19.640"*. | RG 1415/2003 Anexos II y IV, [texto oficial](https://www.argentina.gob.ar/normativa/nacional/resoluci%C3%B3n-1415-2003-81316/texto) | Solo lo **empírico**: qué esperan ver los inspectores de TDF en la práctica |
+| **A-10 scope** | **Confirmado** que continente→TDF es **exportación** (Art. 31 Ley 19.640 + Art. 17 RG 1415 → Factura **E**), distinto del comercio local. Valida que F0 lo excluya. | Ley 19.640 Art. 31 + RG 1415 Art. 17 | — cerrado |
+| **A-1** | ARCA fija el **modo** (HALF_EVEN) pero **no el stage**. No hay respuesta normativa → es decisión de ingeniería, no de la contadora. Se mantiene **PER_LINE**; la invariante `ImpIVA == Σ Iva[].Importe` con tolerancia 0 la garantiza la capa de proyección, así que el centavo no se escapa a la DDJJ. | Manuales WSFEv1/WSMTXCA/WSFEX | Nada. Si ella prefiere PER_BRACKET, es 2-3h de refactor |
+| **A-2 / A-20.f** | Los hechos normativos de CAEA ya estaban verificados (07-10). "¿CAEA en F0 o F0.5?" es **decisión de scope nuestra**, no consulta. Se mantiene **CAE-online + fail-closed en F0**. | RG 5782/5852 | El ángulo civil es **B-6 (abogado)**, no ella |
+| **A-7** | "observed" → `manual_resolution_required` se deriva de nuestro principio **fail-closed** (§8.12). Decidido. | CLAUDE.md §8.12 | Solo lo empírico: si en la práctica se entrega y se rectifica con NC |
+
+### ✅ A-19.e — CERRADO: las tres leyendas SÍ coexisten
+
+Cada leyenda tiene un **disparador independiente**, y ninguna norma las declara excluyentes:
+
+| Leyenda | La dispara |
+|---|---|
+| *"OPERACIÓN SUJETA A RETENCIÓN"* / *"PAGO EN CBU INFORMADA"* (RG 5762) | La **solvencia del EMISOR**, que ARCA determina en la habilitación |
+| *"El crédito fiscal discriminado… Ley N° 27.618"* (RG 5003) | El **RECEPTOR es Monotributista** y recibe comprobante clase A |
+| Bloque *"Régimen de Transparencia Fiscal al Consumidor (Ley 27.743)"* | El **alcance del régimen** sobre la operación |
+
+Son tres condiciones sobre ejes distintos (emisor / receptor / operación). Si las tres se cumplen a la vez, **las tres leyendas van en el mismo comprobante**. Pandora debe apilarlas, no elegir una.
+
+### 🔴 A-18.c — CORRECCIÓN: la decisión provisional de Pandora estaba MAL
+
+**Lo que habíamos decidido (🟡):** *"Factura A a Monotri → NO lleva bloque 27.743, porque el receptor Monotributista no es consumidor final frente al IVA"*.
+
+**Por qué ahora dudo de eso:** las fuentes sobre el alcance del régimen incluyen al monotributista **entre los receptores alcanzados**: *"se requiere la discriminación del IVA cuando las operaciones se realizan con responsables inscriptos, así como cuando se realizan con **consumidores finales, sujetos exentos y monotributistas**"*. Si el monotributista está entre los receptores alcanzados, mi razonamiento de "no es consumidor final → no aplica" **se cae**.
+
+**Matiz que complica:** la RG parece regular **dos obligaciones distintas** que conviene no mezclar — (a) **discriminar el IVA**, de alcance amplio, incluso entre responsables inscriptos; y (b) el **bloque con título** de Transparencia (Art. 2° inc. 7 / Apartado B inc. g), que es el orientado al consumidor. Que (a) alcance al monotributista no implica automáticamente que (b) también.
+
+→ **Pregunta para la contadora:** una Factura A a un Monotributista, ¿lleva **solo** la leyenda RG 5003, o **también** el bloque de Transparencia Fiscal? Se junta con A-11.c(a) — es la misma duda de fondo, vista desde el otro lado.
+
+### ✅ ADR-0025 — los catálogos son MÁS estables de lo que asumía el ADR
+
+Evidencia dura: la **RG 5762/2025 eliminó la Factura clase M entera** desde el 01/12/2025 — un cambio normativo mayor. Y aun así, **el código interno siguió siendo `0051`**: el comprobante pasó a llamarse "Factura A con leyenda" pero *el número del catálogo no se movió*.
+
+O sea: ARCA cambia nombres, leyendas y condiciones, pero **mantiene la estabilidad de los códigos numéricos** por retrocompatibilidad. Eso es exactamente lo que un cliente de webservice necesita.
+
+→ **Recomendación:** para F0, `afip-codes.ts` hardcodeado + `tax_policy_version` es **defendible**, y **ADR-0025 (catálogos en runtime) se degrada a F1+** con disparador: *"ARCA agrega un código nuevo que necesitemos, o cambia uno existente"*. Construir el módulo de fetch + cache + validación al boot ahora es resolver un problema que la evidencia dice que no tenemos.
+
+→ **No requiere a la contadora.** Es decisión de ingeniería con evidencia normativa. Queda para el owner confirmar el cambio de estado del ADR.
+
+### ⚠️ A-11.c — lo que QUEDA, y por qué no lo cierro yo
+
+**Dos sub-puntos con conflicto real de fuentes. Acá sí necesito su criterio.**
+
+**(a) ¿El monotributista está alcanzado como EMISOR?** Las fuentes se contradicen de frente:
+
+- **RG 5614 texto oficial** — Art. 2° punto 5 menciona *"responsables inscriptos en el gravamen **o adheridos al Régimen Simplificado para Pequeños Contribuyentes (Monotributo)**"*, y el Anexo IV punto 8.1 también los incluye. **Pero el texto es ambiguo sobre si ahí el monotributista es el EMISOR o el RECEPTOR.**
+- **ARCA, novedad oficial 01/04/2025** — *"La obligación... alcanza a **todo el universo de contribuyentes**"*.
+- **Fuentes profesionales secundarias** (FAQ de contadores) — *"No, la medida **no incluye** a los contribuyentes inscriptos en el Régimen Simplificado"*.
+
+→ **Pregunta concreta:** ¿el monotributista que emite Factura C tiene que poner el bloque de Transparencia Fiscal, sí o no? Es directamente relevante: buena parte del retail chico de TDF es monotributo.
+
+**(b) ¿Qué se pone en "IVA Contenido" cuando la operación está EXENTA?** La RG **no lo trata en ningún artículo**. Lo único cercano es el Art. 2° punto 5 inciso a) punto 2, que habla de *"operaciones **gravadas** efectuadas con sujetos exentos, no alcanzados o consumidores finales"* — o sea, el caso inverso al nuestro (cliente exento, operación gravada), no operación exenta.
+
+→ Lectura razonable: si no hay IVA que recaiga, no hay nada que discriminar → *"IVA Contenido $0"* + leyenda 19.640. **Pero es interpretación nuestra, no texto.** Es el punto donde una firma matriculada vale.
 
 ---
 
@@ -20,17 +132,17 @@ Este cheat sheet es para imprimir y llevar a la reunión. Vista de 1 página de 
 
 | ID | Tema | Bloquea código |
 |---|---|---|
-| **A-1** | Stage redondeo PER_LINE vs PER_BRACKET | Cálculo IVA real |
-| **A-2** | Modelo "constancia provisoria" post-timeout WSFEv1 | Reconciliación fiscal (ADR-0004) |
-| **A-4** | Caché Padrón A5 — política exacta | Refinamiento fail-closed |
-| **A-10** | Ley 19.640 TDF — texto + rubros + default | Tickets TDF amparados |
-| **A-11** | Ley 27.743 Transparencia Fiscal — texto literal + estructura | Primer ticket impreso productivo |
-| **A-18** | RG 5003/2021 — RI a Monotri = clase A + leyenda Ley 27.618 | LIS facturación a Monotri (caso real) |
-| **A-19** | RG 5762/2025 — sub-tipos A (Op. Sujeta a Retención / Pago CBU) | Catálogo tipos comprobante Sprint 6 |
-| **A-20** | RG 5782/2025 — política CAEA pool + contingencia | ADR-0004 reconciliación reescritura |
-| **A-21** | RG 5824/2026 — vinculación PV ↔ actividad (opcional) | Setup Punto de Venta |
-| **A-22** | **NUEVA** RG 4892/2020 — representación legal QR (imagen vs JSON) | Persistencia snapshot ADR-0023 |
-| **A-23** | **NUEVA (Auditoría Beta 2026-06-03)** CondicionIVAReceptorId estado real obligatoriedad al 01/08/2026 + caso CF cash sin DocTipo | Schema fiscal_snapshots NOT NULL vs NULL + handler payload |
+| **A-1** | Stage redondeo PER_LINE vs PER_BRACKET (stage = decisión ingeniería Pandora; solo trato contable del centavo va a ella) | Cálculo IVA real |
+| **A-2** | ~~Modelo "constancia provisoria"~~ → **mecanismo RESUELTO: CAEA** (ver A-20). Queda: scope F0 + ángulo civil B-6 | Reconciliación fiscal (ADR-0004) |
+| **A-4** | Caché Padrón A5 — política exacta (empírico: frecuencia real de cambios de CUIT) | Refinamiento fail-closed |
+| **A-10** | Ley 19.640 TDF — **exención BLANKET por régimen, NO per-producto** (2026-07-10, Ley 19.640 Art. 1/2). A-10.b dejó de ser "qué rubros" → confirmar blanket + edges; A-10.c default → EXENTO. Queda solo A-10.a (texto legal exacto) + confirmación | Tickets TDF amparados |
+| **A-11** | Ley 27.743 — **✅ texto/estructura RESUELTO 2026-07-10** (leyenda + "IVA Contenido" + ubicación, RG 5614 Art. 2.7). Queda: A-11.c Tipo C/TDF + A-11.d sanción | Primer ticket impreso productivo |
+| **A-18** | RG 5003 — **✅ leyenda RESUELTA verbatim 2026-07-10** (Infoleg 350574). Queda: coexistencia 27.743 + TDF + Padrón/sanción | LIS facturación a Monotri (caso real) |
+| **A-19** | RG 5762 — **✅ leyendas + quién determina solvencia RESUELTO 2026-07-10**. Queda: A-19.d LIS (empírico) + A-19.e 3 leyendas | Catálogo tipos comprobante Sprint 6 |
+| **A-20** | RG 5782/5852 — **✅ mecánica CAEA RESUELTA 2026-07-10** (FECAEASolicitar/RegInformativo, tope 5%, vig. 01/08/2026). Queda: A-20.e LIS + A-20.f scope Pandora | ADR-0004 reconciliación reescritura |
+| **A-21** | RG 5824/2026 — vinculación PV ↔ actividad (opcional; beneficio = criterio, código Nomenclador = lookup) | Setup Punto de Venta |
+| **A-22** | **NUEVA** RG 4892/2020 — representación legal QR (imagen vs JSON) — técnicamente cerrado, falta solo confirmación LEGAL | Persistencia snapshot ADR-0023 |
+| **A-23** | **✅ a/b RESUELTO 2026-07-10** por re-extracción Manual **v4.5**: CondicionIVAReceptorId **sigue OPCIONAL** → schema NULL-allowed correcto; CF cash = código 5 o omitir. Queda solo A-23.d (TDF, criterio) | Schema fiscal_snapshots (NULL confirmado correcto) |
 | **A-24** | **NUEVA (Auditoría Beta 2026-06-03)** Manual WSFEv1 v4.2 — re-validación QR spec + validaciones nuevas + códigos error + ImpOpEx semántica. **Estado: ✅ parcialmente resuelta empíricamente** post-extracción Manual v4.2 (ver `ar-2026-06-v2.md`) |
 | **A-25** | **NUEVA (Auditoría Beta 2026-06-03 PM)** Tipo C + ImpOpEx=0 obligatorio per Manual v4.2 → Monotributista TDF ¿cómo amparar Ley 19.640? | A-10 redirigida + scope Pandora F0 (¿solo RI TDF?) |
 
@@ -102,6 +214,43 @@ Investigación 2026-05-27 con fuentes ARCA/AFIP + AAIP + Infoleg + Manuales WSFE
 - ✅ ADR-0022 `ImpOpEx` para exentos en WSFEv1 — confirmado oficialmente
 - ✅ Retención XML AFIP 10 años — confirmado por Ley 11.683
 - ❌ **"Ticket no fiscal post-2h sin CAE" como reemplazo de comprobante fiscal — NO ES VÁLIDO según fuentes oficiales.** Esto invalida parte del modelo ADR-0004 actual (ver pregunta A-2 reformulada).
+
+---
+
+## ✅ RESUELTO POR INVESTIGACIÓN 2026-07-10 — NO preguntar a la contadora
+
+> Barrido de fuentes primarias (Boletín Oficial / Infoleg / manuales ARCA) para sacar de la lista de la contadora todo lo que sea **factual/normativo verificable**. Regla aplicada: solo sale de la lista si es factual **y** hay fuente primaria vigente e inequívoca; si las fuentes se contradicen, **se queda** (ver A-23 abajo). Cada ítem es autovalidable: verbatim + URL + fecha. Lo que queda es **criterio profesional / empírico / decisión de ingeniería de Pandora** (no se le pregunta a ella tampoco a esos últimos).
+
+| ID | Qué se resolvió (verbatim / dato) | Fuente primaria + fecha | Qué QUEDA para la contadora |
+|---|---|---|---|
+| **A-11.a/b** | Leyenda/título literal: **"Régimen de Transparencia Fiscal al Consumidor (Ley 27.743)"** (con paréntesis). Label de la línea de IVA: **"IVA Contenido"** (NO "IVA (21%)"). Línea de otros impuestos: **"Otros Impuestos Nacionales Indirectos"**. Ubicación: **espacio inferior izquierdo**, datos dispuestos verticalmente, cada uno con su valor. | RG 5614/2024 **Art. 2 inc. 7** · BO 13/12/2024 · [Infoleg 407183](https://servicios.infoleg.gob.ar/infolegInternet/anexos/405000-409999/407183/norma.htm) · [argentina.gob.ar/normativa](https://www.argentina.gob.ar/normativa/nacional/resoluci%C3%B3n-5614-2024-407183/texto). Vigencia gradual 01/01/2025, plena 01/04/2025 | **A-11.c** (¿aplica a Tipo C / a TDF-exento donde IVA=0? qué se pone en "IVA Contenido" si está exento) + **A-11.d** (sanción/período de gracia — no está en la RG, viene del régimen sancionatorio general) |
+| **A-18.a/b** | Leyenda verbatim: **"El crédito fiscal discriminado en el presente comprobante, sólo podrá ser computado a efectos del Régimen de Sostenimiento e Inclusión Fiscal para Pequeños Contribuyentes de la Ley N° 27.618"** (es "a efectos", no "a los efectos"). Aplica a **comprobantes clase A** en general (incluye ticket/comprobante electrónico A). | RG 5003/2021 · [Infoleg 350574](https://servicios.infoleg.gob.ar/infolegInternet/anexos/350000-354999/350574/norma.htm) · BO 02/06/2021. Vigencia leyenda 01/07/2021 | **A-18.c** (coexistencia con Ley 27.743 — hipótesis: NO aplica 27.743 porque el receptor Monotri no es "consumidor final frente al IVA"; confirmar) + **A-18.d** (interacción TDF Ley 19.640) + **A-18.e** (obligación de chequear Padrón por emisión + sanción) |
+| **A-19.a/b** | Leyendas verbatim: **"OPERACIÓN SUJETA A RETENCIÓN"** (reemplazo directo de la vieja M, sin solvencia) y **"PAGO EN CBU INFORMADA"** (opción bancarización, no sujeta a retención). Migración M→A "Operación Sujeta a Retención" es **automática**. La **solvencia la determina ARCA** en la habilitación — Pandora NO la calcula; lee la clase/leyenda que ARCA le habilitó al comerciante. | RG 5762/2025 · [ARCA novedad 5179](https://servicioscf.afip.gob.ar/publico/sitio/contenido/novedad/ver.aspx?id=5179) · BO. Vigencia 01/12/2025 | **A-19.c** (automático vs manual = decisión de ingeniería Pandora, no de ella) + **A-19.d** (¿LIS tiene solvencia acreditada? = empírico de su cliente) + **A-19.e** (¿coexisten 3 leyendas? = confirmar) |
+| **A-20.a–d** | CAEA de contingencia: se pide por WebService **`FECAEASolicitar`** (devuelve CAEA + vigencia + plazo de rendición); se emite en contingencia; se rinde con **`FECAEARegInformativo`** + DDJJ **F.2051**. Un CAEA por CUIT, asignable a múltiples PV/comprobantes. **Tope: 5% del período mensual por sucursal** (RG 4290 Título III). Si no se rinde a tiempo, ARCA puede **denegar** futuros CAEA/CAI. Vigencia como contingencia obligatoria: **01/08/2026** (prórroga RG 5852/2026, antes 01/06/2026). | RG 5782/2025 · RG 5852/2026 [BO 29/05/2026](https://www.boletinoficial.gob.ar/detalleAviso/primera/342594/20260529) · métodos WSFEv1 · RG 4290 Tít. III | **A-20.e** (¿LIS adherida a CAEA? = empírico) + **A-20.f** (lanzar CAEA en F0 vs F0.5 = decisión de scope de Pandora, informada por vigencia 01/08/2026) |
+| **A-2 (mecanismo)** | El "qué se hace con la venta cobrada sin CAE" tiene respuesta oficial: **CAEA de contingencia** (ver A-20). El modelo "constancia provisoria" queda **superado** por CAEA como fallback formal. | idem A-20 | Residuo A-2: **scope Pandora** (¿CAEA en F0?) + **ángulo civil/comercial = B-6 (abogado)** + ¿LIS ya usa CAEA? (empírico) |
+| **A-9** | "Diferido" sin CAE inmediato = justamente el mecanismo **CAEA** (autorización anticipada). No hay categoría que emita "sin autorización" y regularice después fuera de CAEA. | idem A-20 | — (cerrado; era confirmación de interpretación) |
+| **A-24.c** | Códigos de error = **catálogo cerrado**. Actualizado a **Manual v4.5** (re-extracción 2026-07-10): además de CAE 10237-10249 / CAEA 818-829 / 12002, v4.3-4.5 agregan CAEA 1517-1526 + CAE 10251/10270-10272 — todos de escenarios **fuera de F0** (FCE, entidades financieras RG 5866, FCI). Mapear código→`fiscal_status` es **ingeniería de Pandora** (`error-codes.ts`). | `tax-policy-versions/ar-2026-07-v1.md` (Manual COMPG v4.5, 02/07/2026) | — (tarea de ingeniería, no de ella) |
+
+### 🟢 A-23.a/b RESUELTO por re-extracción del Manual v4.5 (2026-07-10)
+
+Ante el conflicto de fuentes secundarias (blogs decían "obligatorio"), se **re-extrajo el Manual COMPG vigente = v4.5** (02/07/2026, 199 pág., URL canónica). Resultado, **texto literal v4.5**:
+
+> "…podrá enviarse de forma **opcional** el campo Condición Frente al IVA del receptor, **hasta tanto entre en vigencia su obligatoriedad reglamentada por la Resolución General N°5616**…"
+
+Los changelogs v4.3/v4.4/v4.5 **NO tocan** la obligatoriedad → al 2026-07-10 **sigue OPCIONAL**. Las fuentes secundarias estaban equivocadas.
+
+- ✅ **A-23.a:** OPCIONAL confirmado por fuente primaria vigente. La decisión de schema `condicion_iva_receptor_id` **NULL-allowed** era y sigue siendo **CORRECTA** (no hay ALTER). Detalle en `tax-policy-versions/ar-2026-07-v1.md` (reemplaza v2).
+- ✅ **A-23.b:** CF cash sin identificar → campo opcional, se puede **omitir**; si se envía, código **`5 - Consumidor Final`** (válido A/B/C).
+- ⚠️ **Monitorear:** cuando ARCA anuncie la fecha de vigencia (rechazo 10245) → nueva tax-policy-version + `NOT NULL`.
+
+**Queda solo A-23.d** (¿la condición IVA del receptor cambia algo en ventas amparadas TDF Ley 19.640? — criterio profesional). A-23.c (Padrón A5 devuelve condición) es verificable técnicamente en el hot path, no requiere reunión.
+
+> **Nota de reconciliación (CLAUDE.md §2.2):** esto **corrige** el estado anterior de este bloque, que daba A-23 como "se queda por conflicto". La re-extracción del manual vigente resolvió el conflicto a favor de OPCIONAL. Mi `ar-2026-06-v2.md` (v4.2) quedó superado por `ar-2026-07-v1.md` (v4.5) — misma conclusión de fondo (opcional), fuente actualizada.
+
+### Correcciones a docs internos que surgieron de este barrido
+
+- **CLAUDE.md §8.6** (y cualquier mockup de ticket) muestra la línea de IVA como **"IVA (21%)"** — el label oficial de RG 5614 es **"IVA Contenido"**. Corregir antes del primer ticket productivo.
+- El bloque de arriba "⚠️ Lo que ya está CERRADO" describía la leyenda 27.743 **sin paréntesis** ("Ley 27.743") — la RG la fija **con** paréntesis ("(Ley 27.743)").
 
 ---
 
@@ -298,6 +447,8 @@ Respuesta: ____________________________________________________________
 
 ### A-9. CAE inmediato vs diferido — confirmación de interpretación oficial
 
+> ✅ **RESUELTO por investigación 2026-07-10.** El único mecanismo oficial de emisión "diferida"/sin CAE inmediato es **CAEA** (autorización electrónica anticipada, ver A-20). No hay categoría que emita sin autorización y regularice después fuera de CAEA. No requiere reunión.
+
 > ⚠️ Fuente oficial: comprobante autorizado debe ponerse a disposición del cliente dentro de **10 días** de asignado el CAE. Esto sugiere que "diferido" debe ser estado interno transitorio, NO emisión fiscal terminada.
 
 - ¿Confirmás esta interpretación? ¿Existe alguna categoría de comprobante (NC, FCE, ND) que admita oficialmente emisión diferida sin CAE inmediato en el momento de la venta?
@@ -327,29 +478,24 @@ Ejemplos vistos en otros sistemas: "Operación amparada por Ley 19.640" · "Vent
 
 Respuesta: ____________________________________________________________________
 
-#### A-10.b — Productos típicos amparados por rubro (criterio práctico)
+#### A-10.b — Exención blanket por régimen (NO per-producto) — CONFIRMAR + edges
 
-Para retail pequeño TDF, ¿qué rubros están típicamente amparados? (necesito tu lectura empírica de la práctica fiscal TDF, no el texto frío de la ley)
+> ✅ **Reformulada 2026-07-10.** Ya NO es "qué rubros/productos" (esa framing partía de un modelo mental equivocado). La **Ley 19.640 Art. 1/2** exime *"todo impuesto nacional por hechos, actividades u operaciones realizadas en TDF, o por bienes existentes en dicho Territorio… radicados en la jurisdicción o importados a ésta"*. Es exención **por régimen/jurisdicción, no por producto** → para un comercio TDF amparado, **prácticamente TODA la venta de bienes a un consumidor de TDF está exenta**. No hay lista de rubros porque no existe: son casi todos. Fuente: Ley 19.640, Infoleg 28185.
 
-- Alimentos y bebidas: ☐ amparados ☐ no amparados ☐ depende
-- Electrónica de consumo: ☐ amparados ☐ no amparados ☐ depende
-- Indumentaria: ☐ amparados ☐ no amparados ☐ depende
-- Ferretería / herramientas: ☐ amparados ☐ no amparados ☐ depende
-- Productos de limpieza / higiene: ☐ amparados ☐ no amparados ☐ depende
+Lo que sí necesitamos confirmar con vos (1 min):
 
-¿Existe un criterio general simple (ej: "todo lo producido en TDF está amparado") o es caso por caso?
+- ¿Confirmás que para un comercio retail (kiosco/ferretería/mercería) **RI inscripto bajo Ley 19.640 en TDF**, la venta de bienes a consumidores de TDF es **exenta de forma general** (no producto por producto)? ☐ Sí ☐ Con matices: __________
+- **Edges donde la exención NO aplica** (para que Pandora los contemple): ☐ bienes que salen del área (venta al continente = exportación) ☐ servicios ☐ tributos con afectación especial ☐ otro: __________
+- ¿El comercio debe estar **formalmente inscripto/habilitado** bajo el régimen (no basta con estar físicamente en TDF)? ☐ Sí ☐ No — ¿cómo se acredita? __________
 
-Respuesta: ____________________________________________________________________
+#### A-10.c — Default para comercio TDF amparado
 
-#### A-10.c — Default conservador ante duda
+> ✅ **Corregida 2026-07-10.** Dado que la exención es blanket por régimen (A-10.b), el default para un comercio amparado se **da vuelta**: la venta arranca **EXENTA**, no gravada.
 
-Si el comerciante TDF no sabe si un producto específico está amparado por exención, ¿cuál es el default conservador desde criterio fiscal-contable?
+**Hipótesis Pandora (revisada):** para `merchant_special_regime = LEY_19640` + operación in-zona → **default EXENTO** (a `ImpOpEx`, código `CondicionIVAReceptorId = 10`). El "gravado" queda como excepción para los edges de A-10.b (bienes que salen del área, servicios).
 
-- ☐ Default exento (cargar exención, después rectificar si corresponde)
-- ☐ Default gravado (cobrar IVA, después emitir NC si el cliente tiene derecho)
-- ☐ Default según rubro: _______________
-
-**Hipótesis Pandora:** default `gravado` (cobrar IVA). Falso negativo (IVA cobrado de más) es ajustable contablemente. Falso positivo (IVA omitido sin amparo) = riesgo de inspección AFIP + multa.
+- ¿Confirmás que el default correcto para el comercio amparado es **exento**? ☐ Sí ☐ No — corregir: __________
+- Para los edges gravados, ¿el comercio los marca caso por caso o hay una regla simple? __________
 
 #### Honorarios y disponibilidad TDF
 
@@ -358,6 +504,8 @@ Si el comerciante TDF no sabe si un producto específico está amparado por exen
 - ¿Tu estudio acepta clientes nuevos en TDF? ☐ Sí ☐ No
 
 ### A-11. Régimen de Transparencia Fiscal al Consumidor (Ley 27.743) — texto y estructura
+
+> ✅ **A-11.a/b RESUELTO por investigación 2026-07-10** (ver bloque consolidado arriba). RG 5614/2024 Art. 2 inc. 7: título literal **"Régimen de Transparencia Fiscal al Consumidor (Ley 27.743)"**, línea de IVA con label **"IVA Contenido"**, línea **"Otros Impuestos Nacionales Indirectos"**, en el **espacio inferior izquierdo**. **Solo queda A-11.c** (Tipo C / TDF exento) **y A-11.d** (sanción/gracia).
 
 > ⚠️ CONFIRMADO POR FUENTE OFICIAL: desde 2025 todos los comprobantes deben detallar el componente impositivo bajo la leyenda **"Régimen de Transparencia Fiscal al Consumidor Ley 27.743"**, con IVA en línea separada e "Otros impuestos nacionales indirectos" en otra línea.
 >
@@ -418,6 +566,8 @@ _______________
 
 ### A-19. RG 5762/2025 — Chau factura M, dos sub-tipos A (🔴 vigente desde 1 dic 2025)
 
+> ✅ **A-19.a/b RESUELTO por investigación 2026-07-10** (ver bloque consolidado arriba). Leyendas verbatim **"OPERACIÓN SUJETA A RETENCIÓN"** y **"PAGO EN CBU INFORMADA"**; la **solvencia la determina ARCA** en la habilitación (Pandora no la calcula, lee la clase habilitada). **Solo queda A-19.d** (LIS solvencia, empírico) **y A-19.e** (coexistencia 3 leyendas).
+
 ARCA eliminó la factura clase M. La reemplaza con dos sub-tipos de clase A:
 
 | Sub-tipo | Leyenda obligatoria | Cuándo |
@@ -454,6 +604,8 @@ Si emite A "Operación Sujeta a Retención" a un Monotributista (caso límite), 
 ---
 
 ### A-20. RG 5782/2025 — CAEA solo contingencia (revisa A-2 + B-6 — hay respuesta oficial al hallazgo #1)
+
+> ✅ **A-20.a–d RESUELTO por investigación 2026-07-10** (ver bloque consolidado arriba). CAEA se pide con **`FECAEASolicitar`**, se rinde con **`FECAEARegInformativo`** + DDJJ **F.2051**; **tope 5% mensual por sucursal** (RG 4290 Tít. III); no rendir → ARCA deniega futuros CAEA. Vigencia contingencia obligatoria **01/08/2026** (RG 5852). **Solo queda A-20.e** (LIS adhesión, empírico) **y A-20.f** (scope F0 vs F0.5, decisión Pandora).
 
 ARCA dispuso: CAE en línea = norma obligatoria. CAEA = solo fallback de contingencia (corte internet, falla servidor). Adhesión ya no se requiere. Vigencia postergada por RG 5852/2026 al **1 agosto 2026**.
 
@@ -504,6 +656,8 @@ Aun siendo opcional, ¿hay beneficio fiscal (Ganancias / IIBB / inspecciones) de
 ---
 
 ### A-18. RG 5003/2021 — Factura A a Monotributista + leyenda Ley 27.618 (🔴 destapado por owner 2026-06-01)
+
+> ✅ **A-18.a/b RESUELTO por investigación 2026-07-10** (ver bloque consolidado arriba). Leyenda verbatim (Infoleg 350574): **"El crédito fiscal discriminado en el presente comprobante, sólo podrá ser computado a efectos del Régimen de Sostenimiento e Inclusión Fiscal para Pequeños Contribuyentes de la Ley N° 27.618"**; aplica a comprobantes clase A (incl. electrónico/ticket A). **Solo queda A-18.c** (coexistencia 27.743), **A-18.d** (TDF) **y A-18.e** (Padrón/sanción).
 
 Contexto: RG 5003/2021 (AFIP, hoy ARCA) cambió que cuando un Responsable Inscripto le factura a un Monotributista, debe emitir **factura clase A** (no B) con leyenda obligatoria sobre Ley 27.618 (Régimen de Sostenimiento e Inclusión Fiscal para Pequeños Contribuyentes).
 
@@ -595,6 +749,8 @@ Para las dos nuevas modalidades A ("OPERACIÓN SUJETA A RETENCIÓN" / "PAGO EN C
 ---
 
 ### A-23. Estado real de obligatoriedad CondicionIVAReceptorId al 01/08/2026 (🔴 nueva — detectada en Auditoría Beta 2026-06-03)
+
+> ✅ **A-23.a/b RESUELTO 2026-07-10** por re-extracción del **Manual COMPG v4.5** (02/07/2026, URL canónica). Texto literal v4.5: el campo se envía de forma **opcional "hasta tanto entre en vigencia su obligatoriedad reglamentada por la RG N°5616"**; changelogs v4.3/4.4/4.5 no la tocan → **sigue OPCIONAL**. Schema `condicion_iva_receptor_id` **NULL-allowed correcto** (las fuentes secundarias que decían "obligatorio" estaban equivocadas). CF cash → omitir o código **5**. Ver `tax-policy-versions/ar-2026-07-v1.md`. **Solo queda A-23.d** (impacto TDF, criterio profesional).
 
 **Contexto del hallazgo:** Auditoría Beta pre-fiscal detectó una **discrepancia entre fuentes** sobre el estado actual del campo `CondicionIVAReceptorId` en WSFEv1:
 
@@ -689,35 +845,35 @@ El research v3.4.2 confirmó `ImpOpEx` como "Importe exento" del header. ¿v4.2 
 
 **🔴 Ley 27.743 Transparencia Fiscal — A-11 (nueva — confirmado oficial 2025):**
 
-- [ ] **A-11.a** — Texto literal exacto de leyenda + líneas IVA / otros impuestos
-- [ ] **A-11.b** — Estructura visual (ubicación, tipografía, cuándo aparece)
-- [ ] **A-11.c** — Aplicabilidad a Tipo C + comprobantes TDF amparados
-- [ ] **A-11.d** — Sanción + período de gracia vigente
+- [x] **A-11.a** — ✅ RESUELTO 2026-07-10 (RG 5614 Art. 2.7): leyenda "Régimen de Transparencia Fiscal al Consumidor (Ley 27.743)" + "IVA Contenido" + "Otros Impuestos Nacionales Indirectos"
+- [x] **A-11.b** — ✅ RESUELTO 2026-07-10: espacio inferior izquierdo, datos verticales cada uno con su valor
+- [ ] **A-11.c** — Aplicabilidad a Tipo C + comprobantes TDF amparados (queda)
+- [ ] **A-11.d** — Sanción + período de gracia vigente (queda)
 
 **🔴 RG 5003/2021 — A-18 (destapado por owner 2026-06-01, RI a Monotri = clase A + leyenda Ley 27.618):**
 
-- [ ] **A-18.a** — Texto literal exacto de la leyenda RG 5003 + Ley 27.618 (vigente hoy)
-- [ ] **A-18.b** — Aplicabilidad a ticket A vs factura A "tradicional"
-- [ ] **A-18.c** — Coexistencia con Ley 27.743 Transparencia Fiscal (¿ambas leyendas?)
-- [ ] **A-18.d** — Interacción con régimen Ley 19.640 TDF (LIS caso real)
-- [ ] **A-18.e** — Sanción + validación Padrón A5 obligatoria por emisión
+- [x] **A-18.a** — ✅ RESUELTO 2026-07-10 verbatim (Infoleg 350574): "El crédito fiscal discriminado en el presente comprobante, sólo podrá ser computado a efectos del Régimen de Sostenimiento e Inclusión Fiscal para Pequeños Contribuyentes de la Ley N° 27.618"
+- [x] **A-18.b** — ✅ RESUELTO 2026-07-10: aplica a comprobantes clase A (incl. electrónico/ticket A)
+- [ ] **A-18.c** — Coexistencia con Ley 27.743 Transparencia Fiscal (¿ambas leyendas?) (queda)
+- [ ] **A-18.d** — Interacción con régimen Ley 19.640 TDF (LIS caso real) (queda)
+- [ ] **A-18.e** — Sanción + validación Padrón A5 obligatoria por emisión (queda)
 
 **🔴 RG 5762/2025 — A-19 (Chau M, dos sub-tipos A vigentes desde 1 dic 2025):**
 
-- [ ] **A-19.a** — Texto literal exacto de cada leyenda (Op. Sujeta a Retención + Pago CBU Informada)
-- [ ] **A-19.b** — Cómo Pandora detecta solvencia patrimonial del emisor
-- [ ] **A-19.c** — Decisión del sub-tipo en cada emisión (automático vs manual)
-- [ ] **A-19.d** — LIS: solvencia acreditada o no
-- [ ] **A-19.e** — Coexistencia con 3 leyendas en mismo comprobante (RG 5762 + RG 5003 + Ley 27.743)
+- [x] **A-19.a** — ✅ RESUELTO 2026-07-10: "OPERACIÓN SUJETA A RETENCIÓN" / "PAGO EN CBU INFORMADA"
+- [x] **A-19.b** — ✅ RESUELTO 2026-07-10: la solvencia la determina ARCA (habilitación automática); Pandora lee la clase habilitada, no la calcula
+- [ ] **A-19.c** — Decisión del sub-tipo en cada emisión (automático vs manual) — decisión ingeniería Pandora
+- [ ] **A-19.d** — LIS: solvencia acreditada o no (empírico, queda)
+- [ ] **A-19.e** — Coexistencia con 3 leyendas en mismo comprobante (queda)
 
 **🔴 RG 5782/2025 — A-20 (CAEA solo contingencia, vigencia 1 ago 2026, revisa A-2 + B-6):**
 
-- [ ] **A-20.a** — Pool de CAEA pre-cargados — tamaño típico mensual y tope ARCA
-- [ ] **A-20.b** — Cómo solicitar CAEA (portal web vs WebService)
-- [ ] **A-20.c** — Cómo reportar uso post-contingencia a ARCA
-- [ ] **A-20.d** — Qué pasa si se agota pool de CAEA en contingencia prolongada
-- [ ] **A-20.e** — LIS adhesión actual a CAEA (probable que no)
-- [ ] **A-20.f** — Pandora F0 alcance: lanzar con CAEA o defer F0.5
+- [x] **A-20.a** — ✅ RESUELTO 2026-07-10: tope 5% mensual por sucursal (RG 4290 Tít. III)
+- [x] **A-20.b** — ✅ RESUELTO 2026-07-10: WebService `FECAEASolicitar`
+- [x] **A-20.c** — ✅ RESUELTO 2026-07-10: `FECAEARegInformativo` + DDJJ F.2051
+- [x] **A-20.d** — ✅ RESUELTO 2026-07-10: no rendir → ARCA deniega futuros CAEA/CAI
+- [ ] **A-20.e** — LIS adhesión actual a CAEA (empírico, queda)
+- [ ] **A-20.f** — Pandora F0 alcance: lanzar con CAEA o defer F0.5 (decisión Pandora, queda)
 
 **🟡 RG 5824/2026 — A-21 (Vinculación PV ↔ actividad económica, opcional desde 1 jul 2026):**
 
@@ -735,10 +891,10 @@ El research v3.4.2 confirmó `ImpOpEx` como "Importe exento" del header. ¿v4.2 
 
 **🔴 A-23 — CondicionIVAReceptorId estado real (Auditoría Beta 2026-06-03):**
 
-- [ ] **A-23.a** — Confirmar si al 01/08/2026 es obligatorio u opcional enviar el campo
-- [ ] **A-23.b** — Manejo CF cash sin DocTipo: código por defecto o omitir campo
-- [ ] **A-23.c** — Validación cruzada con CUIT del receptor (Padrón A5)
-- [ ] **A-23.d** — Impacto TDF Ley 19.640 (receptor también amparado)
+- [x] **A-23.a** — ✅ RESUELTO 2026-07-10 (re-extracción Manual v4.5): **OPCIONAL** confirmado ("hasta tanto entre en vigencia RG 5616"); schema NULL-allowed correcto
+- [x] **A-23.b** — ✅ RESUELTO 2026-07-10: CF cash → omitir el campo, o código **5 (Consumidor Final)** válido A/B/C
+- [ ] **A-23.c** — Validación cruzada con CUIT del receptor (Padrón A5) — verificable técnica en hot path, no requiere reunión
+- [ ] **A-23.d** — Impacto TDF Ley 19.640 (receptor también amparado) — criterio profesional, queda
 
 **🔴 A-24 — Manual WSFEv1 v4.2 vs research v3.4.2 (Auditoría Beta 2026-06-03):**
 
@@ -758,6 +914,45 @@ El research v3.4.2 confirmó `ImpOpEx` como "Importe exento" del header. ¿v4.2 
 > **✅ Auditoría Beta empírica (2026-06-03 PM)**: pdf-parse@2.4.5 instalado en proyecto Pandora. Manual COMPG v4.2 (1 de Mayo de 2026, 197 páginas) extraído + analizado. `tax-policy-versions/ar-2026-06-v2.md` creado reemplazando v1. **3 sub-preguntas A-24 resueltas sin contadora.** **A-25 nueva detectada** (Tipo C + ImpOpEx restrictivo).
 
 > **✅ ESTADO POST-EXTRACCIÓN (2026-06-03 PM):** pdf-parse@2.4.5 instalado como devDependency de Pandora. Manual v4.2 extraído verificadamente. Hallazgos persistidos en `tax-policy-versions/ar-2026-06-v2.md` (reemplaza v1). Algunas sub-preguntas A-24 ya resueltas empíricamente sin contadora — ver tabla en ar-2026-06-v2.md §"Lo que cambia respecto a ar-2026-06-v1".
+
+---
+
+### A-27. Contracargo sobre una venta YA FACTURADA (🟡 nueva — surgida del owner 2026-09-05)
+
+**El caso, con números:** el comercio vende $50.000 con tarjeta de crédito. Se emite la factura, ARCA devuelve el CAE, la caja cierra cuadrada, el mes se declara. **Treinta días después** el cliente desconoce el consumo y el procesador hace el contracargo: la plata se va. Para el comercio es una pérdida que ningún papel refleja todavía.
+
+**Por qué importa acá:** hoy Pandora no lo detecta (para tarjeta no hay ninguna fuente de datos; para MercadoPago el código reconoce `charged_back` pero nadie lo ve). Antes de construir la detección hace falta saber **qué hay que emitir cuando pasa**, porque eso define el modelo de datos.
+
+**Preguntas concretas:**
+
+1. **¿Qué comprobante corresponde?** ¿Nota de crédito por el total? ¿Y si el cliente ya se llevó la mercadería y no la devolvió — sigue siendo NC, o es una pérdida por incobrable que va por otro lado?
+2. **¿Con qué fecha se emite?** ¿La del contracargo, o la de la venta original?
+3. **¿Qué pasa si el período fiscal ya se declaró?** ¿Rectificativa, o se imputa al período en que ocurre el contracargo?
+4. **¿Cambia la respuesta según el medio?** Tarjeta (contracargo del procesador) vs MercadoPago (`charged_back` / devolución) vs transferencia desconocida.
+5. **¿Cuánto tiempo hacia atrás puede pasar esto?** Necesito saber la ventana real para definir cuánto tiempo hay que seguir vigilando un pago ya cobrado.
+
+**Por qué bloquea:** si la respuesta es "nota de crédito", entonces **NC deja de ser opcional en F1+** y pasa a ser requisito para operar con tarjeta de verdad. Hoy NC está diferida por decisión de scope (CLAUDE.md §5.3) asumiendo que sólo hace falta para devoluciones voluntarias — este caso no es voluntario y el comercio no lo elige.
+
+**Hipótesis Pandora (a confirmar, NO asumir):** NC por el total con fecha del contracargo. Es lo conservador, pero no está verificado.
+
+**Relacionado:** [ADR-0026](files/ADR-0026-correccion-medio-pago-append-only.md) deja las sesiones de caja cerradas en F1+ — y un contracargo **siempre** cae sobre una caja ya cerrada. Es un mecanismo aparte del arqueo, no una extensión.
+
+---
+
+### A-28. Método de valuación del inventario de bienes de cambio (🟡 nueva — surgida al construir el ítem 8, 2026-09-12)
+
+**Qué está construido:** el ítem 8 de tu pedido ya sale de Pandora — inventario valorizado a la fecha de cierre, con **fecha de adquisición, detalle e importe de compra por lote**, en pantalla y en CSV. La cantidad se reconstruye del libro de movimientos a esa fecha (no es el stock de hoy), y cada lote sale del comprobante de compra cargado.
+
+**La decisión que es tuya, no nuestra:** para valorizar hay que suponer **qué unidades son las que quedaron**. Hoy Pandora aplica **PEPS** (primero entrado, primero salido: lo que queda en stock son las compras más recientes) y **lo declara en la pantalla y en el encabezado del CSV**, para que ningún número viaje sin su criterio.
+
+**Preguntas concretas:**
+
+1. **¿PEPS es el método que usás para este comercio**, o preferís precio promedio ponderado (PPP) u otro? Cambiarlo es un cambio chico y aislado — la cuenta vive en una sola función.
+2. **Las unidades sin compra registrada.** Siempre va a haber algunas: lo que ya estaba en el local antes de empezar a cargar compras. Hoy se muestran **aparte**, valorizadas al último costo conocido y marcadas como *"costo declarado, sin comprobante"*. ¿Te sirve así, o preferís que queden en cero, o que no aparezcan?
+3. **Las unidades sin ningún costo** (producto que nunca se compró por el sistema y no tiene costo cargado) **no entran al total**, y el reporte dice cuántas son. ¿Es lo que esperás, o preferís una estimación?
+4. **¿Necesitás algo más en el archivo?** Hoy lleva: producto, SKU, fecha de adquisición, comprobante, cantidad, costo unitario, importe y origen.
+
+**Lo que Pandora NO hace y no va a hacer solo:** ajuste por inflación, valores corrientes o valor neto de realización. Eso es criterio profesional y sale del estudio.
 
 ---
 
@@ -1075,9 +1270,38 @@ Lista mínima propuesta para T&C de Pandora (validar / completar):
   Respuesta: ____________________________________________________________
 
 - ¿El derecho a "olvido" choca con la obligación de conservación fiscal 10 años (Ley 11.683)? ¿Cómo se resuelve el conflicto en la práctica?
-  - ☐ Prevalece conservación fiscal (rechazo del olvido con fundamento)
-  - ☐ Prevalece derecho ARCO (borrado parcial, mantener mínimo fiscal)
-  - ☐ Otro: __________________
+
+  > ✅ **Núcleo RESUELTO por investigación 2026-07-10 (verificado Infoleg).** **Ley 25.326 Art. 16 inc. 5** (verbatim): *"La supresión no procede… cuando existiera una obligación legal de conservar los datos."* + Art. 16 inc. 7 (conservación por los plazos de las disposiciones aplicables). → **Prevalece la conservación fiscal** para los datos del comprobante durante los 10 años (Ley 11.683 + Decreto 1397/79 + CCyC Art. 328). El "olvido" se rechaza con fundamento legal para esos datos.
+  >
+  > **Queda para el abogado (flujo, no el principio):** (a) petición a Pandora (encargado) vs comerciante (responsable) + plazo de respuesta ARCO; (b) cómo hacer "borrado parcial manteniendo el mínimo fiscal" en la práctica (datos NO fiscales del titular sí se suprimen; los del comprobante no).
+
+---
+
+### B-IA (🔵 F1+/F2 — NO bloquea Sprint 6/7/10, evaluar en el mismo ciclo). Transferencia de datos de tenant a un proveedor de IA en el exterior
+
+**Contexto:** Pandora evalúa (a futuro, F1+/F2 — sin construir aún) incorporar IA que analice datos del comercio (caso concreto pensado: botón "Analizar cierre de caja con IA"). El modelo NO se entrena; se usa un proveedor externo (OpenAI / Anthropic / Google) vía API, enviándole un **contexto acotado** (ej: resumen JSON del cierre: totales por medio de pago, diferencia de caja). La idea es minimizar y anonimizar datos, y que la IA solo sugiera (nunca decida — ADR-0024).
+
+- ¿Enviar datos de un tenant (aunque sean acotados) a un proveedor de IA **en el exterior** constituye transferencia internacional de datos bajo Ley 25.326? ¿Requiere consentimiento expreso del comerciante y/o del cliente final?
+
+  Respuesta: ____________________________________________________________
+
+- ¿Alcanza con **anonimizar** (ej: "Cliente #152" en vez de nombre/CUIT; solo importes agregados) para quedar fuera del régimen, o sigue siendo dato personal / sensible?
+
+  Respuesta: ____________________________________________________________
+
+- ¿Se necesita **DPA específico con el proveedor de IA** + cláusula de **opt-out de entrenamiento**? ¿Qué debe decir exactamente el consentimiento in-app?
+
+  Respuesta: ____________________________________________________________
+
+- ¿Cambia algo según el **destino** (EEUU sin nivel adecuado de protección vs UE)? ¿Requiere cláusulas contractuales tipo o autorización previa de AAIP?
+
+  Respuesta: ____________________________________________________________
+
+- Relación con **B-2** (inscripción AAIP) y **B-9** (mapping `pii_level`): ¿esto se declara junto con la inscripción o es un trámite/anexo aparte?
+
+  Respuesta: ____________________________________________________________
+
+> **Nota de scope:** esta pregunta es F1+/F2 (evaluación futura, ver memorias `idea-centro-inteligencia-pricing` + `idea-ia-implementacion-arquitectura`). Se incluye acá solo para aprovechar el mismo ciclo de reunión. **NO bloquea** ningún sprint actual — F0 no lleva IA. Es el gate duro para cualquier feature de IA sobre datos de tenant.
 
 ---
 
@@ -1116,6 +1340,10 @@ Lista mínima propuesta para T&C de Pandora (validar / completar):
 - [ ] **B-8** — Política Privacidad pública vs solo producto + DPA separado vs embebido
 - [ ] **B-9** — Mapping legal `pii_level` operacional vs Ley 25.326 (qué califica como personal/sensible en contexto Pandora) + plazos retención logs
 - [ ] **B-10** — Flujo formal ARCO + resolución conflicto ARCO vs conservación fiscal 10 años
+
+**🔵 Diferido F1+/F2 (IA / analítica — NO bloquea sprints actuales; evaluar en el mismo ciclo):**
+
+- [ ] **B-IA** — Transferencia de datos de tenant a proveedor de IA en el exterior (Ley 25.326): ¿transferencia internacional? consentimiento, ¿alcanza anonimizar?, DPA + opt-out training, destino internacional, relación con B-2/B-9. Gate para toda IA-sobre-datos-de-tenant. Extiende ADR-0024.
 
 **⚪ Si queda tiempo (B-11 a B-14):**
 
@@ -1161,3 +1389,4 @@ Tras ambas reuniones, los siguientes ADRs / docs se actualizan. El bloque "Decis
 | B-8 DPA + Privacy Policy | 🔴 abierto | Nuevo doc `politica-de-privacidad-v1.md` + DPA template si aplica |
 | B-9 mapping legal PII | 🟡 abierto | ADR-0019 S8 con tabla pii_level → categoría legal Ley 25.326 |
 | B-10 ARCO vs conservación fiscal | 🟡 abierto | Runbook `arco-request.md` (cuando aparezca primer caso) |
+| **B-IA** transferencia datos a IA externa (🔵 F1+/F2, NO bloquea) | 🔵 diferido — evaluar en el ciclo | Gate para features IA; extiende ADR-0024 |
