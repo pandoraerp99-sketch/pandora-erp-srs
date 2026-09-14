@@ -140,8 +140,11 @@ Hecho en `dc7b98c`. Lo que apareció al construirlo y no estaba en el plan:
 - **La lista de motivos vive en dos archivos** (`_common.ts` para la DB, el
   dominio para la pantalla) porque no pueden importarse entre sí; un test falla
   si difieren.
-- 🔴 **`/productos` no tiene modo oscuro** (medido: 0 reglas `data-theme`, la
-  pantalla entera queda clara). Preexistente.
+- 🔴 **`/productos` no tiene modo oscuro.** Preexistente. Medido dos veces:
+  0 reglas `data-theme` en `productosCss`, y con `data-theme="dark"` forzado
+  en `<html>` la card calcula `rgba(255,255,255,.58)` y el texto de fila
+  `rgb(13,20,36)`. (La primera captura "oscura" no probaba nada: sólo escribía
+  `localStorage`; se corrigió el script.)
 - ⚠️ Editar por `\\wsl.localhost` dejó cuatro archivos enteros en CRLF; se
   normalizaron antes del commit.
 
