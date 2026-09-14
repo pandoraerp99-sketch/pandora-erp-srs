@@ -12,7 +12,7 @@
 >
 > | # | Estado real |
 > |---|---|
-> | 2 TLS AFIP | ✅ **Cerrado** — `5c49410`: `soap-transport.ts` con TLS 1.2 + `rejectUnauthorized`, test `T-SEC-06` contra servidores reales |
+> | 2 TLS AFIP | ✅ **Cerrado** — `5c49410`: `soap-transport.ts` con TLS 1.2 + `rejectUnauthorized`, test `T-SEC-06` contra servidores TLS locales. Cableado al cobro; se ejercita contra AFIP recién cuando haya certificado |
 > | 3 `vault.ts` | ✅ **Cableado** — primer consumidor real: certificados AFIP por tenant (migration 0025) |
 > | 4 Fork triple de Caja | ✅ **Resuelto** — `ae42a49` (2026-09-03): `/caja` es el React sobre AppShell |
 > | 6 Archivar mockups | ✅ Hecho por Fable F4 (2026-09-02) |

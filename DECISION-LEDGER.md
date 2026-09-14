@@ -151,7 +151,7 @@
 
 ### 🔴 Mutaciones de plata y de acceso SIN evento de `audit_log` (detectado 2026-09-14)
 
-**Estado:** abierto — requiere aprobación del owner (EVENT-TAXONOMY regla J1: catálogo CERRADO).
+**Estado:** abierto — **propuesta escrita, espera aprobación del owner**: [PROPUESTA-EVENTOS-AUDITORIA-2026-09.md](PROPUESTA-EVENTOS-AUDITORIA-2026-09.md) (6 eventos, 43→49; pendientes y cargo-por-venta excluidos con motivo; incluye un hallazgo 🔴 latente: `adjustAccount` no verifica el tenant del cliente). EVENT-TAXONOMY regla J1: catálogo CERRADO.
 **Qué pasa:** CLAUDE.md §16.9 exige un evento de auditoría por mutación crítica en tablas de tenant. Estas escriben filas con plata o dan acceso y **no auditan** porque el catálogo no tiene eventos para ellas:
 - `expense.service.ts` — registrar gasto y **anular** gasto (append-only, irreversible, devuelve plata a la caja, revierte stock).
 - `account.service.ts` — cargos y cobros de cuenta corriente (ADR-0027).
@@ -927,7 +927,7 @@ Construcción del primitivo `withIdempotency()` (diferido NO bloqueado de mayor 
 - **Webhook de MP:** `company_id` del path validado (forma + existencia) antes del tracing (`2a4aa27`, `T-MT-09`); secret atado a UN comercio declarado, fail-closed (`4c7586f`, `T-SEC-09`) → el segundo comercio necesita vault, no queda riesgo silencioso.
 - **CLAUDE.md §7.2 corregido contra el código:** el filtro `tenant_id` va dentro del `where`; `validateTenantAccess()` sólo donde el tenant no viene de la sesión.
 - **`noUncheckedIndexedAccess` activo** (`1341334`). **CSP `unsafe-eval` sólo en dev** (`1aa0160`).
-- **TLS 1.2+ en el canal AFIP (D-24 CERRADO)** — `soap-transport.ts` con `minVersion` + `rejectUnauthorized: true`; `T-SEC-06` levanta servidores TLS reales y comprueba que la conexión FALLA con autofirmado y con TLS 1.1.
+- **TLS 1.2+ en el canal AFIP (D-24 CERRADO)** — `soap-transport.ts` con `minVersion` + `rejectUnauthorized: true`; `T-SEC-06` levanta servidores TLS reales y comprueba que la conexión FALLA con autofirmado y con TLS 1.1. Cableado de punta a punta (`emit-after-cobro` → `getCaeRequester` → `createLoginCmsTransport`/`createWsfev1Transport`), **pero todavía no se ejercitó contra AFIP**: sin certificado cargado la factory devuelve `null` y la emisión se difiere. Probado contra servidores TLS locales, no contra homologación.
 - **Build de producción sano** (`4a79120`, 2026-09-14): el "prerender de `/_global-error` falla" que se arrastraba desde julio era `NODE_ENV` exportado al compilar, no el código. `scripts/smoke-prod.sh` compila y levanta producción con sesión.
 
 #### C. Identidad y contador
