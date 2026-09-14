@@ -1,7 +1,7 @@
 # Propuesta — eventos de auditoría que faltan (EVENT-TAXONOMY v2.0.3 → v2.1.0)
 
 **Fecha:** 2026-09-14
-**Estado:** 🟡 **PROPUESTA — espera aprobación del owner** (regla J1: el catálogo es CERRADO; hasta que se apruebe, `event-names.ts` no se toca)
+**Estado:** 🟢 **APROBADA completa por el owner el 2026-09-14** ("dale") e implementada: EVENT-TAXONOMY v2.1.0, test `T-AUDIT-02`, `scripts/mutar-auditoria-plata.sh`. Los hallazgos §4.1 y §4.2 quedaron arreglados en el mismo trabajo; §4.3 (retención) queda anotado en EVENT-TAXONOMY §7.
 **Origen:** auditoría de documentación del 2026-09-14 → decisión abierta 🔴 del DECISION-LEDGER ("mutaciones de plata y de acceso sin evento de audit_log")
 **Qué pide la regla:** CLAUDE.md §16.9 — *"toda tabla con datos de tenant: evento `audit_log` en cada mutation crítica"*; §1.7 — *"decir 'no se loguea' debe ser una decisión deliberada y documentada"*.
 

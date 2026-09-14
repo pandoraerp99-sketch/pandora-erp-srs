@@ -1,13 +1,14 @@
 # Event Taxonomy F0 — Pandora ERP
 
-**Versión:** v2.0.3
-**Fecha:** 2026-05-27 (creación) · 2026-05-28 (auditoría Lote 3) · 2026-05-30 (auditoría focal pre-migración) · 2026-07-13 (ADR-0026)
+**Versión:** v2.1.0
+**Fecha:** 2026-05-27 (creación) · 2026-05-28 (auditoría Lote 3) · 2026-05-30 (auditoría focal pre-migración) · 2026-07-13 (ADR-0026) · 2026-09-14 (plata y acceso)
 **Reemplaza:**
 - v1.0.0 — enterprise scope original (archivada conceptualmente en §11 "Evolution Path")
 - v2.0.0 — simplificación F0 inicial (mismo día); 4 fixes técnicos aplicados para v2.0.1: PK metrics_counter sin COALESCE + cleanup partitioning + jobs_queue 6 reglas J1-J6 + metrics whitelist
 - v2.0.1 — post-auditoría Lote 3: catálogo job_types unificado con CLAUDE.md/BOUNDED-CONTEXTS, dedupe reglas operativas, 3 eventos `system.dead_job.*` agregados
 - v2.0.2 — post-auditoría focal 2026-05-30 PM: agregado dominio `product` con 6 eventos (cambios fiscalmente sensibles) + refinada disciplina "qué va a audit_log y qué a Pino" para sale/product domains
-- v2.0.3 — esta versión, ADR-0026 (2026-07-13): agregado `payment.method_reclassified` (corrección append-only de medio de pago). 42→43 eventos
+- v2.0.3 — ADR-0026 (2026-07-13): agregado `payment.method_reclassified` (corrección append-only de medio de pago). 42→43 eventos
+- v2.1.0 — esta versión (2026-09-14, **aprobada por el owner**): 6 eventos para mutaciones de plata y de acceso que quedaban sólo en Pino — `expense.registered`, `expense.annulled`, `customer.account.settled`, `customer.account.adjusted`, `auth.accountant.granted`, `auth.accountant.revoked`. Dominio nuevo `expense`. 43→49 eventos. Propuesta y exclusiones razonadas: [PROPUESTA-EVENTOS-AUDITORIA-2026-09.md](PROPUESTA-EVENTOS-AUDITORIA-2026-09.md). Test: `T-AUDIT-02`
 **Relacionado con:** ADR-0010 (idempotency), ADR-0019 (audit_log + observability), Rule 04-observability, ADR-0022 (fiscal events críticos), [CAPABILITY-MAP.md](CAPABILITY-MAP.md), [BOUNDED-CONTEXTS.md](BOUNDED-CONTEXTS.md), [OPERATIONAL-SEVERITY.md](OPERATIONAL-SEVERITY.md)
 
 > **Filosofía:** F0 separa 4 concerns que la versión anterior mezclaba. Resultado: 3 tablas dedicadas (`audit_log` para compliance, `jobs_queue` para trabajo async, `metrics_counter` para observability) + Pino logs (debugging) externos. Sin outbox enterprise, sin event bus, sin worker poller para audit.
@@ -817,11 +818,11 @@ logger.info({
 
 ---
 
-## 5. Catálogo F0 de `audit_log` events (43 eventos)
+## 5. Catálogo F0 de `audit_log` events (49 eventos)
 
 Solo los que pasan el test de §1. El resto va a Pino logs + counters.
 
-### Domain: `auth` (4 eventos)
+### Domain: `auth` (6 eventos)
 
 | `event_name` | severity | pii_level | idempotency_key | Notas |
 |---|---|---|---|---|
@@ -829,6 +830,10 @@ Solo los que pasan el test de §1. El resto va a Pino logs + counters.
 | `auth.login.failed` | warning | sensitive_pii (IP) | — | Tracking abuso |
 | `auth.password.changed` | warning | internal | — | Invalida sesiones existentes |
 | `auth.role.changed` | warning | internal | — | Invalida cache permisos |
+| `auth.accountant.granted` | warning | internal | — | v2.1.0. Un **tercero** (la contadora, ADR-0008) pasa a ver los datos del comercio. Se emite sólo cuando el vínculo se **crea** (reinvitar no emite). Payload: `{accountant_user_id, via: 'invitacion'\|'usuario_existente'}` — sólo ids, el email no va |
+| `auth.accountant.revoked` | warning | internal | — | v2.1.0. El vínculo se borra de `company_users`: sin el evento no queda rastro de que tuvo acceso. Sólo si efectivamente se borró una fila. Payload: `{accountant_user_id}` |
+
+> **Por qué no se reusa `auth.role.changed` para la contadora:** ese evento es "a un usuario del comercio le cambiaron el rol". Dar acceso a un tercero externo es otro hecho, y reusarlo haría que el log mintiera sobre qué pasó.
 
 ### Domain: `sale` (4 eventos)
 
@@ -891,12 +896,23 @@ Solo los que pasan el test de §1. El resto va a Pino logs + counters.
 | `cash_session.closed` | info | internal | — | Cierre limpio |
 | `cash_session.closed_with_difference` | warning | internal | — | Diferencia ≠ 0 → atención |
 
-### Domain: `customer` (2 eventos)
+### Domain: `customer` (4 eventos)
 
 | `event_name` | severity | pii_level | idempotency_key | Notas |
 |---|---|---|---|---|
 | `customer.created` | info | pii | — | Nuevo cliente cargado |
 | `customer.deletion_requested` | warning | pii | — | ARCO request — Ley 25.326 |
+| `customer.account.settled` | info | internal | — | v2.1.0 (ADR-0027). El cliente paga su cuenta; en efectivo entra plata al cajón **fuera de una venta**. Payload: `{movement_id, customer_id, amount, method, saldo_antes, cash_session_id, cash_movement_id}` |
+| `customer.account.adjusted` | warning | internal | — | v2.1.0 (ADR-0027). Ajuste manual que **suma deuda**, con motivo obligatorio. Payload: `{movement_id, customer_id, amount, reason, saldo_antes}` |
+
+> El **cargo** por venta fiada no tiene evento propio: ocurre dentro de `finalizeSale` y `sale.completed` ya lleva `payments[]` con `method: 'cuenta_corriente'`. Un evento aparte duplicaría el mismo hecho.
+
+### Domain: `expense` (2 eventos — agregado v2.1.0)
+
+| `event_name` | severity | pii_level | idempotency_key | Notas |
+|---|---|---|---|---|
+| `expense.registered` | info | internal | — | Gasto cargado. Si es mercadería, **entra stock**: el movimiento `purchase` va con `skip_audit` y este evento lleva sus ids (mismo patrón que `sale.completed`). Payload: `{expense_id, fecha, categoria, total, neto, iva, medio_pago, en_iva_compras, tercero_id, comprobante_tipo, comprobante_numero, cash_movement_id, items[{product_id, qty, unit_cost}], stock_movement_ids[]}` |
+| `expense.annulled` | warning | internal | — | Anulación append-only (fila en cero con `corrects_id`): **devuelve plata a la caja de hoy y saca el stock** de la compra. Payload: `{expense_id, annulment_id, fecha_original, total_anulado, motivo, devolvio_a_caja, cash_session_id, deposit_cash_movement_id, stock_movement_ids[]}` |
 
 ### Domain: `subscription` (2 eventos)
 
@@ -932,7 +948,7 @@ Solo los que pasan el test de §1. El resto va a Pino logs + counters.
 |---|---|---|---|---|
 | `system.incident_handled` | error | internal | — | Operator ejecutó runbook completo. Payload obligatorio: `{ runbook: string, severity_observed: S0\|S1\|S2\|S3, steps_taken: string[], outcome: string, duration_minutes: number }` |
 
-**Total: 43 eventos auditables F0** (32 originales + 3 system.dead_job.* + 1 system.incident_handled v2.0.1 + 6 product.* v2.0.2 + 1 payment.method_reclassified v2.0.3/ADR-0026). Todo lo demás (cache hits, request lifecycle, debug, métricas, draft lifecycle, updates triviales) → Pino logs + counters.
+**Total: 49 eventos auditables F0** (32 originales + 3 system.dead_job.* + 1 system.incident_handled v2.0.1 + 6 product.* v2.0.2 + 1 payment.method_reclassified v2.0.3/ADR-0026 + 6 de plata y acceso v2.1.0). Todo lo demás (cache hits, request lifecycle, debug, métricas, draft lifecycle, updates triviales) → Pino logs + counters.
 
 ### Lo que NO va a audit_log (deliberado)
 
@@ -950,6 +966,9 @@ Solo los que pasan el test de §1. El resto va a Pino logs + counters.
 | `payment.mp.qr_generated` | counter `payment.mp.qr_generated` |
 | `fiscal.invoice.requested` | Es estado interno del job, no event auditable |
 | `fiscal.invoice.afip_request_sent` | Pino log debug del worker |
+| Pendientes / agenda (`task.*`: crear, completar, reabrir, editar, borrar) | Pino log — un pendiente es **intención**, no hecho económico; es la primera tabla que se edita a propósito (decidido v2.1.0) |
+| Alta/edición de proveedores (`terceros`) | Pino log — no cambia plata ni stock |
+| El `cash_movement` de un cobro o de la devolución de un gasto anulado | Resumido en `cash_session.closed*`; el hecho de negocio lo audita `customer.account.settled` / `expense.annulled` con el id |
 
 ### Regla de oro para decidir audit vs Pino
 
@@ -976,7 +995,7 @@ Solo los que pasan el test de §1. El resto va a Pino logs + counters.
 - **Verbos en pasado** (`created`, `received`, `failed`)
 - **Outcome solo si dual** (`cae_received` vs `cae_rejected`)
 
-Domains permitidos F0: `auth`, `sale`, `fiscal`, `payment`, `stock`, `product`, `cash_session`, `customer`, `subscription`, `system`, `security`. Sub-domains válidos F0: `system.dead_job.*`.
+Domains permitidos F0: `auth`, `sale`, `fiscal`, `payment`, `stock`, `product`, `cash_session`, `customer`, `expense` (v2.1.0), `subscription`, `system`, `security`. Sub-domains válidos F0: `system.dead_job.*`, `customer.account.*` y `auth.accountant.*` (v2.1.0).
 
 **Naming inmutable post-release.** Si necesitás cambiar payload manteniendo semántica → bumpear `event_version`.
 
@@ -999,8 +1018,11 @@ Domains permitidos F0: `auth`, `sale`, `fiscal`, `payment`, `stock`, `product`, 
 | `fiscal.*` | 10 años (Ley 11.683) |
 | `payment.*` | 10 años (compliance financiero) |
 | `subscription.*` financieros | 10 años |
-| `auth.*` | aplicar tabla default |
+| `auth.*` | aplicar tabla default (`auth.accountant.*`: plazo legal pendiente **B-5** abogado) |
 | `system.*` críticos | 10 años |
+| `expense.*`, `customer.account.*` | 10 años — son plata, igual que `payment.*` (v2.1.0) |
+
+> ⚠️ **2026-09-14:** `computeRetentionDays` está especificada acá pero **no implementada** en `audit-writer.ts`: hoy todo evento vive lo que vive su partición anual (DROP PARTITION a los 10 años). Si se implementa, el override de `expense.*` y `customer.account.*` es obligatorio — con la tabla por defecto, `expense.registered` (info) duraría 90 días.
 
 Función canónica al insertar:
 

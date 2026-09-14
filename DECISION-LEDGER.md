@@ -85,7 +85,7 @@
 |---|---|
 | `DECISION-LEDGER.md` | Este archivo. Source of truth de qué decisión está dónde. |
 | `AUTHORITY-MAP.md` | Matriz de autoridades del sistema (quién decide qué, qué dependencias) |
-| `EVENT-TAXONOMY.md` | **v2.0.3** — Catálogo canónico **CERRADO de 43 eventos** (coincide exacto con `src/lib/audit/event-names.ts`) + 4 concerns separados (audit_log + jobs_queue + metrics_counter + Pino). v2.0.2 agregó `product.*`; v2.0.3 `payment.method_reclassified` (ADR-0026). Nota 2026-09-12: `stock.adjusted_manually` cubre también la merma (`type` + `motivo` en payload, migration 0038) |
+| `EVENT-TAXONOMY.md` | **v2.1.0** (2026-09-14) — Catálogo canónico **CERRADO de 49 eventos** (coincide exacto con `src/lib/audit/event-names.ts`; v2.1.0 sumó 6 de plata y acceso) + 4 concerns separados (audit_log + jobs_queue + metrics_counter + Pino). v2.0.2 agregó `product.*`; v2.0.3 `payment.method_reclassified` (ADR-0026). Nota 2026-09-12: `stock.adjusted_manually` cubre también la merma (`type` + `motivo` en payload, migration 0038) |
 | `QUEUE.md` · `DRIFT-REPORT.md` · `INVENTARIO-REAL.md` · `FABLE-TASKS.md` | Auditoría docs-vs-código del **2026-09-02** (25 contradicciones, 11 ALTA) y su cola de trabajo. P0 cerrada completa (RLS, rate limit, webhook MP). ⚠️ QUEUE quedó desactualizada después del 2026-09-05: el trabajo pasó a guiarse por `EVIDENCIA-pedido-contadora-2026-09.md` |
 | `EVIDENCIA-pedido-contadora-2026-09.md` | **Especificación real** (2026-09-09): lo que la contadora le pide al comercio para los Estados Contables. Desde esa fecha es la fuente de prioridad del producto (ver puesta al día al final) |
 | `RESEARCH-BRIEF-*.md` | Un brief por feature significativa ANTES del código (metodología del owner): panel, calendario-y-proyecciones, vencimientos-fiscales, gastos, gastos-detalle-y-anulacion, compras-y-lotes, inventario-valorizado, ajuste-de-stock, caja-egresos. Plantilla: `RESEARCH-BRIEF-template.md` |
@@ -149,9 +149,11 @@
 **Bloqueante para:** lanzamiento F0 con clientes reales (B2.7 del apéndice).
 **Resolución requerida:** consulta corta con abogado AAIP.
 
-### 🔴 Mutaciones de plata y de acceso SIN evento de `audit_log` (detectado 2026-09-14)
+### ✅ Mutaciones de plata y de acceso SIN evento de `audit_log` (detectado y CERRADO 2026-09-14)
 
-**Estado:** abierto — **propuesta escrita, espera aprobación del owner**: [PROPUESTA-EVENTOS-AUDITORIA-2026-09.md](PROPUESTA-EVENTOS-AUDITORIA-2026-09.md) (6 eventos, 43→49; pendientes y cargo-por-venta excluidos con motivo; incluye un hallazgo 🔴 latente: `adjustAccount` no verifica el tenant del cliente). EVENT-TAXONOMY regla J1: catálogo CERRADO.
+**Estado:** 🟢 **cerrado** — el owner aprobó la [propuesta](PROPUESTA-EVENTOS-AUDITORIA-2026-09.md) completa ("dale", 2026-09-14). EVENT-TAXONOMY **v2.1.0** (43→49): `expense.registered`, `expense.annulled`, `customer.account.settled`, `customer.account.adjusted`, `auth.accountant.granted`, `auth.accountant.revoked`, cada uno en la misma transacción que su mutación. Excluidos con motivo: pendientes (`task.*`) y el cargo por venta fiada (ya en `sale.completed`). Arreglado en el mismo trabajo: `adjustAccount` ahora verifica que el cliente sea del comercio. Test `T-AUDIT-02` (14 casos) + `scripts/mutar-auditoria-plata.sh` (12/12 mutaciones atrapadas).
+
+*Lo que sigue es el registro del hallazgo, tal como se abrió:*
 **Qué pasa:** CLAUDE.md §16.9 exige un evento de auditoría por mutación crítica en tablas de tenant. Estas escriben filas con plata o dan acceso y **no auditan** porque el catálogo no tiene eventos para ellas:
 - `expense.service.ts` — registrar gasto y **anular** gasto (append-only, irreversible, devuelve plata a la caja, revierte stock).
 - `account.service.ts` — cargos y cobros de cuenta corriente (ADR-0027).
