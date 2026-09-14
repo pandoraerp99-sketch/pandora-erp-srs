@@ -1,7 +1,7 @@
 # Research Brief — `Próximos vencimientos` (panel de la contadora)
 
 **Fecha:** 2026-09-09
-**Estado:** 🧩 diseño
+**Estado:** 🧩 diseño — **NO construido** al 2026-09-14 (no hay tabla de vencimientos; sólo feriados, migrations 0028/0029). Falta además la pasada de verificación del calendario anual (§ pendientes)
 **Autor:** sesión Claude + Agus
 **Relacionado:** panel `/contador` · maqueta `pos-preview/contador-v2.html` · `tax-policy-versions/` · memoria `feedback-validar-fuentes-oficiales`
 

@@ -6,6 +6,24 @@
 
 **Tamaños:** `S` < 1h · `M` 1-4h · `L` > 4h o multi-sesión.
 
+> ## Estado al 2026-09-14 — esta cola quedó atrás del trabajo real
+>
+> Desde el 2026-09-09 la prioridad sale de `EVIDENCIA-pedido-contadora-2026-09.md`, no de esta cola. Lo decidido y construido desde junio está en DECISION-LEDGER → "Puesta al día jun → sep 2026". Estado de los ítems de abajo que no estaban marcados:
+>
+> | # | Estado real |
+> |---|---|
+> | 2 TLS AFIP | ✅ **Cerrado** — `5c49410`: `soap-transport.ts` con TLS 1.2 + `rejectUnauthorized`, test `T-SEC-06` contra servidores reales |
+> | 3 `vault.ts` | ✅ **Cableado** — primer consumidor real: certificados AFIP por tenant (migration 0025) |
+> | 4 Fork triple de Caja | ✅ **Resuelto** — `ae42a49` (2026-09-03): `/caja` es el React sobre AppShell |
+> | 6 Archivar mockups | ✅ Hecho por Fable F4 (2026-09-02) |
+> | 9 Sincronizar CLAUDE.md | ✅ Hecho (Fable F1) y re-sincronizado 2026-09-14 (27 ADRs, §3.6) |
+> | 10 Tests `product.service.ts` | 🟡 **Parcial** — cubren alta/edición/rubro/ajuste/stock inicial/historial (T-INV-09/10/11/13); sin test propio `softDeleteProduct`, `searchProducts`, `listLowStockProducts` |
+> | 11 `noUncheckedIndexedAccess` | ✅ `1341334` (Fable F5) |
+> | 13 Portar pantallas | 🚧 7 reales: POS, Caja, Productos, Clientes, Gastos, Contador, Panel. Faltan Stock, Ofertas, Facturas, Presupuestos, Pedidos, Señas, Devoluciones, Reportes, Integraciones, Configuración |
+> | 14 Modo oscuro | 🚧 Con tema: Caja, Clientes, Gastos, Panel. **Sin tema (medido): Productos, Contador** |
+>
+> **Nuevo, fuera de esta cola:** mutaciones de plata y de acceso sin evento de `audit_log` (ver Ledger → Decisiones abiertas).
+
 ---
 
 ## P0 — Cerrar agujeros de seguridad

@@ -1,7 +1,7 @@
 # Research Brief — Inventario de bienes de cambio valorizado al cierre
 
 **Fecha:** 2026-09-12
-**Estado:** propuesto
+**Estado:** 🏁 cerrado — `3be8928` + `e721a69` + `d970bb6` (migration 0037) + `e65883c`. Queda A-28 (método de valuación, contadora)
 **Slice:** 4 de `RESEARCH-BRIEF-compras-y-lotes.md` — la última
 **Ítem 8** del pedido de la contadora, textual: *"Inventario de bienes de cambio
 VALORIZADO al cierre (fecha adq., detalle, importe de compra)"*.

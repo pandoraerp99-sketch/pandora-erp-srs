@@ -1,7 +1,7 @@
 # Research Brief — `Calendario`, `Agenda/Pendientes` y `Proyecciones`
 
 **Fecha:** 2026-09-10
-**Estado:** 🧩 diseño
+**Estado:** 🚧 parcial — calendario (`560f981`, 0028/0029), pendientes (`f8a5ec5`, 0030), días de stock (`f534d17`), cierre de mes (`38cea0e`) y margen (`6ac0c25`) hechos. Faltan: vencimientos cargados, patrón por día de la semana (~2-3 meses de datos), contra el año pasado (13 meses)
 **Autor:** sesión Claude (owner: Agus)
 **Relacionado:** maqueta `public/panel.html` (bloques `#calCard` y `#pendCard`) · [`RESEARCH-BRIEF-vencimientos-fiscales.md`](RESEARCH-BRIEF-vencimientos-fiscales.md) · [`RESEARCH-BRIEF-panel.md`](RESEARCH-BRIEF-panel.md) §8.b · memoria `feedback-validar-fuentes-oficiales`
 

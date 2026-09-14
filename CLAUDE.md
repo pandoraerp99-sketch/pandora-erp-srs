@@ -174,7 +174,7 @@ Pandora tiene validaciones que dependen de **profesionales externos** (contador 
 
 # 3. Decision Registry Snapshot
 
-## 3.1 ADRs activos (26 vigentes — fuente: filesystem real `files/ADR-*.md`)
+## 3.1 ADRs activos (27 vigentes — fuente: filesystem real `files/ADR-*.md`)
 
 | ID | Tema | Estado | Validación |
 |---|---|---|---|
@@ -204,6 +204,7 @@ Pandora tiene validaciones que dependen de **profesionales externos** (contador 
 | ADR-0024 | IA Boundary Policy — "IA sugiere, NUNCA decide" (15 áreas) | Aprobado | 🟢 |
 | ADR-0025 | Catálogos Regulatorios Runtime (12 FEParam* + cache + boot validation fail-closed) | Aprobado — **implementación diferida a F1+** (rev. 2026-09-03) | 🟡 (F0 = hardcode anclado por `tax_policy_version`; evidencia: RG 5762 eliminó clase M y el código `0051` no cambió) |
 | ADR-0026 | Corrección de medio de pago append-only (`corrects_id` self-ref, UNIQUE parcial, cierre excluye superseded). Nuevo evento `payment.method_reclassified` | Aprobado | 🟢 |
+| ADR-0027 | Cuenta corriente de clientes como libro append-only (el saldo se calcula, nunca se guarda) + cierre de caja fail-closed ante tipo de movimiento desconocido | Aprobado | 🟢 |
 
 ## 3.2 Trilogía de spec arquitectónica (cerrada 2026-05-27 PM)
 
@@ -285,7 +286,9 @@ Ver [DECISION-LEDGER.md sección "Decisiones abiertas críticas"](DECISION-LEDGE
 ## 3.6 Estado del repo (vive en WSL, no acá)
 
 **Path:** `~/workspace/pandora-erp` (WSL2/Ubuntu/Node 22)
-**Status:** SIN AVANCES desde 2026-05-21. Existe sólo el esqueleto del Sprint Visual de 3 días (componentes Hero / Atmospheres / etc.). Todo lo demás (multi-tenant, fiscal, POS, etc.) falta.
+**Status (actualizado 2026-09-14):** en construcción activa — 186 commits, migrations hasta 0038. Pantallas reales en React: `/pos`, `/caja`, `/productos`, `/clientes`, `/gastos`, `/contador`, `/panel` (+ login). Plataforma multi-tenant con RLS, audit, idempotency cableada al cobro, cadena fiscal hasta AFIP lista **salvo el certificado**. El detalle de qué se decidió y cuándo vive en [DECISION-LEDGER.md](DECISION-LEDGER.md) → "Puesta al día jun → sep 2026".
+
+> ~~SIN AVANCES desde 2026-05-21~~ — texto del 2026-05-28, quedó viejo.
 
 ---
 
@@ -3167,7 +3170,9 @@ SRS/
 
 Este documento es **vigente al 2026-05-28**. Cualquier cambio estructural en Pandora debe sincronizarse acá. Cualquier sesión futura debe respetar este contrato.
 
-**Estado al cierre:**
+> **Nota 2026-09-14:** lo que sigue es la foto del 2026-05-28 y se deja como histórico. El estado actual (27 ADRs, repo en construcción activa, decisiones de jun→sep) está en §3.1, §3.6 y en [DECISION-LEDGER.md](DECISION-LEDGER.md). ⚠️ §1.4 (métricas de éxito "5 clientes pagando") **no se reescribió**: el propósito real declarado por el owner el 2026-07-02 está registrado en el Ledger, que gana (§2.2), y la reescritura de §1.4 queda para cuando el owner la pida.
+
+**Estado al cierre (2026-05-28):**
 - 26 ADRs vigentes
 - Trilogía de spec arquitectónica completa (EVENT-TAXONOMY + CORRELATION-PROPAGATION + RECONCILIATION-ENGINE)
 - Sistema gobernable formal completo (NON-GOALS + CAPABILITY-MAP + BOUNDED-CONTEXTS + OPERATIONAL-SEVERITY + MONEY-POLICY + RUNBOOKS)

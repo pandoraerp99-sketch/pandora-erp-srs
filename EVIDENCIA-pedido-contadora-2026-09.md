@@ -23,14 +23,15 @@ profesional matriculado pide, por escrito, a un comercio que existe.
 | 5 | **Deudores** por prestación de servicios: **razón social, CUIT e importe** | ✅ **Sí, hoy** | Es EXACTAMENTE la cuenta corriente (ADR-0027) + `customers.doc_number`. En el pedido dice "Sin deudores" — porque no lo llevan, no porque no exista. |
 | 6 | **Otros créditos**: depósitos en garantía, retiro de socios, sumas a cobrar | ❌ | Contabilidad societaria, fuera del POS. |
 | 7 | Inventario de **bienes de uso** (fecha de adquisición, descripción, valor de compra) | ❌ | Activos fijos. No existe. |
-| 8 | Inventario de **bienes de cambio VALORIZADO** al cierre (fecha adq., detalle, importe de compra) | 🟡 **Casi** | Hay stock y `products.cost`. **Falta la fecha de adquisición por lote** — hoy el costo es un valor único del producto, no por compra. Está "Pendiente" en el pedido. |
+| 8 | Inventario de **bienes de cambio VALORIZADO** al cierre (fecha adq., detalle, importe de compra) | ✅ **Sí, desde 2026-09-12** | `3be8928`: foto a la fecha de cierre desde el **libro** de stock (no `stock_current`), con fecha de adquisición e importe de compra por **lote** (`expense_items`, migrations 0034/0036), fecha de negocio por movimiento (0037) y CSV para el estudio. Tres estados: con compra, **sin compra asociada** (stock inicial), sin costo. El método (PEPS) va **declarado** en el CSV: la elección es del estudio → pregunta **A-28**. |
 | 9 | **Proveedores/acreedores**: razón social, CUIT e importe | 🟡 **Media — construida la mitad** (2026-09-09) | **Hecho**: listado + export CSV de proveedores del período con razón social, CUIT e importe, y una tarjeta en `/gastos` para revisarlo antes de mandarlo (marca si a un proveedor le quedaron dos CUIT distintos). **Falta la otra mitad, y no por olvido**: "acreedores **a la fecha de cierre**" son los que **NO se pagaron**, y todo gasto en Pandora nace pagado. El CSV lo aclara adentro para que nadie lo lea como "no hay saldos pendientes". Cuenta corriente de proveedores sigue diferida. |
 | 10 | **Préstamos bancarios** | ❌ | — |
 | 11 | **Libro IVA compras y ventas** del ejercicio | 🟡 | Ventas: cuando se emita ante AFIP. Compras: no. El pedido aclara que **el estudio ya lo tiene** (lo baja de ARCA). |
 | 12 | Comprobantes de pago: **alquileres** (con contrato), **seguros**, **servicios** (luz, gas, agua, cable, teléfono), **impuestos y tasas municipales**, **honorarios de directores**, y **otros gastos no incluidos en el IVA compras** | 🟡 **Media** (2026-09-09) | **Construido**: `/gastos` con esas mismas 6 categorías + export CSV. Lo que da es el **detalle** de cada pago (fecha, proveedor, CUIT, comprobante, importe, medio). Lo que NO da es el **comprobante en sí** —el PDF, la foto, el contrato de alquiler— porque adjuntos quedó diferido en el brief (necesita Storage por tenant). Ver §3. |
 
-**Marcador: de 12 ítems, Pandora cubre 2 enteros y 3 a medias** (era 2 y 1 antes
-del módulo de gastos, 2026-09-09).
+**Marcador: de 12 ítems, Pandora cubre 3 enteros (1, 5, 8) y 3 a medias (9, 11, 12)**
+(actualizado 2026-09-14; era 2 y 1 antes del módulo de gastos, 2026-09-09, y 2 y 3
+hasta el inventario valorizado, 2026-09-12).
 
 ## 2. Lo que esto corrige de lo que estábamos construyendo
 

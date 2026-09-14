@@ -1,6 +1,6 @@
 # Decision Ledger — Pandora ERP
 
-**Última actualización:** 2026-06-02
+**Última actualización:** 2026-09-14 (puesta al día jun→sep 2026 — ver sección al final)
 **Propósito:** source of truth único de qué decisión está dónde, en qué estado, y qué dependencias tiene.
 
 > Si CLAUDE.md o cualquier doc contradice este ledger, **el ledger gana**. Cualquier inconsistencia detectada se reporta y se actualiza acá primero.
@@ -51,6 +51,7 @@
 | ADR-0024 | `files/ADR-0024-ia-boundary-policy.md` | IA Boundary Policy ("IA sugiere, nunca decide"): 15 áreas BLINDADAS (fiscal/money/multi-tenant/auth/audit/snapshots) + áreas PERMITIDAS con guidelines + patrón canónico input→IA sugiere→humano confirma→dominio + audit trace `payload.ai_suggestion` (NUNCA `actor_type='ai'`). Cristaliza invariante ANTES de Sprint 6. Refuerza ADR-0019/0022/0023, formaliza NON-GOALS N-TECH-15. | Aprobado | 🟢 (decisión interna, sin pendientes humanos) | Toda feature futura que considere IA | ADR-0019, ADR-0022, ADR-0023, NON-GOALS |
 | ADR-0025 | `files/ADR-0025-catalogos-regulatorios-runtime.md` | Catálogos Regulatorios Runtime + Snapshot Policy: 12 métodos `FEParam*` WSFEv1 verificados contra WSDL oficial. Patrón: runtime cache + boot validation + cron refresh + fail-closed + snapshot autosuficiente. Generaliza ADR-0023. **⏸️ REVISIÓN 2026-09-03 — implementación DIFERIDA a F1+.** La auditoría 2026-09-02 detectó que `afip-codes.ts` hardcodea los catálogos y que el módulo `catalogs/` nunca se construyó (drift ALTA). Evidencia que cambió la decisión: la **RG 5762/2025 eliminó la clase "M" entera** (01/12/2025) y aun así **el código interno siguió siendo `0051`** → ARCA cambia nombres/leyendas/condiciones pero **preserva los códigos numéricos** por retrocompatibilidad. El riesgo que motivó el ADR es mucho menor al asumido. **F0 = hardcode anclado por `tax_policy_version`** (da la reproducibilidad histórica, que es el objetivo de fondo); **F1+ = construir `catalogs/`**, spec intacta. **Disparador:** ARCA agrega un código que necesitemos o modifica uno existente (se detecta al re-extraer el Manual COMPG en cada bump de `tax_policy_version`). NO se rechaza: el principio es correcto, lo que estaba mal era el momento (§20.1 over-engineering). **Pendiente F0 no diferible:** que `afip-codes.ts` documente en su encabezado que es una fotografía versionada, con manual + fecha de extracción. | Aprobado (implementación diferida F1+) | 🟡 (principio vigente; momento corrido por evidencia normativa) | F1+ con disparador | ADR-0022, ADR-0023, ADR-0024, ADR-0019 |
 | ADR-0026 | `files/ADR-0026-correccion-medio-pago-append-only.md` | Corrección de medio de pago (reclasificación **append-only**): venta mal clasificada (efectivo→débito) se corrige con fila NUEVA `sale_payments` + `corrects_id → original`, NUNCA UPDATE (trigger `sale_payments_immutable` lo bloquea). "Activo" = fila que nadie apunta; UNIQUE parcial sobre `corrects_id`. Cierre excluye superseded (NOT EXISTS) → descuadre igual-y-opuesto cierra solo. Scope F0: 1 solo pago, sesión abierta (mixto + sesiones cerradas = F1+). Nuevo evento audit `payment.method_reclassified` (catálogo 42→43). Implementado + testeado (T-CASH-10, 6 casos). | Aprobado | 🟢 (decisión interna; A-26 taxonomía resuelta; no fiscal — forma de pago no viaja en CAE) | Editor /caja + arqueo débito/crédito | ADR-0010, EVENT-TAXONOMY, §16.5 |
+| ADR-0027 | `files/ADR-0027-cuenta-corriente-clientes.md` | Cuenta corriente de clientes ("fiado") como **libro append-only** (`customer_account_movements`, migration 0024): el saldo se CALCULA, nunca se guarda. `cuenta_corriente` es medio de pago. El cobro en efectivo entra a la caja; transferencia/tarjeta no. El cierre de caja **lanza** ante un tipo de movimiento desconocido en vez de ignorarlo (fail-closed). Implementado: `e881bf2` (dominio) + `da630bf` (cobro desde /clientes). ⚠️ Sin evento de `audit_log` — ver "Decisiones abiertas". | Aprobado | 🟢 (decisión interna, no fiscal) | Ítem 5 del pedido de la contadora (deudores) | ADR-0026, §13.9, §16.5 |
 
 ---
 
@@ -65,6 +66,8 @@
 ---
 
 ## Reglas operativas (`.claude/rules/`)
+
+> ⚠️ **NO CONSTRUIDO** (verificado 2026-09-02, DRIFT-REPORT #16): ni `.claude/CLAUDE.md` ni `.claude/rules/` existen en el repo WSL. La tabla describe el plan de `CLAUDE-WSL-INSTRUCCIONES.md`, no archivos reales. Las reglas vigentes viven en `CLAUDE.md` (SRS) y en la memoria del agente.
 
 | Filename | Tema |
 |---|---|
@@ -82,7 +85,10 @@
 |---|---|
 | `DECISION-LEDGER.md` | Este archivo. Source of truth de qué decisión está dónde. |
 | `AUTHORITY-MAP.md` | Matriz de autoridades del sistema (quién decide qué, qué dependencias) |
-| `EVENT-TAXONOMY.md` | v2.0.1 — Catálogo canónico de 32 eventos F0 + 4 concerns separados (audit_log + jobs_queue + metrics_counter + Pino) (Sesión 1) |
+| `EVENT-TAXONOMY.md` | **v2.0.3** — Catálogo canónico **CERRADO de 43 eventos** (coincide exacto con `src/lib/audit/event-names.ts`) + 4 concerns separados (audit_log + jobs_queue + metrics_counter + Pino). v2.0.2 agregó `product.*`; v2.0.3 `payment.method_reclassified` (ADR-0026). Nota 2026-09-12: `stock.adjusted_manually` cubre también la merma (`type` + `motivo` en payload, migration 0038) |
+| `QUEUE.md` · `DRIFT-REPORT.md` · `INVENTARIO-REAL.md` · `FABLE-TASKS.md` | Auditoría docs-vs-código del **2026-09-02** (25 contradicciones, 11 ALTA) y su cola de trabajo. P0 cerrada completa (RLS, rate limit, webhook MP). ⚠️ QUEUE quedó desactualizada después del 2026-09-05: el trabajo pasó a guiarse por `EVIDENCIA-pedido-contadora-2026-09.md` |
+| `EVIDENCIA-pedido-contadora-2026-09.md` | **Especificación real** (2026-09-09): lo que la contadora le pide al comercio para los Estados Contables. Desde esa fecha es la fuente de prioridad del producto (ver puesta al día al final) |
+| `RESEARCH-BRIEF-*.md` | Un brief por feature significativa ANTES del código (metodología del owner): panel, calendario-y-proyecciones, vencimientos-fiscales, gastos, gastos-detalle-y-anulacion, compras-y-lotes, inventario-valorizado, ajuste-de-stock, caja-egresos. Plantilla: `RESEARCH-BRIEF-template.md` |
 | `CORRELATION-PROPAGATION.md` | v1.0.0 — 2 IDs canónicos (correlation_id + request_id) + AsyncLocalStorage + bridge Edge→Node + worker continuity + sessionStorage cliente (Sesión 2) |
 | `RECONCILIATION-ENGINE.md` | v1.0.0 — Worker afip-reconcile-pending + FECompUltimoAutorizado recovery + poison detection + dead letter philosophy + operator tooling F0 (Sesión 3) |
 | `backlog-validaciones.md` | 69 items diferidos de Sesión 5 v4 con triggers para promoverlos |
@@ -142,6 +148,33 @@
 **Estado:** cronograma propuesto en ADR-0020 sin validar.
 **Bloqueante para:** lanzamiento F0 con clientes reales (B2.7 del apéndice).
 **Resolución requerida:** consulta corta con abogado AAIP.
+
+### 🔴 Mutaciones de plata y de acceso SIN evento de `audit_log` (detectado 2026-09-14)
+
+**Estado:** abierto — requiere aprobación del owner (EVENT-TAXONOMY regla J1: catálogo CERRADO).
+**Qué pasa:** CLAUDE.md §16.9 exige un evento de auditoría por mutación crítica en tablas de tenant. Estas escriben filas con plata o dan acceso y **no auditan** porque el catálogo no tiene eventos para ellas:
+- `expense.service.ts` — registrar gasto y **anular** gasto (append-only, irreversible, devuelve plata a la caja, revierte stock).
+- `account.service.ts` — cargos y cobros de cuenta corriente (ADR-0027).
+- `accountant.service.ts` — invitar / vincular / **revocar** a la contadora: dar acceso a los datos del comercio queda sólo en Pino.
+- `task.service.ts` — pendientes (probablemente NO crítico: no es hecho económico; decidir explícitamente).
+**Por qué no se agregaron:** se construyeron las features sin elevar la pregunta "¿abrimos el catálogo?". Gap de proceso, no de código.
+**Resolución requerida:** propuesta de eventos (nombre, severity, pii_level, payload) → aprobación del owner → EVENT-TAXONOMY v2.1.0 + `event-names.ts` + cableado con test de integración que verifique la fila.
+
+### 🟡 A-28 — Método de valuación del inventario de bienes de cambio (contadora)
+
+**Estado:** abierto. El reporte de ítem 8 (`3be8928`) **declara** PEPS en el propio CSV; la elección del método es del estudio, no de Pandora. Pregunta en `reunion-contador-y-abogado.md` A-28.
+
+### 🟡 A-27 — Contracargo sobre una venta ya facturada (contadora)
+
+**Estado:** abierto. Hoy el sistema **no detecta** contracargos (backlog D.5).
+
+### 🟡 Registro de la fecha de negocio y el motivo en `stock_movements` — ¿ADR o alcanza brief + ledger?
+
+**Estado:** abierto, a criterio del owner. Las migrations 0037 (`fecha`, un solo reloj al cierre) y 0038 (`motivo` de lista cerrada con CHECK, merma = `loss`) cambian el libro de stock, que es append-only y lo leen inventario, compras y el reporte de la contadora (impacto > 1 módulo, CLAUDE.md §19.1). Hoy están documentadas en `RESEARCH-BRIEF-inventario-valorizado.md` §6.4, `RESEARCH-BRIEF-ajuste-de-stock.md` y en la puesta al día de este ledger.
+
+### 🟡 "Consumo propio / uso interno" como motivo de ajuste
+
+**Estado:** abierto, decisión del owner (+ criterio contable de la contadora). Agregarlo después es cambiar la CHECK de 0038. Ver `RESEARCH-BRIEF-ajuste-de-stock.md` §7.
 
 ---
 
@@ -876,4 +909,82 @@ Construcción del primitivo `withIdempotency()` (diferido NO bloqueado de mayor 
 
 ---
 
-*Decision Ledger versión 1.0 — 2026-05-26 / actualizado 2026-05-27 (Sesión 3 — cierre trilogía de spec arquitectónica) / actualizado 2026-05-28 AM (6 docs fundacionales: NON-GOALS, CAPABILITY-MAP, BOUNDED-CONTEXTS, OPERATIONAL-SEVERITY, RUNBOOKS, MONEY-POLICY) / actualizado 2026-05-28 PM (Auditoría Lotes 1+2+3+4+5: 89 fixes aplicados, 30 mejoras diferidas) + ROADMAP.md v1.0.0 creado / actualizado 2026-06-03 AM (Sprint 3 Inventory cerrado, 552/552 tests verdes) / actualizado 2026-06-03 PM (Spike A1 Supabase Local CLI cerrado + T-INV-04..08 portados: 577/577 verdes, Sprint 3 EMPÍRICAMENTE VALIDADO contra Postgres real) / actualizado 2026-06-03 PM cont. (Retroactivos Sprint 1+2 portados: 597/597 verdes, T-JOBS-01 + T-WEBHOOK-01 + T-AUDIT-01 + T-METRICS-01, bug #3 fixed en queue.service.ts execute raw, Sprint 1+2 EMPÍRICAMENTE VALIDADO) / actualizado 2026-06-04 (Sprint 4 Cash CERRADO COMPLETO: 717/717 tests verde — 627 unit + 90 integration con 45 nuevos Cash. Advisor pass pre-commit detectó gap cross-tenant T-CASH-08 → fix aplicado antes del commit. Cash EMPÍRICAMENTE VALIDADO contra Postgres real) / actualizado 2026-06-11 (Sprint 5 Sales+MP CIERRE ESTRUCTURAL — Bloques 1-4 cerrados 742/742 tests verde; Bloque 5 MercadoPago + T-SALES-03 idempotency + T-MONEY mapping verification DEFERIDOS con trigger explícito. Advisor 4 fixes aplicados: framing honesto memoria/ledger/ROADMAP + stock_tracking decisión documentada. Anti-drift: ROADMAP §1033 gating mismo state.) / actualizado 2026-06-25 (Idempotency primitivo reserve-first CONSTRUIDO y verificado — migration 0014 + helper + 6 tests T-IDEMP-01; 798 verde total; ADR-0010 desviación result-nullable surfaceada en el ADR mismo. ⚠️ Primitivo ≠ obligación saldada: ningún mutation lo llama aún, wiring real = Sprint 6 CAE. Entorno backend desbloqueado: Supabase local puertos 34320-34329.)*
+### Puesta al día jun → sep 2026 (registrada 2026-09-14)
+
+> **Por qué esta sección existe.** Entre el 2026-06-26 y el 2026-09-14 entraron **162 commits y 24 migrations (0015–0038)** sin que este ledger se actualizara. Las decisiones quedaron en commits, briefs y la memoria del agente, pero no acá — que por §2.1 es la autoridad. Es el mismo patrón que DRIFT-REPORT diagnosticó como causa raíz ("el doc deja de ser un registro de lo hecho"). Se reconstruye desde `git log` + la cabecera de cada migration (`scripts/decisiones-desde.sh` en pandora-erp). Cada línea cita su commit o documento.
+
+#### A. Dirección del producto
+
+- **Propósito real (owner, 2026-07-02).** La app se construye principalmente para el comercio de la novia del owner; si le sirve a otros, bienvenido. **Norte = calidad + durabilidad + que le sirva a ella**, no "5 clientes pagando". Las fases F0/F1/F2 pasan a ser **orden técnico por dependencias, no gates de permiso**. Lo que NO se afloja: integridad fiscal, aislamiento multi-tenant, invariantes de money, no volverlo un Frankenstein. ⚠️ **CLAUDE.md §1.4 (métricas de éxito) y ROADMAP Sprint 10 (5 clientes) NO se reescribieron** a propósito: el owner no lo pidió. Mientras tanto este registro manda (§2.2).
+- **El pedido de la contadora es la especificación (2026-09-09).** `EVIDENCIA-pedido-contadora-2026-09.md`: la lista real que el estudio ROMERO & RUIZ SAS le pide al comercio para los Estados Contables (ejercicio 01/08→31/07). Desde ahí se priorizó por ítem. Marcador al 2026-09-14: **3 completos** (1 caja, 5 deudores, 8 inventario valorizado) · **3 a medias** (9 proveedores sin acreedores, 11 libro IVA, 12 comprobantes sin adjunto) · 6 fuera (moneda extranjera, extractos, cheques, otros créditos, bienes de uso, préstamos — 6, 7 y 10 son del estudio, no del POS).
+- **Research Brief antes de cada feature significativa**, con "qué NO implementar" obligatorio (metodología del owner). Aplicado en todas las features de sep-2026.
+- **Los mockups de `pos-preview/` son la autoridad visual** (`015009f`, 2026-07-09), no las constituciones visuales de CLAUDE.md §14 / ADR-0012..0017 al pie de la letra. Las pantallas copian el CSS de la maqueta ENTERO (`6f102b0`, `e58bbb2`). **Ambos temas (claro/oscuro) son obligatorios** con toggle. Fuentes Inter + JetBrains Mono auto-alojadas (`e74e90d`: la app cargaba Geist). Deuda: `/productos` y `/contador` sin modo oscuro (medido).
+
+#### B. Plataforma y seguridad (auditoría 2026-09-02 → QUEUE P0 cerrada)
+
+- **Fuga cross-tenant ACTIVA cerrada** — migration 0020 (`72c209d`): 8 tablas + particiones de `audit_log` sin RLS, legibles vía PostgREST con la anon key pública. Regresión `T-MT-08` prueba SQL **y** HTTP. Toda tabla tenant-aware nueva se agrega a ese test.
+- **Rate limit del login cableado** (`0a4c5d6`): el módulo existía sin un import. `auth.login.success/failed` escriben de verdad (`T-SEC-08`).
+- **Webhook de MP:** `company_id` del path validado (forma + existencia) antes del tracing (`2a4aa27`, `T-MT-09`); secret atado a UN comercio declarado, fail-closed (`4c7586f`, `T-SEC-09`) → el segundo comercio necesita vault, no queda riesgo silencioso.
+- **CLAUDE.md §7.2 corregido contra el código:** el filtro `tenant_id` va dentro del `where`; `validateTenantAccess()` sólo donde el tenant no viene de la sesión.
+- **`noUncheckedIndexedAccess` activo** (`1341334`). **CSP `unsafe-eval` sólo en dev** (`1aa0160`).
+- **TLS 1.2+ en el canal AFIP (D-24 CERRADO)** — `soap-transport.ts` con `minVersion` + `rejectUnauthorized: true`; `T-SEC-06` levanta servidores TLS reales y comprueba que la conexión FALLA con autofirmado y con TLS 1.1.
+- **Build de producción sano** (`4a79120`, 2026-09-14): el "prerender de `/_global-error` falla" que se arrastraba desde julio era `NODE_ENV` exportado al compilar, no el código. `scripts/smoke-prod.sh` compila y levanta producción con sesión.
+
+#### C. Identidad y contador
+
+- **`company_id` al JWT vía custom access token hook** (migration 0015, `962aca3`); login real (`4357fcc`).
+- **Contador multi-empresa implementado** (ADR-0008): invitación + empresa activa (`cc28c13`), panel con datos reales + CSV (`23d43aa`). ⚠️ invitar/vincular/revocar no audita — ver "Decisiones abiertas".
+- **Ejercicio comercial por empresa** (migration 0027, `companies.fiscal_year_end_month`): el período "Ejercicio" (el último cerrado) en `/gastos` y `/contador`. El año calendario no le sirve a una empresa que cierra el 31/07.
+
+#### D. Ventas, cobro e idempotency
+
+- **Idempotency CABLEADA a `finalizeSale`** (`c966b9e`, 2026-07-09) — actualiza la entry del 2026-06-25: el doble-click concurrente SÍ doble-cobraba. Emisión CAE todavía no la usa (sin certificado).
+- **Cobro tipeable multi-medio** en `/pos` (`4134dff`, `a6751b9`): el input es la fuente de verdad; montos exactos sin `Math.round`. **QR/MP apagado con motivo**: nunca pudo cobrar (faltaba `mp_payment_external_id`).
+- **Débito/crédito como medios** (migration 0016, A-26). **Cliente elegible desde el carrito** (`76afa05`).
+- **Costo congelado en la línea de venta** (migration 0031, `unit_cost_snapshot`): dato con reloj, imposible de backfillear; NULL ≠ 0.
+
+#### E. Caja
+
+- **ADR-0026** (ya en tabla) + motivos de retiro administrables (0018) + egreso estructurado con beneficiario/`terceros` (0019).
+- **Fork triple de Caja resuelto** (`ae42a49`): `/caja` es el React sobre AppShell.
+
+#### F. Fiscal (Sprint 6, sin emitir en producción)
+
+- **Slices 1-5 + cadena real hasta AFIP** (`96d26f5`…`5987f7f`, `5c49410`): Projection Layer WSFEv1 → WSAA con cache → WSFEv1 sobre TLS. Firma CMS con `node-forge` (Node no arma PKCS#7; se descartó shellear a openssl por Vercel).
+- **Certificado por tenant cifrado con el vault** (migration 0025, `afip_credentials`, clave `(tenant, environment)`): primer consumidor real del vault; un CHECK rechaza PEM en claro.
+- **Sin certificado → emisión diferida, el cobro nunca se bloquea** (`emitAfterCobro` best-effort). El POS sigue con `require_fiscal_invoice=false`.
+- **Campos de ADR-0023 en `fiscal_snapshots`** (migration 0021). HIGH-1 (`ImpNeto = Σ BaseImp`) y HIGH-2 (pooler transaccional + timeout de la base) cerrados.
+- **Sigue bloqueado:** worker de reconciliación (A-2 + B-6) y primer ticket productivo (A-11.c/d, certificado de homologación).
+
+#### G. Catálogo, clientes y cuenta corriente
+
+- Rubro de producto (0022). Registro de clientes (0023). **ADR-0027 cuenta corriente** (0024, ya en tabla).
+
+#### H. Gastos y compras
+
+- **Gastos del comercio** (migration 0026, `14d7e1f`): las 6 categorías del pedido de la contadora + export "lo que hay que mandar" y "todos los gastos" (`68e021d`). La Posición de IVA cierra con crédito fiscal real.
+- **Un gasto se anula, no se edita** (migration 0033, `corrects_id`): la anulación **hereda la fecha** del original (la plata no cambia de período); "vigente" = nadie lo apunta **y** total > 0. La pestaña Anulados lista por CUÁNDO se anuló (`c3e5975`).
+- **La compra de mercadería es un lote** (migrations 0034 + 0036): `expense_items` con producto, cantidad, costo y renglón; entra al stock por el libro (`daa7fa2`). **El costo del producto es el de la última COMPRA** (`6665c78`); al anular vuelve a la compra anterior o a NULL.
+
+#### I. Libro de stock e inventario
+
+- **El libro guarda el signo** (migration 0032, `direction`): +5 y −5 eran filas idénticas. `adjustStock` no escribía en el libro (`65aa0ae`).
+- **Stock inicial al libro** (migration 0035): 7 de 7 productos no reconstruían desde el ledger; había 4 puertas escribiendo `stock_current`. El alta entra como `adjustment`, no `purchase` → el reporte muestra "sin compra asociada". La cantidad se mide, la fecha se elige.
+- **Fecha de negocio en cada movimiento** (migration 0037, `d970bb6`): un solo reloj al cierre — la compra lleva la fecha del comprobante, la anulación la del original. Guard `fecha_futura`.
+- **Inventario de bienes de cambio valorizado al cierre** (`3be8928`, ítem 8): foto desde el LIBRO, no desde `stock_current`; tres estados (con compra / sin compra asociada / sin costo); **PEPS declarado** en el CSV, la elección es del estudio (A-28).
+- **Ajuste manual con motivo de lista cerrada** (migration 0038, `dc7b98c`): merma (rotura/vencimiento/robo) = `type 'loss'`, sólo resta; corrección (recuento/error de carga/otro) = `adjustment`. CHECK en la DB con `IS NOT NULL` explícito en cada rama (lógica de tres valores). Se audita con `stock.adjusted_manually` (catálogo intacto). Historial por producto ordenado por fecha de negocio.
+
+#### J. Panel, calendario y proyecciones
+
+- **`/panel` con datos reales** (`db428ef`…): 4 de 7 bloques; los 3 restantes esperan DATO (el de merma ya tiene su primera fila `loss`).
+- **Feriados = dato cargado, nunca calculado** (migrations 0028/0029); el feriado provincial de TDF es asueto que el comercio elige.
+- **Pendientes** (migration 0030): **primera tabla MUTABLE** a propósito (una tarea es intención, no hecho económico — brief de calendario §8.c). No es gestor de proyectos (NON-GOALS N-FEAT-20).
+- **Proyecciones con compuerta:** días de stock (sin 14 días de operación real no hay número), cierre de mes (acumulado + ritmo × lo que falta, nunca ritmo × días del mes), margen bruto histórico en tres estados. No es BI avanzado (N-FEAT-04).
+
+#### K. Reloj del comercio
+
+- **Todo corte de día o mes se lee en `America/Argentina/Ushuaia`** (`diaDelComercio`, `mesesDelComercio`, `AT TIME ZONE` en SQL): `/contador` (`e65883c`), Clientes (`8e9e29b`, `5e02920`), Gastos (`dc895d8`), tests (`bce23dd`). Base y runtime corren en UTC: entre las 21 y la medianoche, UTC ya es mañana.
+
+---
+
+*Decision Ledger versión 1.0 — 2026-05-26 / actualizado 2026-05-27 (Sesión 3 — cierre trilogía de spec arquitectónica) / actualizado 2026-05-28 AM (6 docs fundacionales: NON-GOALS, CAPABILITY-MAP, BOUNDED-CONTEXTS, OPERATIONAL-SEVERITY, RUNBOOKS, MONEY-POLICY) / actualizado 2026-05-28 PM (Auditoría Lotes 1+2+3+4+5: 89 fixes aplicados, 30 mejoras diferidas) + ROADMAP.md v1.0.0 creado / actualizado 2026-06-03 AM (Sprint 3 Inventory cerrado, 552/552 tests verdes) / actualizado 2026-06-03 PM (Spike A1 Supabase Local CLI cerrado + T-INV-04..08 portados: 577/577 verdes, Sprint 3 EMPÍRICAMENTE VALIDADO contra Postgres real) / actualizado 2026-06-03 PM cont. (Retroactivos Sprint 1+2 portados: 597/597 verdes, T-JOBS-01 + T-WEBHOOK-01 + T-AUDIT-01 + T-METRICS-01, bug #3 fixed en queue.service.ts execute raw, Sprint 1+2 EMPÍRICAMENTE VALIDADO) / actualizado 2026-06-04 (Sprint 4 Cash CERRADO COMPLETO: 717/717 tests verde — 627 unit + 90 integration con 45 nuevos Cash. Advisor pass pre-commit detectó gap cross-tenant T-CASH-08 → fix aplicado antes del commit. Cash EMPÍRICAMENTE VALIDADO contra Postgres real) / actualizado 2026-06-11 (Sprint 5 Sales+MP CIERRE ESTRUCTURAL — Bloques 1-4 cerrados 742/742 tests verde; Bloque 5 MercadoPago + T-SALES-03 idempotency + T-MONEY mapping verification DEFERIDOS con trigger explícito. Advisor 4 fixes aplicados: framing honesto memoria/ledger/ROADMAP + stock_tracking decisión documentada. Anti-drift: ROADMAP §1033 gating mismo state.) / actualizado 2026-06-25 (Idempotency primitivo reserve-first CONSTRUIDO y verificado — migration 0014 + helper + 6 tests T-IDEMP-01; 798 verde total; ADR-0010 desviación result-nullable surfaceada en el ADR mismo. ⚠️ Primitivo ≠ obligación saldada: ningún mutation lo llama aún, wiring real = Sprint 6 CAE. Entorno backend desbloqueado: Supabase local puertos 34320-34329.) / actualizado 2026-09-14 (puesta al día jun→sep: 162 commits y migrations 0015-0038 registrados; ADR-0027 agregado a la tabla; 5 decisiones abiertas nuevas, entre ellas mutaciones de plata y acceso sin evento de audit_log.)*

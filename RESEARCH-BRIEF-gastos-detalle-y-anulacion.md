@@ -1,7 +1,7 @@
 # Research Brief — `/gastos`: cargar el detalle de una compra y anular
 
 **Fecha:** 2026-09-12
-**Estado:** propuesto
+**Estado:** 🏁 cerrado — `7685c06` + `7e47fbf` (migration 0036) + `c3e5975`
 **Slice:** 3 de `RESEARCH-BRIEF-compras-y-lotes.md`
 **Alcance:** pantalla. El backend ya está: `registerExpense({ items })`, `annulExpense`, `expense_items` (migration 0034).
 

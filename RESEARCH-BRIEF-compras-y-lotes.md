@@ -1,7 +1,7 @@
 # Research Brief — `compras de mercadería y lotes`
 
 **Fecha:** 2026-09-11
-**Estado:** 🧩 diseño
+**Estado:** 🏁 cerrado — los 4 slices: `9c36f52` (0033) · `daa7fa2` + `6665c78` (0034) · `7685c06` + `7e47fbf` (0036) · `3be8928`
 **Autor:** sesión Claude Opus 5 (con Agus)
 **Relacionado:** EVIDENCIA-pedido-contadora ítem 8 · `RESEARCH-BRIEF-gastos.md` · ADR-0027 (libro append-only, el saldo se calcula) · ADR-0026 (`corrects_id`) · migration 0032 (`stock_movements.direction`) · CLAUDE.md §5.2
 

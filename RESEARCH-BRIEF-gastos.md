@@ -1,7 +1,7 @@
 # Research Brief — `Gastos`
 
 **Fecha:** 2026-09-09
-**Estado:** 🧩 diseño
+**Estado:** 🏁 cerrado — `14d7e1f` (0026) · `ca83d2e` · `68e021d` (0027) · `7294c39`. Adjuntos del comprobante: diferido (ver §7)
 **Relacionado:** `EVIDENCIA-pedido-contadora-2026-09.md` · panel `/contador` · `terceros` · ADR-0027 (mismo patrón de "toca la caja o no")
 
 > Brief **corto a propósito**: la especificación no hay que investigarla, está en

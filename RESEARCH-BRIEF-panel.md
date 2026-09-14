@@ -1,7 +1,7 @@
 # Research Brief — `Panel` (pantalla de inicio)
 
 **Fecha:** 2026-09-10
-**Estado:** 🧩 diseño
+**Estado:** 🚧 parcial — 4 de 7 bloques (`db428ef`…`aa19918`). Los 3 que faltan esperan DATO: merma (ya hay una fila `loss` real desde `dc7b98c`), régimen, vencimientos
 **Autor:** sesión Claude (owner: Agus)
 **Relacionado:** ADR-0012 (atmospheres · Panel = *Insight*) · ADR-0014 (charts SVG puros) · commits `db428ef` `5c5aedb` `a6622b4` `911ec5e`
 

@@ -1,7 +1,7 @@
 # Research Brief — Egresos de caja estructurados (concepto + beneficiario) + búsqueda de movimientos
 
 **Fecha:** 2026-07-13
-**Estado:** 🧩 diseño → 🚧 en implementación
+**Estado:** 🏁 cerrado — `664217e` (0018) + `b831f0d` (0019)
 **Autor:** sesión Claude (con advisor)
 **Relacionado:** ADR-0026 (reclassify append-only), cash_withdrawal_reasons (664217e), NON-GOALS (payroll/HR, módulo compras F1+), CAPABILITY-MAP Cash
 
