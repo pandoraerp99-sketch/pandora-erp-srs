@@ -29,7 +29,7 @@ Sesión 5 v4 tenía **110 items** organizados como 4 BloqueanteCode + 38 Bloquea
 - 35 Importantes (filtrados de 62 originales — algunos ya cubiertos por ADRs)
 - 6 Nice-to-have
 
-Total backlog: **69 items diferidos** (ver tabla resumen ejecutivo más abajo). 41 activos F0 quedan en Sesión 5 v4. Total Sesión 5 v4 original: 110 items.
+Total backlog: **79 items diferidos** (ver tabla resumen ejecutivo más abajo). 41 activos F0 quedan en Sesión 5 v4. Total Sesión 5 v4 original: 110 items + 3 agregados de campo (D.4, ver nota de reconciliación en el resumen).
 
 ---
 
@@ -102,8 +102,8 @@ Un item sale del backlog cuando:
 | ID | Item | Trigger |
 |---|---|---|
 | A5.2 | Liquidación parcial MercadoPago | Implementación MP QR completa |
-| A5.4 | Contracargos y devoluciones | F1+ con NC implementada |
-| A5.5 | Conciliaciones bancarias | F2+ |
+| A5.4 | Contracargos y devoluciones | F1+ con NC implementada. **Detalle técnico y estado real del código en §D.5** (auditado 2026-09-05) + pregunta **A-27** a la contadora |
+| A5.5 | Conciliaciones bancarias | F2+ (CLAUDE.md §5.3, §21.2). Ver §D.5 |
 | A5.6 | Cambio medio de pago tras cierre | Primer reporte real de error |
 
 (A5.1, A5.3 quedan en Sesión 5 v4 como **BloqueanteProd**.)
@@ -194,7 +194,7 @@ Un item sale del backlog cuando:
 
 (C1.1-C1.6, C3.1, C3.5, C3.6 quedan en Sesión 5 v4 como **BloqueanteProd**.)
 
-### Sección D — Producto (1 diferido, 2 quedan en Sesión 5 v4)
+### Sección D — Producto (4 diferidos, 2 quedan en Sesión 5 v4)
 
 (D.1, D.2 ambos son críticos para definir UX — quedan como **BloqueanteProd**.)
 
@@ -207,6 +207,18 @@ Un item sale del backlog cuando:
 **Caveat operativo:** owner trajo la idea explícitamente como "para más adelante, no romper flujo Sprint 1". Disciplina aplicada: persistida acá, no agregada a F0. Cuando se promueva, validar con contadora si calcular sobre `ingresos brutos` (simple) o `ganancia neta = ingresos − costos − impuestos − sueldos` (real, requiere módulo gastos previo). Schema candidato: tabla `tenant_partners (tenant_id, user_id?, partner_name, percentage_basis_points, valid_from, valid_to)` — usar basis points (7000 = 70.00%) para evitar floating point en porcentajes.
 
 **Aplicabilidad fuera de LIS:** común en SRL/SAS multi-socio (LIS = SAS según cierre Z). Patrón potencialmente útil también para rotisería del papá del amigo si tiene socio. Validar con 2+ clientes reales antes de promover.
+
+#### D.4 Catálogo — ideas tomadas de Tango Facturador (3 items diferidos — observación de campo owner 2026-09-03)
+
+Origen: el owner fotografió la pantalla **"Precios y saldos de stock"** de Tango Facturador en un comercio real (Mar de Cobo). Se aplicó el filtro §4.3 de CLAUDE.md: de lo observado, **el modo consulta de precio se promovió a la cola** (ver `QUEUE.md` P4 #15) por ser un flujo diario con gap real; estos tres quedan diferidos con trigger; y se descartaron explícitamente *stock por depósito* (NON-GOAL multi-sucursal), *descuento en cascada* (complejidad sin caso real — el guard de margen de Ofertas cubre el 95%) y *moneda de la lista* (ARS-only hasta F2).
+
+| ID | Item | Trigger |
+|---|---|---|
+| D4.1 | **Códigos alternativos / "sinónimo" por producto.** Tango muestra `Sinónimo: PDP6648` además del código de barras `779355406648`: el mismo artículo tiene el código del fabricante Y uno interno del comercio. Hoy tenemos `sku` + `barcode` (dos); esto sería un tercer eje N:1. Schema candidato: tabla `product_codes (product_id, code, type)` en vez de agregar columnas. | **1 comercio real que lo pida** (típico cuando migra de otro sistema y arrastra códigos viejos que el personal ya tiene memorizados). NO antes: agrega una tabla y complica el escaneo, que hoy funciona. |
+| D4.2 | **Artículos sustitutos y accesorios.** "No hay Coca 600 → ofrecé la de 500" (sustituto) y "va bien con esto" (accesorio). Muy útil en kiosco para no perder la venta por faltante. | **Catálogo maduro** (>300 SKU cargados en un cliente real) **+ pedido explícito**. Sin catálogo grande la relación se arma a mano y no se mantiene. |
+| D4.3 | **Listas de precios múltiples** (Tango: "Venta Minorista" como una de N). Hoy Pandora tiene **un** precio por producto. | **Primer cliente con precio mayorista/minorista diferenciado.** Nota de diseño: engancha directo con los **tipos comerciales de cliente** ya diseñados en `pos-preview/clientes-v6.html` (clasificación ortogonal a la condición IVA, multi-tag, habilita promos) — cuando se promueva, la lista de precios se asocia al tipo comercial, no a un campo suelto. |
+
+**Observación de producto (no accionable, pero registrada):** la pantalla de Tango muestra **precio sin impuestos y precio con impuestos lado a lado**, que es exactamente lo que exige el Régimen de Transparencia Fiscal (Ley 27.743) y lo que ya modela nuestro `FiscalBreakdown` (ADR-0022). Es validación externa de que esa parte del diseño va bien encaminada.
 
 ### Sección E — Avanzado (8 items diferidos, 4 quedan)
 
@@ -232,6 +244,52 @@ Un item sale del backlog cuando:
 
 ---
 
+### D.5 — Detección de contracargos (pagos revertidos después de cobrados)
+
+> Surgido de una pregunta del owner (2026-09-05): *"¿cómo chequeo que un pago de hace un mes no fue dado de baja por el consumidor y no represente una pérdida no contemplada?"* Auditado contra el código el mismo día.
+
+**Estado real hoy:** el sistema **no lo detecta**.
+
+| Medio | Qué hay | Qué falta |
+|---|---|---|
+| **MercadoPago** | `charged_back` está reconocido en `payment-status.ts` → mapea a `pending` + `reclassified:true` y se audita. El razonamiento está escrito: *"un charged_back mal interpretado como approved sería plata mal contada"* | (a) el único disparador es el webhook entrante — **ningún job revisa pagos viejos**; (b) el estado cambia en `mp_payments` y **nadie se entera**: la venta sigue `cobrada` y la caja ya contó esa plata |
+| **Débito / Crédito** | **NADA.** El POS escribe `credito $X` y no hay integración, ni webhook, ni archivo de liquidación | Todo. Es la exposición real |
+| **Conciliación bancaria** | — | Es **F2** por decisión de scope (CLAUDE.md §5.3, §21.2) |
+
+| ID | Ítem | Trigger para promover |
+|---|---|---|
+| D5.1 | **Exponer el `reclassified` que ya se detecta** — que un contracargo de MP le llegue a una persona (queries de operador §10.8; `payment.mp.refunded` ya está en el catálogo de eventos) | Barato y no depende de nadie. Primer cliente que cobre con MP en producción |
+| D5.2 | **Archivo de liquidación del procesador de tarjeta** (Posnet/Lapos) — única fuente real de contracargos de tarjeta. Conseguirlo es **trámite con el proveedor, no código** (misma categoría que el certificado de homologación) | Primer cliente que cobre con tarjeta en volumen |
+| D5.3 | Job proactivo que re-consulte pagos ya cobrados dentro de la ventana de contracargo | Requiere D5.2 + saber la ventana real (pregunta A-27 a la contadora) |
+
+**🔴 Ojo al scope:** si la contadora responde que un contracargo sobre venta facturada se resuelve con **nota de crédito** (pregunta **A-27**), entonces **NC deja de ser diferible**. Hoy está en F1+ asumiendo que sólo sirve para devoluciones voluntarias — un contracargo no es voluntario y el comercio no lo elige.
+
+**Por qué NO es parte del cierre de caja:** el contracargo llega **después** de que la sesión cerró. ADR-0026 deja las sesiones cerradas en F1+ explícitamente. Es un mecanismo aparte, no una extensión del arqueo.
+
+---
+
+### D.6 — Análisis de compras del cliente / ofertas personalizadas
+
+> **Evidencia de campo 2026-09-05:** un emprendedor lo pidió en una reunión — *"análisis de las compras de los clientes para hacerle ofertas personalizadas, u ofrecerle mercadería que suele comprar"*. Es la **primera señal real** del módulo "Clientes (CRM-lite)" del Centro de Inteligencia, que hasta ahora era hipótesis de brainstorm.
+
+Son **tres pedidos distintos**, y conviene no tratarlos como uno:
+
+| ID | Ítem | Dificultad | Trigger para promover |
+|---|---|---|---|
+| D6.1 | Ver qué compra habitualmente un cliente (historial) | Baja — consulta sobre `sale_items` + cliente de la venta | 3+ comercios que lo pidan **y** que sus ventas tengan cliente identificado |
+| D6.2 | Sugerir reposición ("suele comprar X cada 15 días") | Media — patrón temporal por cliente/producto | Requiere D6.1 con historial real de meses |
+| D6.3 | Ofertas **personalizadas** (precio o promo por cliente) | Alta — y **no sólo técnica** | 🔴 **Bloqueado por dos gates, ver abajo** |
+
+**🔴 Gate legal (abogado).** Analizar el comportamiento de compra de una persona para ofrecerle cosas es **elaboración de perfiles** sobre datos personales → **Ley 25.326**: base legal, finalidad, consentimiento, derecho de oposición. Registrar una venta (finalidad fiscal, obligatoria) NO es lo mismo que usar esa venta para perfilar (finalidad comercial, opcional). Misma categoría que el gate **B-IA**.
+
+**🔴 Gate fiscal (contadora).** El research de Ofertas ya cerró que **no hay descuento por medio de pago — precio único**. Un precio distinto por cliente es su vecino cercano: hay que verificar implicancias sobre base imponible y sobre el régimen de transparencia (Ley 27.743) antes de asumir que "es marketing y es libre".
+
+**⚠️ Dependencia dura:** requiere que la venta tenga **cliente identificado**. En un kiosco el 80%+ es consumidor final anónimo y no hay nada que analizar. Es cierto en sedería/ferretería con habitués, falso en otros rubros. **Pregunta para las entrevistas:** *"¿sabés quiénes son los clientes que te vuelven?"*.
+
+**Estado:** asentado a pedido del owner, sin analizar todavía.
+
+---
+
 ## Resumen ejecutivo del backlog
 
 | Sección | Diferidos | Activos F0 | Total |
@@ -239,11 +297,15 @@ Un item sale del backlog cuando:
 | A — Contador | 29 | 19 | 48 |
 | B — Abogado | 24 | 7 | 31 |
 | C — Cliente | 8 | 9 | 17 |
-| D — Producto | 1 | 2 | 3 |
+| D — Producto | 10 | 2 | 12 |
 | E — Avanzado | 8 | 4 | 12 |
-| **TOTAL** | **70** | **41** | **111** |
+| **TOTAL** | **79** | **41** | **120** |
 
 **Discrepancia con Sesión 5 v4 conteos previos:** la auditoría 2026-05-26 redujo "activos F0" de 42 a 41 (cambio menor por reclasificación de B4.6 que ya está cubierto por ADR-0020).
+
+**Reconciliación de conteos 2026-09-03:** al sumar los 3 items de D.4 se detectó que el encabezado del doc decía **69** diferidos mientras esta tabla ya sumaba **70** — drift preexistente de 1, anterior a este cambio. Se tomó la tabla como fuente (es la que desglosa por sección) y se alineó el encabezado. Nuevo total: 70 + 3 = **73**.
+
+**2026-09-05:** +3 por D.5 (detección de contracargos) → **76**. +3 por D.6 (análisis de compras del cliente) → **79**.
 
 ---
 

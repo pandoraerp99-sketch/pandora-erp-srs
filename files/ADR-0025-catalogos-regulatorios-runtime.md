@@ -1,10 +1,34 @@
 # ADR-0025 — Catálogos Regulatorios Runtime + Snapshot Policy
 
 **Fecha:** 2026-06-02
-**Estado:** Aprobado
+**Estado:** ⏸️ **Aprobado — implementación DIFERIDA a F1+** (revisión 2026-09-03)
 **Relacionado con:** ADR-0023 (Snapshot Fiscal Completo — primera aplicación del patrón), ADR-0022 (Fiscal Projection Layer), ADR-0024 (IA Boundary Policy), ADR-0019 (Security baseline)
 **Reemplaza:** ninguno (generaliza principio aplicado puntualmente en ADR-0023)
-**Validación:** 🟢 Aprobado arquitectónicamente (decisión interna, sin pendientes humanos)
+**Validación:** 🟡 El principio sigue vigente; **el momento de construirlo se corrió a F1+** por evidencia normativa (ver abajo)
+
+---
+
+## ⏸️ REVISIÓN 2026-09-03 — implementación diferida a F1+
+
+**Qué gatilló la revisión:** la auditoría del 2026-09-02 detectó que `src/lib/fiscal/afip-codes.ts` **hardcodea** `CBTE_TIPO`, `CONDICION_IVA_RECEPTOR`, `DOC_TIPO` y `CONCEPTO`, y que el módulo `catalogs/` que este ADR exige **no existe**. Estaba catalogado como drift de severidad ALTA: un ADR *Aprobado* describiendo algo que nunca se construyó.
+
+**Evidencia que cambió la decisión** — la **RG 5762/2025** eliminó **la clase de comprobante "M" entera** a partir del 01/12/2025 (cambio normativo mayor: nuevo procedimiento de habilitación, dos sub-tipos de A, leyendas nuevas). Y aun así:
+
+> **el código interno del comprobante siguió siendo `0051`.** Pasó a llamarse "Factura A con leyenda", pero el número del catálogo no se movió.
+
+O sea: ARCA cambia **nombres, leyendas y condiciones**, pero preserva la **estabilidad de los códigos numéricos** por retrocompatibilidad con los clientes de webservice. El riesgo #1 que motivó este ADR ("drift cuando ARCA modifique códigos") resulta ser mucho menor de lo asumido en 2026-06-02.
+
+**Decisión:**
+- **F0** → catálogos hardcodeados en `afip-codes.ts`, anclados por `tax_policy_version` en el snapshot fiscal. Esto ya da reproducibilidad histórica, que es el objetivo de fondo.
+- **F1+** → construir `catalogs/` (fetch runtime + cache + boot validation fail-closed + cron de refresh) tal como está especificado más abajo. **La especificación NO se toca** — sigue siendo el destino correcto.
+
+**Disparador para promover:** ARCA **agrega un código nuevo que necesitemos**, o **modifica uno existente**. Cualquiera de las dos cosas se detecta al re-extraer el Manual COMPG en cada bump de `tax_policy_version`.
+
+**Por qué no se degrada a "Rechazado" ni se borra:** el principio (no hardcodear regulación, persistir snapshot autosuficiente) sigue siendo correcto. Lo que estaba mal era el **momento**: construir un módulo de fetch + cache + validación al boot para resolver un problema que la evidencia dice que hoy no tenemos es exactamente el over-engineering que el proyecto rechaza (CLAUDE.md §20.1).
+
+**Lo que SÍ hay que hacer en F0 (no diferible):** que `afip-codes.ts` documente en su encabezado que es una **fotografía versionada** de los catálogos de ARCA, con el manual y la fecha de extracción, y que su fuente de verdad es `tax-policy-versions/`. Sin eso, el hardcode sí es deuda silenciosa.
+
+---
 
 ## Contexto
 

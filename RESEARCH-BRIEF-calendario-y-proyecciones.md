@@ -257,7 +257,24 @@ Es más de un slice y conviene verlo entre medio. Orden propuesto:
      se exige `stock_minimum`, porque 20.001 de los 20.009 productos de la base
      no lo tienen cargado y un producto sin mínimo igual tiene velocidad. Sí se
      comparte `stock_tracking_enabled`.
-   - **cierre de mes** ← **ACÁ VA LO PRÓXIMO**
+   - ~~**cierre de mes**~~ — ✅ **HECHO** 2026-09-11. Run-rate en
+     `src/lib/reporting/cierre-de-mes.ts`, derivado de la MISMA serie diaria que
+     dibuja el gráfico (no de un agregado propio: dos números de la misma
+     pantalla no pueden discrepar si salen del mismo array).
+
+     **Compuerta:** menos de 7 días terminados del mes → no hay número, se dice
+     cuántos faltan. **Hoy NO entra en la base**: un día a medio andar arrastra
+     el promedio y haría que la proyección caiga sola durante la mañana — por
+     eso el bloque aclara que la tarjeta "Facturación del mes" (que sí incluye
+     hoy) muestre otro número.
+
+     **No es run-rate puro.** Es `acumulado_de_terminados + ritmo × lo_que_falta`:
+     `ritmo × días_del_mes` le atribuiría facturación a los días en que un local
+     recién abierto no existía. La base tampoco puede ser más larga que la
+     historia del comercio (`ventanaEfectiva` otra vez).
+
+     Y se cumplió §6.2 al pie: el número **nunca va solo**, siempre con los días
+     de base, el promedio diario y cuánto falta del mes.
    - patrón semanal (necesita ~2-3 meses de operación real)
    - contra el año pasado (necesita 13 meses)
 

@@ -1,12 +1,13 @@
 # Event Taxonomy F0 — Pandora ERP
 
-**Versión:** v2.0.2
-**Fecha:** 2026-05-27 (creación) · 2026-05-28 (auditoría Lote 3) · 2026-05-30 (auditoría focal pre-migración)
+**Versión:** v2.0.3
+**Fecha:** 2026-05-27 (creación) · 2026-05-28 (auditoría Lote 3) · 2026-05-30 (auditoría focal pre-migración) · 2026-07-13 (ADR-0026)
 **Reemplaza:**
 - v1.0.0 — enterprise scope original (archivada conceptualmente en §11 "Evolution Path")
 - v2.0.0 — simplificación F0 inicial (mismo día); 4 fixes técnicos aplicados para v2.0.1: PK metrics_counter sin COALESCE + cleanup partitioning + jobs_queue 6 reglas J1-J6 + metrics whitelist
 - v2.0.1 — post-auditoría Lote 3: catálogo job_types unificado con CLAUDE.md/BOUNDED-CONTEXTS, dedupe reglas operativas, 3 eventos `system.dead_job.*` agregados
-- v2.0.2 — esta versión, post-auditoría focal 2026-05-30 PM: agregado dominio `product` con 6 eventos (cambios fiscalmente sensibles) + refinada disciplina "qué va a audit_log y qué a Pino" para sale/product domains
+- v2.0.2 — post-auditoría focal 2026-05-30 PM: agregado dominio `product` con 6 eventos (cambios fiscalmente sensibles) + refinada disciplina "qué va a audit_log y qué a Pino" para sale/product domains
+- v2.0.3 — esta versión, ADR-0026 (2026-07-13): agregado `payment.method_reclassified` (corrección append-only de medio de pago). 42→43 eventos
 **Relacionado con:** ADR-0010 (idempotency), ADR-0019 (audit_log + observability), Rule 04-observability, ADR-0022 (fiscal events críticos), [CAPABILITY-MAP.md](CAPABILITY-MAP.md), [BOUNDED-CONTEXTS.md](BOUNDED-CONTEXTS.md), [OPERATIONAL-SEVERITY.md](OPERATIONAL-SEVERITY.md)
 
 > **Filosofía:** F0 separa 4 concerns que la versión anterior mezclaba. Resultado: 3 tablas dedicadas (`audit_log` para compliance, `jobs_queue` para trabajo async, `metrics_counter` para observability) + Pino logs (debugging) externos. Sin outbox enterprise, sin event bus, sin worker poller para audit.
@@ -816,7 +817,7 @@ logger.info({
 
 ---
 
-## 5. Catálogo F0 de `audit_log` events (~32 eventos)
+## 5. Catálogo F0 de `audit_log` events (43 eventos)
 
 Solo los que pasan el test de §1. El resto va a Pino logs + counters.
 
@@ -858,12 +859,13 @@ Solo los que pasan el test de §1. El resto va a Pino logs + counters.
 | `payment.cash.received` | info | internal | — | Efectivo registrado |
 | `payment.mp.confirmed` | info | internal | mp_event_id | MP webhook confirmó cobro |
 | `payment.mp.refunded` | warning | internal | — | F1+ con NC |
+| `payment.method_reclassified` | info | internal | — | Corrección append-only de medio (ADR-0026). Payload: `{sale_id, original_payment_id, correction_payment_id, from_method, to_method, amount, reason}` |
 
 ### Domain: `stock` (2 eventos)
 
 | `event_name` | severity | pii_level | idempotency_key | Notas |
 |---|---|---|---|---|
-| `stock.adjusted_manually` | notice | internal | — | Comerciante ajusta inventario (motivo obligatorio en payload) |
+| `stock.adjusted_manually` | notice | internal | — | Comerciante ajusta inventario (motivo obligatorio en payload). Desde 2026-09-12 (migration 0038) cubre la **corrección** (`type: 'adjustment'`) y la **merma** cargada a mano (`type: 'loss'`): el payload lleva `type` y `motivo` (rotura/vencimiento/robo/recuento/error_carga/otro). Se reusó el evento en vez de agregar `stock.loss_recorded` (catálogo intacto). Ver RESEARCH-BRIEF-ajuste-de-stock.md |
 | `stock.negative.allowed` | warning | internal | — | Excepción de stock negativo aplicada |
 
 ### Domain: `product` (6 eventos — agregado v2.0.2)
@@ -930,7 +932,7 @@ Solo los que pasan el test de §1. El resto va a Pino logs + counters.
 |---|---|---|---|---|
 | `system.incident_handled` | error | internal | — | Operator ejecutó runbook completo. Payload obligatorio: `{ runbook: string, severity_observed: S0\|S1\|S2\|S3, steps_taken: string[], outcome: string, duration_minutes: number }` |
 
-**Total: 42 eventos auditables F0** (32 originales + 3 system.dead_job.* + 1 system.incident_handled v2.0.1 + 6 product.* v2.0.2). Todo lo demás (cache hits, request lifecycle, debug, métricas, draft lifecycle, updates triviales) → Pino logs + counters.
+**Total: 43 eventos auditables F0** (32 originales + 3 system.dead_job.* + 1 system.incident_handled v2.0.1 + 6 product.* v2.0.2 + 1 payment.method_reclassified v2.0.3/ADR-0026). Todo lo demás (cache hits, request lifecycle, debug, métricas, draft lifecycle, updates triviales) → Pino logs + counters.
 
 ### Lo que NO va a audit_log (deliberado)
 

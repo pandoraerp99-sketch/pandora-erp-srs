@@ -174,14 +174,14 @@ Pandora tiene validaciones que dependen de **profesionales externos** (contador 
 
 # 3. Decision Registry Snapshot
 
-## 3.1 ADRs activos (22 vigentes — fuente: filesystem real `files/ADR-*.md`)
+## 3.1 ADRs activos (26 vigentes — fuente: filesystem real `files/ADR-*.md`)
 
 | ID | Tema | Estado | Validación |
 |---|---|---|---|
 | ADR-0001 | Stack tecnológico F0 (Next.js + Supabase + Drizzle) | Aprobado | 🟢 |
 | ADR-0002 | Multi-tenant: RLS + `auth.jwt() ->> 'company_id'` | Aprobado | 🟢 |
 | ADR-0003 | Application Services TypeScript, NO plpgsql para lógica de negocio | Aprobado | 🟢 |
-| ADR-0004 | AFIP WSFEv1 sincrónico timeout 30s + reconciliación async | Aprobado | 🔴 **parcialmente invalidado** por hallazgo oficial 2026-05-27 (ver §8) |
+| ADR-0004 | AFIP WSFEv1 sincrónico timeout 30s + reconciliación async | Aprobado | 🟡 **parcialmente invalidado** por hallazgo oficial 2026-05-27 (ver §8) — estado según DECISION-LEDGER (§2.2: el Ledger gana) |
 | ADR-0005 | Money: `numeric(19,4)` + Decimal.js + HALF_EVEN | Aprobado | 🟡 (stage redondeo pendiente contador) |
 | ADR-0006 | Numeración fiscal SELECT FOR UPDATE | Aprobado | 🟢 |
 | ADR-0007 | Monolito modular (NO microservicios F0) | Aprobado | 🟢 |
@@ -200,6 +200,10 @@ Pandora tiene validaciones que dependen de **profesionales externos** (contador 
 | ADR-0020 | Política demo expirado (modo lectura 60d, archivo día 82) | Aprobado | 🟢 |
 | ADR-0021 | Money client-side con Decimal.js + Context injection | Aprobado | 🟢 |
 | ADR-0022 | Fiscal Projection Layer + Fiscal Snapshot + TDF F0 + FiscalBreakdown + Circuit Breakers + Fail-Closed Semantics | Aprobado | 🟡 (5 preguntas TDF + Ley 27.743 pendientes contador) |
+| ADR-0023 | Snapshot Fiscal Completo (CondicionIVAReceptor + QR + tax_policy_version + CAE/CAEA) | Aprobado | 🟡 (A-22 legal QR pendiente; schema real aún no implementa los campos — ver DRIFT-REPORT) |
+| ADR-0024 | IA Boundary Policy — "IA sugiere, NUNCA decide" (15 áreas) | Aprobado | 🟢 |
+| ADR-0025 | Catálogos Regulatorios Runtime (12 FEParam* + cache + boot validation fail-closed) | Aprobado — **implementación diferida a F1+** (rev. 2026-09-03) | 🟡 (F0 = hardcode anclado por `tax_policy_version`; evidencia: RG 5762 eliminó clase M y el código `0051` no cambió) |
+| ADR-0026 | Corrección de medio de pago append-only (`corrects_id` self-ref, UNIQUE parcial, cierre excluye superseded). Nuevo evento `payment.method_reclassified` | Aprobado | 🟢 |
 
 ## 3.2 Trilogía de spec arquitectónica (cerrada 2026-05-27 PM)
 
@@ -246,7 +250,7 @@ Confirmado por fuente oficial: el término "comprobante no fiscal" pertenece al 
 
 ### 🔴 Hallazgo #2 — Régimen Transparencia Fiscal Ley 27.743
 
-Obligatorio desde 2025. Todos los comprobantes deben llevar leyenda "**Régimen de Transparencia Fiscal al Consumidor Ley 27.743**" + IVA en línea separada + "Otros impuestos nacionales indirectos" en otra línea.
+Obligatorio desde 2025. Todos los comprobantes deben llevar el título "**Régimen de Transparencia Fiscal al Consumidor (Ley 27.743)**" + línea "**IVA Contenido**" + línea "**Otros Impuestos Nacionales Indirectos**" (labels literales RG 5614/2024 Art. 2 inc. 7, verificado 2026-07-10 — ver §8.6).
 
 **Valida** que `FiscalBreakdown` de ADR-0022 NO es invención propia — está alineado.
 
@@ -511,7 +515,7 @@ Si la propuesta no pasa los 5 filtros, va a [over-engineering rejected memory] o
 
 ### Observabilidad
 - **Pino** para structured logs (NO console.log, NO winston)
-- **Sentry** instrumentación básica F0, completa F1+
+- **Sentry** instrumentación básica F0, completa F1+ — ⚠️ declarado pero **NO instalado** al 2026-09-02 (cero dependencia `@sentry/*` en `package.json`)
 
 ### Testing
 - **Vitest** + **fast-check** (property-based testing donde aplique)
@@ -668,11 +672,17 @@ Toda tabla con datos de tenant debe tener:
 4. Index en `company_id` (compuesto si query lo amerita)
 
 ### Service-side validation como capa secundaria
+
 Cada Application Service que toca datos de tenant debe:
 1. Leer `tenant_id` del AsyncLocalStorage context (montado por middleware)
-2. Verificar que el `tenant_id` matchea el `company_id` del recurso accedido
-3. Si no matchea → `throw new CrossTenantAccessError()`, audit log inmediato
-4. Si el RLS rechaza (defensa en profundidad) → audit log + alerta
+2. **Filtrar por ese `tenant_id` dentro del `where` de la query** — no leer primero y comparar después
+3. Si el RLS rechaza (defensa en profundidad) → audit log + alerta
+
+> **Corregido 2026-09-05 tras auditar la superficie real.** Este bloque pedía que cada service leyera el recurso y después comparara su `tenant_id` contra el del context, llamando a `validateTenantAccess()`. **El código cumple el objetivo de otra forma:** todas las queries de `sale.service`, `product.service`, `cash` e `inventory` ya filtran por `tenant_id` adentro del `where`, así que un acceso cruzado devuelve **cero filas** y termina en `NotFoundError` — nunca llega a haber un recurso ajeno en memoria que comparar.
+>
+> Agregar `validateTenantAccess()` ahí sería un chequeo **provablemente siempre verdadero**, y daría exactamente la falsa sensación de cobertura que esta sección quiere evitar. Se corrige el documento en vez de doblar el código para que coincida.
+>
+> **Dónde sí hace falta la comparación explícita:** cuando el `tenant_id` **no viene de la sesión**. Hoy hay un solo caso — el webhook de MercadoPago, donde el `company_id` llega en el path de la URL. Ahí se valida forma + existencia con `resolveKnownTenantId()` **antes** de montar el tracing context (`src/lib/multi_tenant/resolve-tenant.ts`, test `T-MT-09`). Cualquier superficie nueva donde el tenant venga de afuera entra por el mismo lugar.
 
 ### Tests cross-tenant obligatorios
 Toda operación crítica debe tener un test cross-tenant que:
@@ -854,27 +864,26 @@ Si AFIP timeout → la transacción permanece abierta con el número reservado +
 
 > ⚠️ **Régimen de Transparencia Fiscal al Consumidor (Ley 27.743) obligatorio desde 2025.** Confirma que el `FiscalBreakdown` de ADR-0022 NO es invención propia.
 
-Cada ticket impreso debe incluir:
+Cada ticket impreso debe incluir (labels literales confirmados por **RG 5614/2024 Art. 2 inc. 7** — verificado 2026-07-10 contra BO/Infoleg 407183):
 
 ```
 ─────────────────────────────────────────
 Subtotal sin impuestos:        $X.XXX,XX
-IVA (21%):                     $X.XXX,XX
-Otros impuestos nacionales
-indirectos:                    $X.XXX,XX
-─────────────────────────────────────────
 TOTAL:                         $X.XXX,XX
-
+─────────────────────────────────────────
 Régimen de Transparencia Fiscal
-al Consumidor Ley 27.743
+al Consumidor (Ley 27.743)
+IVA Contenido:                 $X.XXX,XX
+Otros Impuestos Nacionales
+Indirectos:                    $X.XXX,XX
 ─────────────────────────────────────────
 ```
 
-**Pendiente cerrar con contador (pregunta A-11):**
-- Texto literal exacto de cada línea
-- Estructura visual obligatoria (ubicación, tipografía, cuándo aparece)
-- Aplicabilidad a Tipo C + comprobantes TDF amparados
-- Sanción + período de gracia
+> Labels OFICIALES (no parafrasear): título **"Régimen de Transparencia Fiscal al Consumidor (Ley 27.743)"** (con paréntesis), línea **"IVA Contenido"** (NO "IVA (21%)"), línea **"Otros Impuestos Nacionales Indirectos"**. Ubicación: **espacio inferior izquierdo**, datos dispuestos verticalmente, cada uno con su valor.
+
+**A-11.a/b CERRADO** (2026-07-10, RG 5614 Art. 2.7): texto literal + estructura visual resueltos. **Pendiente contador (A-11.c/d):**
+- Aplicabilidad a Tipo C + comprobantes TDF amparados (qué se pone en "IVA Contenido" si IVA=0 por exención)
+- Sanción + período de gracia (no está en la RG; viene del régimen sancionatorio general)
 
 Persistencia: `fiscal_snapshots.fiscal_breakdown jsonb` inmutable. Ticket impreso lee del snapshot — **NUNCA recalcula.**
 
@@ -3055,7 +3064,7 @@ SRS/
 
 ```
 ~/workspace/pandora-erp/                       ← repo del proyecto en WSL
-├── .claude/
+├── .claude/                                   ← (NO CONSTRUIDO al 2026-09-02)
 │   ├── CLAUDE.md                              ← copia/spec de este doc (con paths relativos al repo)
 │   └── rules/
 │       ├── 01-stack.md
@@ -3068,8 +3077,8 @@ SRS/
 │   ├── components/                            ← UI components
 │   │   ├── ui/                                ← shadcn
 │   │   ├── pos/
-│   │   ├── charts/
-│   │   └── atmospheres/
+│   │   ├── charts/                            ← (NO CONSTRUIDO)
+│   │   └── atmospheres/                       ← (NO CONSTRUIDO)
 │   ├── lib/
 │   │   ├── services/                          ← Application Services TS
 │   │   ├── domain/                            ← Domain functions puras
@@ -3079,7 +3088,7 @@ SRS/
 │   │   │   │   └── wsfev1.ts
 │   │   │   ├── snapshot.ts
 │   │   │   └── breakdown.ts
-│   │   ├── workers/                           ← Worker dedicado por job_type
+│   │   ├── workers/                           ← Worker dedicado por job_type (NO CONSTRUIDO — el único worker real vive en integrations/mercadopago/)
 │   │   ├── integrations/                      ← AFIP, MP, email
 │   │   ├── observability/                     ← Pino, metrics, audit writer
 │   │   ├── tracing/                           ← AsyncLocalStorage context
@@ -3091,9 +3100,9 @@ SRS/
 │   ├── unit/
 │   ├── integration/
 │   ├── cross-tenant/
-│   └── e2e/
+│   └── e2e/                                   ← (NO CONSTRUIDO — sin Playwright)
 ├── docs/
-│   └── runbooks/
+│   └── runbooks/                              ← (NO CONSTRUIDO — docs/ sólo tiene 2 docs de diseño POS)
 │       ├── security-incident.md
 │       ├── cross-tenant-leak.md
 │       └── arco-request.md
@@ -3159,7 +3168,7 @@ SRS/
 Este documento es **vigente al 2026-05-28**. Cualquier cambio estructural en Pandora debe sincronizarse acá. Cualquier sesión futura debe respetar este contrato.
 
 **Estado al cierre:**
-- 22 ADRs vigentes
+- 26 ADRs vigentes
 - Trilogía de spec arquitectónica completa (EVENT-TAXONOMY + CORRELATION-PROPAGATION + RECONCILIATION-ENGINE)
 - Sistema gobernable formal completo (NON-GOALS + CAPABILITY-MAP + BOUNDED-CONTEXTS + OPERATIONAL-SEVERITY + MONEY-POLICY + RUNBOOKS)
 - 2 hallazgos críticos pendientes (ticket no fiscal post-2h + Ley 27.743 texto/estructura)

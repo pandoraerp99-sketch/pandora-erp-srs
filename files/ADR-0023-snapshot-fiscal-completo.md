@@ -6,6 +6,32 @@
 **Reemplaza:** ninguno (extiende ADR-0022 sin invalidarlo)
 **Validación:** 🟡 Pendiente validación humana A-22 (representación legal QR — ver §8)
 
+---
+
+## ✅ ESTADO DE IMPLEMENTACIÓN — 2026-09-03
+
+**Antes:** este ADR figuraba *Aprobado* declarando campos que el schema real **nunca tuvo**, y una migración `0006_fiscal_snapshot_v2.sql` (§ más abajo) que **jamás se creó**. La auditoría 2026-09-02 lo catalogó como drift de severidad ALTA — 4 filas del reporte.
+
+**Ahora:** implementado en **`drizzle/migrations/post_initial/0021_fiscal_snapshot_adr_0023.sql`**. El número `0006` del ADR era aspiracional; el real es **0021** (las migraciones ya iban por 0020 cuando se ejecutó).
+
+`fiscal_snapshots` estaba **vacía** al momento de migrar → sin backfill ni riesgo. Todas las columnas nuevas son NULLABLE (salvo `authorization_code_type`, NOT NULL con default `CAE`), así que no rompen la emisión.
+
+**7 columnas agregadas:** `condicion_iva_receptor_id` · `condicion_iva_receptor_desc_at_emission` · `qr_version` · `qr_payload_json` · `qr_url_base_at_emission` · `authorization_code_type` (+CHECK CAE/CAEA) · `wsfe_manual_revision`.
+
+**3 campos de la spec que NO se implementaron, con motivo:**
+
+| Campo | Por qué no |
+|---|---|
+| `condicion_iva_receptor_catalog_version_at_emission` | Presupone el patrón de **ADR-0025** (catálogos traídos en runtime, cada uno con su versión). Ese ADR quedó **diferido a F1+** el 2026-09-03. En F0 quien identifica la fotografía del catálogo es `tax_policy_version`, que ya está en la tabla. Se suma junto con `catalogs/` cuando ADR-0025 se promueva. |
+| `fx_rate` / `precision_internal` | Constantes en F0 (ARS-only, `numeric(19,4)` + HALF_EVEN por ADR-0005). Serían columnas con el mismo valor en todas las filas. Además la cotización fiscalmente relevante ya viaja **dentro del QR** (`ctz`). Entran con multi-moneda real (F2+). |
+| `customer_snapshot_ref` | Ya existe vía `sale_id`: el snapshot del cliente vive en `sales` (`customer_*_snapshot`, inmutables post-emisión). Una FK adicional sería una segunda fuente de verdad (CLAUDE.md §20.26). |
+
+**Regresión:** `T-FISCAL-SCHEMA-01` casos **T1.5** (las 7 columnas existen, con la nulabilidad correcta) y **T1.6** (`authorization_code_type` rechaza cualquier valor fuera de CAE/CAEA). 6/6 verde.
+
+**Lo que queda:** la **lógica de llenado** de estos campos. Depende del certificado de homologación, y para el QR en comprobantes exentos también de **A-11.c**. Las columnas ya están listas para recibirlos.
+
+---
+
 ## Contexto
 
 ADR-0022 (2026-05-26) estableció Fiscal Projection Layer + Fiscal Snapshot inmutable con la promesa de **"reproducibilidad histórica de comprobantes años después"**. La investigación de fuentes oficiales realizada el 2026-06-02 ([[research-fuentes-oficiales-adr-0023-2026-06-02]]) reveló **4 gaps específicos** en el snapshot definido por ADR-0022 que impedirían cumplir esa promesa en escenarios reales de auditoría a 5/10 años.
