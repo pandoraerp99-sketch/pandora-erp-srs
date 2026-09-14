@@ -171,5 +171,7 @@ Mismo método que el resto del proyecto:
 4. Arreglo de §4.1 y §4.2 con sus tests.
 5. Mutaciones: sacar cada `writeAuditLog` tiene que poner un test en rojo.
 
-**Para aprobar:** alcanza con decir "dale" (todo), o qué eventos sí / no / con
-otro nombre.
+**Aprobada** el 2026-09-14 ("dale", todo tal cual) e implementada en
+pandora-erp `68263b7`. Único cambio respecto de lo propuesto: `via` en
+`auth.accountant.granted` admite `null` cuando no se sabe cómo llegó la
+contadora, en vez de asumir un valor.

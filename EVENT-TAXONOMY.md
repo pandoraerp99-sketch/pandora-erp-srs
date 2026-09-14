@@ -830,7 +830,7 @@ Solo los que pasan el test de §1. El resto va a Pino logs + counters.
 | `auth.login.failed` | warning | sensitive_pii (IP) | — | Tracking abuso |
 | `auth.password.changed` | warning | internal | — | Invalida sesiones existentes |
 | `auth.role.changed` | warning | internal | — | Invalida cache permisos |
-| `auth.accountant.granted` | warning | internal | — | v2.1.0. Un **tercero** (la contadora, ADR-0008) pasa a ver los datos del comercio. Se emite sólo cuando el vínculo se **crea** (reinvitar no emite). Payload: `{accountant_user_id, via: 'invitacion'\|'usuario_existente'}` — sólo ids, el email no va |
+| `auth.accountant.granted` | warning | internal | — | v2.1.0. Un **tercero** (la contadora, ADR-0008) pasa a ver los datos del comercio. Se emite sólo cuando el vínculo se **crea** (reinvitar no emite). Payload: `{accountant_user_id, via: 'invitacion'\|'usuario_existente'\|null}` — `null` si quien vincula no sabe cómo llegó (no se inventa). Sólo ids, el email no va |
 | `auth.accountant.revoked` | warning | internal | — | v2.1.0. El vínculo se borra de `company_users`: sin el evento no queda rastro de que tuvo acceso. Sólo si efectivamente se borró una fila. Payload: `{accountant_user_id}` |
 
 > **Por qué no se reusa `auth.role.changed` para la contadora:** ese evento es "a un usuario del comercio le cambiaron el rol". Dar acceso a un tercero externo es otro hecho, y reusarlo haría que el log mintiera sobre qué pasó.

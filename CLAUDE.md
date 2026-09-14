@@ -111,7 +111,7 @@ Si alguien (humano o IA) propone llevar Pandora hacia uno de esos territorios si
 | 1 | **[DECISION-LEDGER.md](DECISION-LEDGER.md)** | SIEMPRE. Source of truth absoluto. |
 | 2 | **[AUTHORITY-MAP.md](AUTHORITY-MAP.md)** | Para conflictos de autoridad de recursos/estados (quién decide qué). |
 | 3 | **ADRs aprobados** (`files/ADR-*.md`) | Decisiones arquitectónicas formales. |
-| 4 | **[EVENT-TAXONOMY.md](EVENT-TAXONOMY.md)** v2.0.1 | Catálogo canónico de eventos del sistema. |
+| 4 | **[EVENT-TAXONOMY.md](EVENT-TAXONOMY.md)** v2.1.0 | Catálogo canónico de eventos del sistema. |
 | 5 | **[CORRELATION-PROPAGATION.md](CORRELATION-PROPAGATION.md)** v1.0.0 | Tracing end-to-end. |
 | 6 | **[RECONCILIATION-ENGINE.md](RECONCILIATION-ENGINE.md)** v1.0.0 | Resolución de incertidumbre fiscal. |
 | 7 | **[PANDORA_ERP_SRS_v3.0.md](PANDORA_ERP_SRS_v3.0.md)** (+ partes 2, 3) | Source of truth principal del producto (congelado). |
@@ -210,7 +210,7 @@ Pandora tiene validaciones que dependen de **profesionales externos** (contador 
 
 | # | Doc | Estado |
 |---|---|---|
-| 1 | [EVENT-TAXONOMY.md](EVENT-TAXONOMY.md) v2.0.1 — 32 eventos canónicos + 4 concerns separados (`audit_log` partitioned + `jobs_queue` + `metrics_counter` whitelist + Pino logs) | ✅ |
+| 1 | [EVENT-TAXONOMY.md](EVENT-TAXONOMY.md) v2.1.0 — 49 eventos canónicos (32 al cierre de 2026-05-27; v2.1.0 del 2026-09-14 sumó plata y acceso) + 4 concerns separados (`audit_log` partitioned + `jobs_queue` + `metrics_counter` whitelist + Pino logs) | ✅ |
 | 2 | [CORRELATION-PROPAGATION.md](CORRELATION-PROPAGATION.md) v1.0.0 — 2 IDs (`correlation_id` + `request_id`) + AsyncLocalStorage Node + headers Edge + worker continuity + sessionStorage cliente | ✅ |
 | 3 | [RECONCILIATION-ENGINE.md](RECONCILIATION-ENGINE.md) v1.0.0 — Worker `afip-reconcile-pending` + SKIP LOCKED + `FECompUltimoAutorizado` recovery + dead letter philosophy + poison detection inmediata + operator tooling SQL F0 | ✅ |
 
@@ -1136,7 +1136,7 @@ Cada proyección es función pura testeada.
 
 # 10. Observability Constitution
 
-## 10.1 4 concerns separados (EVENT-TAXONOMY.md v2.0.1)
+## 10.1 4 concerns separados (EVENT-TAXONOMY.md v2.1.0)
 
 | Concern | Storage | Retention | Consumer |
 |---|---|---|---|
@@ -1191,7 +1191,7 @@ CREATE TRIGGER audit_log_no_delete BEFORE DELETE ON audit_log
 - Cleanup deja audit de la propia operación de cleanup.
 
 ### Catálogo canónico
-32 eventos F0 documentados en [EVENT-TAXONOMY.md §5](EVENT-TAXONOMY.md). Lista por domain: fiscal, sales, stock, cash, auth, multi_tenant, integration, system.
+49 eventos F0 documentados en [EVENT-TAXONOMY.md §5](EVENT-TAXONOMY.md) (v2.1.0, 2026-09-14) — la lista cerrada vive en `src/lib/audit/event-names.ts` y coincide exacto. Domains: auth, sale, fiscal, payment, stock, product, cash_session, customer, expense, subscription, system, security.
 
 ## 10.3 jobs_queue (EVENT-TAXONOMY §6)
 
@@ -3011,7 +3011,7 @@ SRS/
 ├── OPERATIONAL-SEVERITY.md (v1.0.0)           ← matriz S0-S4
 ├── MONEY-POLICY.md (v1.0.0)                   ← consolidación monetaria
 ├── ROADMAP.md (v1.0.0)                        ← 11 sprints operativos hasta Pilot Launch
-├── EVENT-TAXONOMY.md (v2.0.1)                 ← catálogo canónico eventos
+├── EVENT-TAXONOMY.md (v2.1.0)                 ← catálogo canónico eventos
 ├── CORRELATION-PROPAGATION.md (v1.0.0)        ← tracing end-to-end
 ├── RECONCILIATION-ENGINE.md (v1.0.0)          ← resolución incertidumbre fiscal
 ├── RUNBOOKS/                                  ← 6 playbooks F0
