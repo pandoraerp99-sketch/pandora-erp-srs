@@ -1,7 +1,7 @@
 # Research Brief — `Panel` (pantalla de inicio)
 
 **Fecha:** 2026-09-10
-**Estado:** 🚧 parcial — 4 de 7 bloques (`db428ef`…`aa19918`). Los 3 que faltan esperan DATO: merma (ya hay una fila `loss` real desde `dc7b98c`), régimen, vencimientos
+**Estado:** 🚧 parcial — 6 de 7 bloques. Merma y valor del stock construidos el 2026-09-14 (§8.e). Falta el badge Ley 19.640, que espera DATO: `merchant_special_regime` en NULL y sin pantalla de Configuración
 **Autor:** sesión Claude (owner: Agus)
 **Relacionado:** ADR-0012 (atmospheres · Panel = *Insight*) · ADR-0014 (charts SVG puros) · commits `db428ef` `5c5aedb` `a6622b4` `911ec5e`
 
@@ -161,6 +161,68 @@ declarado, que con fondos translúcidos miente), el token `--ink-3` que usa
 todas las pantallas de costado. Los textos nuevos que cargan contenido real
 —la fecha, las etiquetas de clientes, el pie de cada rubro— sí se subieron a
 `--ink-2`, que mide entre 4,7 y 6,9. Queda como ítem propio.
+
+### 8.e Merma y valor del stock (2026-09-14) — la tarjeta de inventario
+
+**El trigger de §8.c se cumplió** con el ajuste de stock con motivo (`dc7b98c`,
+migration 0038). Medido en la base de dev **agrupando por comercio**
+(`scripts/medir-merma.sh`): Kiosco Demo TDF tiene **1 merma real** (rotura, 2 ×
+Yerba, costo $2.400) y **7 `adjustment` del 09/07 sin motivo**.
+
+🔴 **Esos 7 son el stock inicial** (migration 0035: el alta entra como
+`adjustment`). Un bloque que contara "ajustes" mostraría 149 unidades de
+correcciones que en realidad son la carga del catálogo. Lo mismo pasa con la
+salida de stock de una compra anulada (`adjustment` sin motivo, con
+`related_expense_id`). **Regla: el bloque cuenta sólo movimientos con `motivo`
+cargado** — la columna que existe justamente para separar lo que una persona
+declaró de lo que el sistema generó.
+
+**Qué muestra — y qué decisión cambia cada número:**
+
+| Renglón | Cálculo | Decisión que cambia |
+|---|---|---|
+| **Plata en stock** | Σ `stock_current × cost` de productos activos con control de stock | Cuánta plata está quieta en góndola. Con "N productos con stock sin costo cargado" aparte: el hueco se muestra, no se rellena |
+| **Merma del mes** | Σ `loss` del mes del comercio (por `stock_movements.fecha`), valorizada | Si se pierde plata de más |
+| **por motivo** | rotura / vencimiento / robo, con pesos y unidades | Vencimiento alto → comprar menos de eso. Robo alto → control. Rotura → exhibición/manipulación |
+| **qué se pierde más** | los 3 productos con más merma valorizada | Sobre qué producto actuar |
+| **Correcciones del mes** | cantidad de `adjustment` con motivo (recuento / error de carga / otro) | Muchos "error de carga" → revisar cómo se carga |
+
+**Valorización: a costo de ÚLTIMA COMPRA (`products.cost`), rotulado así.** El
+movimiento de merma no congela el costo. Para el mes en curso la diferencia es
+chica y se declara en pantalla. Tres estados, igual que margen: sin merma
+cargada / merma con costo completo / merma con unidades sin costo (se informan
+las unidades, no se inventan pesos).
+
+**"Sin mermas cargadas este mes", no "sin merma".** Que nadie haya registrado una
+rotura no prueba que no hubo: el texto dice lo que se sabe.
+
+**Qué NO:**
+
+| Descartado | Por qué | Trigger |
+|---|---|---|
+| Merma de meses anteriores (serie) | Valorizada con el costo de HOY cambiaría meses cerrados. Si se pide, se valoriza por PEPS desde el libro, como el inventario al cierre | Pedido del owner o de la contadora |
+| % de merma sobre ventas | Mezcla costo (merma) con precio (ventas): el cociente no significa nada limpio | Si se pide, contra el costo de lo vendido (margen), no contra la facturación |
+| Merma de "consumo propio" | La categoría no existe: decisión abierta del owner (Ledger) | Que el owner decida |
+| El valor del stock como dato contable | Es plata quieta a costo de reposición; el inventario valorizado al cierre (PEPS, ítem 8) es otro número y es el que va al estudio | — |
+
+**Construido (2026-09-14).** Capa pura `src/lib/reporting/merma.ts` (12 tests
+unitarios: los cuatro estados de merma y de valor del stock, orden de los sin
+costo, división por cero) · reporte `merma.report.ts` · tarjeta
+`MermaDelMes.tsx` entre Rentabilidad y Reponer · test `T-PANEL-02` (6 casos:
+mes anterior y siguiente, stock inicial, compra anulada, sin costo, vecino, y
+el camino real por `adjustStock`) · `scripts/mutar-merma.sh`: **11/11
+mutaciones atrapadas**.
+
+Verificado contra el dato real, no sólo contra fixtures: la tarjeta muestra
+$4.800 de rotura (2 × Yerba) y $210.300 de plata en stock, y el total se
+contrastó producto por producto con otra consulta
+(`scripts/verificar-valor-stock.sh`). **Los estados `sin_merma`, `sin_costo`
+y `parcial` NO se vieron en pantalla**: la base de dev no los tiene. Están
+probados en la capa pura y en `T-PANEL-02`.
+
+Contraste medido **sobre píxeles** (`scripts/contraste-png.ps1`): las notas de
+la tarjeta se subieron de `--ink-3` a `--ink-2` (misma decisión que §8.d) y
+dan 5,04–5,69 en claro y 6,65–6,99 en oscuro.
 
 ## 9. Plan de implementación
 
