@@ -16,11 +16,11 @@ profesional matriculado pide, por escrito, a un comercio que existe.
 
 | # | Lo que pide | ¿Pandora lo puede dar? | Nota |
 |---|---|---|---|
-| 1 | Saldo de **caja** al cierre del ejercicio | ✅ **Sí, hoy** | `cash_sessions`. En el pedido está puesto **a mano**: "$349.000". Pandora lo da exacto a cualquier fecha. |
+| 1 | Saldo de **caja** al cierre del ejercicio | ✅ **Sí, desde 2026-09-16** | ~~El dato estaba en `cash_sessions` pero **ninguna pantalla lo entregaba**: /contador mostraba cuántos cierres hubo y el descuadre, no el saldo.~~ Ahora hay tarjeta + CSV: el **último arqueo de cada punto de venta** hasta la fecha, sumado y con el desglose (son N cajas, no una). Tres estados: contado ese día / último arqueo anterior **con su fecha** / sin datos — y una caja que quedó **abierta** sale **sin monto**, porque `inicial + movimientos` sería aritmética nuestra y el balance pide plata contada. Es **efectivo**: lo cobrado con tarjeta o QR es el ítem 3, que no tenemos, y la pantalla lo dice. |
 | 2 | Saldo en **moneda extranjera** al cierre | ❌ | ARS-only (CLAUDE.md §9.4). Está "Pendiente" en el pedido. |
 | 3 | **Extractos bancarios** mensuales de todas las cuentas **y billeteras virtuales** | ❌ | Ojo: "billeteras virtuales" incluye MercadoPago, donde Pandora sí tiene `mp_payments`. No es el extracto, pero es la mitad. |
 | 4 | Detalle de **cheques emitidos** | ❌ | No hay cheques. (Acá: "sin cheques emitidos".) |
-| 5 | **Deudores** por prestación de servicios: **razón social, CUIT e importe** | ✅ **Sí, hoy** | Es EXACTAMENTE la cuenta corriente (ADR-0027) + `customers.doc_number`. En el pedido dice "Sin deudores" — porque no lo llevan, no porque no exista. |
+| 5 | **Deudores** por prestación de servicios: **razón social, CUIT e importe** | ✅ **Sí, desde 2026-09-16** | Es la cuenta corriente (ADR-0027) + `customers.doc_number`. ~~El saldo se calculaba **a hoy**, sin CUIT y sin export — o sea, no era el del balance.~~ Ahora sale **a la fecha de cierre**, con razón social, documento e importe, y CSV. Avisa cuántos deudores **no tienen CUIT cargado**. ⚠️ El corte usa la fecha de **registración**: el libro no guarda la de la operación, así que un fiado del 30/07 cargado el 02/08 cae en el ejercicio siguiente — declarado adentro del CSV. En el pedido dice "Sin deudores" — porque no lo llevan, no porque no exista. |
 | 6 | **Otros créditos**: depósitos en garantía, retiro de socios, sumas a cobrar | ❌ | Contabilidad societaria, fuera del POS. |
 | 7 | Inventario de **bienes de uso** (fecha de adquisición, descripción, valor de compra) | ❌ | Activos fijos. No existe. |
 | 8 | Inventario de **bienes de cambio VALORIZADO** al cierre (fecha adq., detalle, importe de compra) | ✅ **Sí, desde 2026-09-12** | `3be8928`: foto a la fecha de cierre desde el **libro** de stock (no `stock_current`), con fecha de adquisición e importe de compra por **lote** (`expense_items`, migrations 0034/0036), fecha de negocio por movimiento (0037) y CSV para el estudio. Tres estados: con compra, **sin compra asociada** (stock inicial), sin costo. El método (PEPS) va **declarado** en el CSV: la elección es del estudio → pregunta **A-28**. |
@@ -32,6 +32,14 @@ profesional matriculado pide, por escrito, a un comercio que existe.
 **Marcador: de 12 ítems, Pandora cubre 3 enteros (1, 5, 8) y 3 a medias (9, 11, 12)**
 (actualizado 2026-09-14; era 2 y 1 antes del módulo de gastos, 2026-09-09, y 2 y 3
 hasta el inventario valorizado, 2026-09-12).
+
+> ⚠️ **Corrección 2026-09-16.** El marcador no se mueve, pero decía algo que no
+> era cierto: los ítems **1 y 5 estaban ✅ porque el dato existía en la base**, no
+> porque alguien pudiera sacarlo. El saldo de caja no lo mostraba ninguna
+> pantalla y los deudores salían **a hoy, sin CUIT y sin export** — el balance
+> pide los dos **a la fecha de cierre**. Los dos se construyeron ese día. La
+> lección para los ítems que quedan: *"el dato está"* y *"se entrega"* son
+> afirmaciones distintas, y el marcador vale sólo para la segunda.
 
 ## 2. Lo que esto corrige de lo que estábamos construyendo
 
