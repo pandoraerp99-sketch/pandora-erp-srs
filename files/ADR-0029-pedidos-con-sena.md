@@ -1,7 +1,7 @@
 # ADR-0029 — Pedidos (encargos) con seña, y su plata en la caja
 
 **Fecha:** 2026-11-18
-**Estado:** Aprobado (por delegación de la misión del 2026-11-18: "asumí la dirección de producto"). **Pendiente de ratificación del owner** en los puntos marcados ⚠️.
+**Estado:** Aprobado (por delegación de la misión del 2026-11-18). Los 4 eventos `order.*` fueron **ratificados por el owner** el 2026-11-18.
 **Reemplaza a:** —
 **Relacionado:** ADR-0026 (corrección append-only de medio), ADR-0027 (cuenta corriente), ADR-0010 (idempotencia), ADR-0005 (money), EVENT-TAXONOMY v2.4.0, `pos-preview/PEDIDOS-SENAS-research.md`, `pos-preview/pedidos.html`, `pos-preview/pedidos-senados.html`.
 
@@ -24,7 +24,7 @@ Una seña es plata real que entra a la caja **fuera de una venta**. Si no queda 
 5. **Reglas de saldo:** no se cobra de más (saldo a favor no está modelado); editar no puede dejar el total por debajo de lo cobrado; **entregar exige saldo cero** ("Cobrar saldo y entregar" hace las dos cosas en una transacción).
 6. **Concurrencia e idempotencia:** cada mutación toma el pedido `FOR UPDATE` antes de leer lo cobrado (dos cobros simultáneos no pasan los dos el chequeo de saldo); la caja se lee `FOR SHARE` (el cierre la toma `FOR UPDATE`, así un cobro no se cuela en una caja que se está cerrando). Alta, cobro y entrega van por `withIdempotency` (reserve-first, `releaseOnError`): un doble click o un reintento no duplican.
 7. **Medios:** efectivo, débito, crédito, transferencia. **Sin `mp_qr`:** el cobro por QR todavía no se verifica contra MercadoPago (H-03), y anotar "pagó por QR" sin verificar es anotar plata que puede no haber entrado.
-8. **Auditoría:** 4 eventos nuevos (EVENT-TAXONOMY v2.4.0): `order.created`, `order.updated`, `order.status_changed`, `order.payment.received`. ⚠️ El catálogo es cerrado: se agregaron por la delegación de la misión y **quedan pendientes de ratificación del owner**.
+8. **Auditoría:** 4 eventos nuevos (EVENT-TAXONOMY v2.4.0): `order.created`, `order.updated`, `order.status_changed`, `order.payment.received`. El catálogo es cerrado: se agregaron por la delegación de la misión y el owner los **ratificó** el 2026-11-18.
 9. **Estados persistidos:** `tomado → en_preparacion → listo → entregado`, más `cancelado`. "Señado", "saldado" y "vencido" **no son estados**: se derivan de los cobros y de la fecha de retiro (día del comercio).
 
 ## Consecuencias
@@ -59,4 +59,4 @@ Una seña es plata real que entra a la caja **fuera de una venta**. Si no queda 
 - Tests: `T-PED-01` (13 casos de integración), `pedidos-dominio` (12 unitarios), `T-ROL-01` (+5 mutaciones), catálogo (57 eventos). Recorrido en navegador: `scripts/recorrido-pedidos.mjs`.
 
 ## Validación
-🟡 — decisión interna implementada y probada; A-32 (contable) y la ratificación de los 4 eventos quedan abiertas.
+🟡 — decisión interna implementada y probada; eventos ratificados. Queda abierta A-32 (contable).
